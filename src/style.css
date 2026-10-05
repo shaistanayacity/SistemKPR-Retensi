@@ -320,9 +320,9 @@ button.stat[aria-pressed="true"]{border-color:#111;box-shadow:0 0 0 1px #111}
 .chart .ax{font-size:11px;fill:#8a8a8a;font-family:inherit}
 .legend{display:flex;gap:16px;font-size:11.5px;color:var(--muted);margin:2px 0 6px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
-.legend i{display:inline-block;width:20px;height:0;border-top:2px solid #9a9a9a}
-.legend i.dsh{border-top:2px dashed #111}
-.tip{position:absolute;top:26px;transform:translateX(-50%);background:#111;color:#fff;border-radius:8px;padding:6px 10px;font-size:11.5px;display:grid;gap:2px;pointer-events:none;white-space:nowrap;z-index:2}
+.legend i{display:inline-block;width:20px;height:0;border-top:2.5px solid #d9a62e;border-radius:2px}
+.legend i.dsh{border-top:2.5px dashed #23335a}
+.tip{position:absolute;top:26px;transform:translateX(-50%);background:#16213c;color:#fff;border-radius:8px;padding:6px 10px;font-size:11.5px;display:grid;gap:2px;pointer-events:none;white-space:nowrap;z-index:2}
 .tip b{font-weight:700}
 
 .bars.two{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
@@ -427,3 +427,129 @@ button.stat[aria-pressed="true"]{border-color:#111;box-shadow:0 0 0 1px #111}
   .px,.slide,.dots button{transition:none}
   .p1,.p2,.p3{transform:none}
 }
+
+/* ===== Tema lembut: kaca, kapsul, biru tua dan emas (hanya warna, lengkung, bayangan; tata letak tidak berubah) ===== */
+:root{
+  --ink:#141b2e; --navy:#23335a; --navy-2:#16213c; --gold:#e3b34a; --gold-soft:#f5e2a8;
+  --fg:#141b2e; --muted:#5d6881; --faint:#8d97ab;
+  --line:rgba(35,51,90,.10); --line-2:rgba(35,51,90,.07);
+  --surface:rgba(255,255,255,.72); --surface-2:rgba(255,255,255,.55);
+  --accent:#1f2c4d; --accent-hover:#141d36; --accent-fg:#fff; --accent-soft:rgba(35,51,90,.08); --accent-2:#3c4d78;
+  --track:rgba(35,51,90,.10);
+  --ok-bg:#dff3e6; --ok-fg:#1d6a42; --warn-bg:#fbefc7; --warn-fg:#7a5806;
+  --info-bg:#dfe8fb; --info-fg:#27478a; --bad-bg:#fbe2e2; --bad-fg:#8c2f2f;
+  --neu-bg:rgba(35,51,90,.08); --neu-fg:#4b5671; --vio-bg:#e8e2f8; --vio-fg:#4d3c8c;
+  --av-s:34%; --av-l:86%; --av-fg:#26335a;
+  --shadow:0 10px 30px rgba(31,45,80,.08),0 1px 2px rgba(31,45,80,.05);
+  --r:22px; --r-sm:12px;
+}
+body{background:
+  radial-gradient(900px 460px at 58% -8%,rgba(72,98,158,.40),transparent 70%),
+  radial-gradient(760px 560px at 100% 105%,rgba(238,200,104,.42),transparent 70%),
+  radial-gradient(600px 480px at -5% 70%,rgba(150,172,214,.28),transparent 70%),
+  linear-gradient(180deg,#eef1f7,#e5e9f1);
+  background-attachment:fixed;color:var(--ink)}
+
+/* permukaan kaca */
+.shell{background:transparent}
+.side{background:rgba(255,255,255,.42);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-right:1px solid rgba(255,255,255,.7)}
+.topbar{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.7)}
+.card{background:var(--surface);border:1px solid rgba(255,255,255,.85);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.brandbox,.usercard{background:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.9);border-radius:18px;box-shadow:0 4px 14px rgba(31,45,80,.06)}
+
+/* menu samping berbentuk kapsul */
+.snav button{border-radius:999px;color:#4b5671}
+.snav button:hover{background:rgba(255,255,255,.7);color:var(--ink)}
+.snav button[aria-selected="true"]{background:var(--navy-2);color:#fff;box-shadow:0 6px 16px rgba(22,33,60,.22)}
+.snav button[aria-selected="true"] .cnt{background:var(--gold);color:#241b05;border-color:transparent}
+.snav .cnt{border-radius:999px;background:rgba(255,255,255,.85)}
+.tabs-mini{background:rgba(255,255,255,.7);border-radius:999px;padding:4px}
+.tabs-mini button{border-radius:999px}
+.tabs-mini button[aria-selected="true"]{background:var(--navy-2);color:#fff;box-shadow:0 4px 12px rgba(22,33,60,.2)}
+.tabs-mini button[aria-selected="true"] .num{color:var(--gold-soft)}
+
+/* tombol, ikon, isian: kapsul */
+.btn{border-radius:999px;background:rgba(255,255,255,.85);border-color:rgba(35,51,90,.12)}
+.btn:hover{background:#fff;border-color:rgba(35,51,90,.25)}
+.btn.pri{background:var(--navy-2);border-color:var(--navy-2);color:#fff;box-shadow:0 6px 16px rgba(22,33,60,.22)}
+.btn.pri:hover{background:#0f172b}
+.btn.sm{border-radius:999px}
+.btn.danger{border-radius:999px}
+.icon-btn{border-radius:50%;background:rgba(255,255,255,.85);border-color:rgba(35,51,90,.12)}
+.icon-btn:hover{background:#fff;border-color:var(--navy);color:var(--navy)}
+.search input,.sel,input.sel{border-radius:999px;background:rgba(255,255,255,.85);border-color:rgba(35,51,90,.12)}
+.search input:focus{background:#fff}
+.sel:focus,.search input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(35,51,90,.12)}
+.fld input,.fld select,.fld textarea,.rowf input,.rowf select{border-radius:14px;background:rgba(255,255,255,.9);border-color:rgba(35,51,90,.14)}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.rowf input:focus,.rowf select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(35,51,90,.12)}
+.ck{border-radius:999px;background:rgba(255,255,255,.85)}
+.ck:has(input:checked){background:var(--info-bg);border-color:#9db6ea;color:var(--info-fg)}
+.ck input{accent-color:var(--navy)}
+.calc{border-radius:14px;background:rgba(255,255,255,.6)}
+
+/* tab status: kapsul */
+.seg{padding:10px 12px 5px;gap:2px;border-bottom:1px solid var(--line)}
+.seg button{border-radius:999px;border-bottom:0;margin-bottom:0;padding:8px 13px;color:#4b5671}
+.seg button:hover{background:rgba(255,255,255,.7);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--navy-2);color:#fff;border-bottom:0;box-shadow:0 5px 14px rgba(22,33,60,.2)}
+.seg .k{background:rgba(35,51,90,.09);color:#4b5671}
+.seg button[aria-pressed="true"] .k{background:var(--gold);color:#241b05}
+
+/* kartu angka */
+.stat .st-r{background:rgba(255,255,255,.5);border-left:1px solid rgba(35,51,90,.07)}
+.stat .tile{border-radius:50%;background:#fff;border:1px solid rgba(35,51,90,.08);color:var(--navy);box-shadow:0 4px 12px rgba(31,45,80,.1)}
+button.stat:hover{border-color:rgba(35,51,90,.3)}
+button.stat[aria-pressed="true"]{border-color:var(--navy);box-shadow:0 0 0 2px rgba(35,51,90,.35)}
+.stat .t{height:4px;border-radius:999px;background:rgba(35,51,90,.10)}
+.stat .t i{border-radius:999px;background:linear-gradient(90deg,var(--navy),#5a74b4)}
+.stat.dark{background:linear-gradient(135deg,#2a3b66,#16213c);border-color:#16213c;color:#fff}
+.stat.dark .st-r{background:rgba(255,255,255,.06);border-left-color:rgba(255,255,255,.08)}
+.stat.dark .tile{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);color:var(--gold-soft)}
+.stat.dark .t{background:rgba(255,255,255,.18)}
+.stat.dark .t i{background:linear-gradient(90deg,var(--gold),#f6dd95)}
+
+/* bar progres dan bagan batang */
+.bar .bt{height:10px;border-radius:999px;background:rgba(35,51,90,.09)}
+.bar .bt i{border-radius:999px;background:linear-gradient(90deg,var(--navy),#6580c0)}
+.prog .t{height:7px;border-radius:999px;background:rgba(35,51,90,.10)}
+.prog .t i{border-radius:999px;background:linear-gradient(90deg,var(--navy),#6580c0)}
+.prog .t i.part{background:linear-gradient(90deg,var(--gold),#f3d58b)}
+
+/* status: pastel dengan titik */
+.p-ok{background:var(--ok-bg);color:var(--ok-fg)}
+.p-warn{background:var(--warn-bg);color:var(--warn-fg)}
+.p-info{background:var(--info-bg);color:var(--info-fg)}
+.p-bad{background:var(--bad-bg);color:var(--bad-fg);border-style:solid}
+.p-neu{background:#e9ecf2;color:#4b5671}
+.p-vio{background:var(--vio-bg);color:var(--vio-fg)}
+.p-acc{background:var(--navy-2);color:#fff}
+.p-info,.p-bad,.p-vio{box-shadow:none}
+.chip{border-radius:999px;background:#e9ecf2;color:#4b5671}
+.chip.acc{background:var(--ok-bg);color:var(--ok-fg)}
+.chip.no{background:var(--bad-bg);color:var(--bad-fg)}
+
+/* tabel dan daftar */
+th{background:rgba(255,255,255,.55);color:#5d6881}
+tbody tr:hover td{background:rgba(255,255,255,.7)}
+td:last-child,th:last-child{background:#f8f9fc}
+tbody tr:hover td:last-child{background:#fff}
+tfoot td{background:rgba(255,255,255,.6)}
+.fu-i{border-radius:14px}
+.fu-i:hover{background:rgba(255,255,255,.7)}
+
+/* panel samping dan pop-up */
+.drawer{background:#f3f5fa;border-radius:24px 0 0 24px}
+.dr-h,.dr-f{background:rgba(255,255,255,.85)}
+.dr-h{border-radius:24px 0 0 0}
+.dr-f{border-radius:0 0 0 24px}
+fieldset{background:rgba(255,255,255,.8);border-color:rgba(255,255,255,.9);border-radius:20px}
+.x{border-radius:50%}
+.ovl{background:rgba(18,27,50,.38)}
+.toast{background:var(--navy-2);border-radius:999px;padding:11px 20px}
+.drop{border-radius:20px;background:rgba(255,255,255,.6)}
+@media (max-width:640px){.drawer{border-radius:0}.dr-h,.dr-f{border-radius:0}}
+
+/* halaman masuk */
+.auth-go{background:var(--navy-2);box-shadow:0 8px 20px rgba(22,33,60,.28)}
+.auth-go:hover:not(:disabled){background:#0f172b}
+.dots button.on{background:var(--gold)}
