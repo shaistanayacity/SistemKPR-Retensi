@@ -4,7 +4,7 @@ import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num,
 import type { BankProses, Kpr, Pencairan, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
 
-type Common<T> = { initial: T; isNew: boolean; canEdit: boolean; canDelete: boolean; onClose: () => void; onSave: (r: T) => Promise<void>; onDelete: () => Promise<void> };
+type Common<T> = { initial: T; isNew: boolean; popup?: boolean; canEdit: boolean; canDelete: boolean; onClose: () => void; onSave: (r: T) => Promise<void>; onDelete: () => Promise<void> };
 
 function Footer({ isNew, canEdit, canDelete, busy, msg, onSave, onDelete, onClose }: { isNew: boolean; canEdit: boolean; canDelete: boolean; busy: boolean; msg: string; onSave: () => void; onDelete: () => void; onClose: () => void }) {
   const [confirm, setConfirm] = useState(false);
@@ -37,7 +37,7 @@ function useForm<T>(initial: T, onSave: (r: T) => Promise<void>, onDelete: () =>
 const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 
 // ---------------- KPR ----------------
-export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
+export function KprForm({ initial, isNew, popup, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
   const { rec: r, patch, busy, msg, save, del } = useForm(initial, onSave, onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
   const bp = r.bankProses ?? [], pc = r.pencairan ?? [];
   const setBp = (i: number, p: Partial<BankProses>) => patch({ bankProses: bp.map((b, j) => (j === i ? { ...b, ...p } : b)) });
@@ -48,7 +48,7 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
   const bayarOpts = [...new Set(["KPR", "Hardcash", "Tunai Bertahap", r.caraBayar].filter(Boolean) as string[])];
 
   return (
-    <Drawer title={isNew ? "Tambah unit" : `${r.unit} · ${titleCase(r.nama)}`} subtitle={isNew ? "Isi data pembeli dan berkas KPR" : `${status(r)} · diperbarui ${r.updatedAt ? tgl(r.updatedAt.slice(0, 10)) : "dari rekap Excel"}`} onClose={onClose}
+    <Drawer modal={popup} title={isNew ? "Tambah unit" : `${r.unit} · ${titleCase(r.nama)}`} subtitle={isNew ? "Isi data pembeli dan berkas KPR" : `${status(r)} · diperbarui ${r.updatedAt ? tgl(r.updatedAt.slice(0, 10)) : "dari rekap Excel"}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
       <Datalist id="dl-bank" values={all.flatMap(x => (x.bankProses ?? []).map(b => b.bank))} />
       <Datalist id="dl-tempat" values={all.map(x => x.tempatAkad)} />
@@ -122,7 +122,7 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
 }
 
 // ---------------- Retensi ----------------
-export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all, addCair }: Common<Retensi> & { all: Retensi[]; addCair?: boolean }) {
+export function RetForm({ initial, isNew, popup, canEdit, canDelete, onClose, onSave, onDelete, all, addCair }: Common<Retensi> & { all: Retensi[]; addCair?: boolean }) {
   const start = addCair ? { ...initial, cair: [...(initial.cair ?? []), { tgl: isoToday(), nominal: 0, komponen: (Object.keys(RET_LABEL) as string[]).find(k => compSisa(initial, k) > 0) ?? "bangunan", ket: "" }] } : initial;
   const { rec: r, patch, busy, msg, save, del } = useForm(start, onSave, onDelete, x => (!x.blok?.trim() || !x.nama?.trim() ? "Blok dan nama wajib diisi." : ""));
   const cair = r.cair ?? [];
@@ -136,7 +136,7 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
   const nf = (k: keyof Retensi) => (v: string) => patch({ [k]: num(v) } as Partial<Retensi>);
 
   return (
-    <Drawer title={isNew ? "Tambah retensi" : `${r.blok} · ${titleCase(r.nama)}`} subtitle={isNew ? "Data escrow / retensi bank per unit" : `${retStatus(r) || "Tanpa status"} · sisa retensi Rp ${rp(sisa)}`} onClose={onClose}
+    <Drawer modal={popup} title={isNew ? "Tambah retensi" : `${r.blok} · ${titleCase(r.nama)}`} subtitle={isNew ? "Data escrow / retensi bank per unit" : `${retStatus(r) || "Tanpa status"} · sisa retensi Rp ${rp(sisa)}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
       <Datalist id="dl-rbank" values={all.map(x => x.bank)} />
       <Datalist id="dl-rnot" values={all.map(x => x.notaris)} />

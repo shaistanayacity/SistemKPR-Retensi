@@ -7,7 +7,7 @@ import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 import { Icon } from "./Icon";
 import { TrendChart } from "./TrendChart";
 
-export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all: Retensi[]; canEdit: boolean; onOpen: (r: Retensi) => void; onAdd: () => void; onCair: (r: Retensi) => void; onImport: () => void }) {
+export function RetView({ all, canEdit, onOpen, onAdd, onQuickAdd, onCair, onImport }: { all: Retensi[]; canEdit: boolean; onOpen: (r: Retensi) => void; onAdd: () => void; onQuickAdd: () => void; onCair: (r: Retensi) => void; onImport: () => void }) {
   const [dl, setDl] = useState("");
   const months = useMemo(() => lastMonths(12, windowEnd(all.flatMap(r => (r.cair ?? []).map(c => c.tgl)))), [all]);
   const [f, setF] = useState<RetFilter>(emptyRetFilter);
@@ -39,7 +39,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
       <div className="ph">
         <div><p className="eyebrow">Escrow yang ditahan bank</p><h1>Retensi</h1>
           <p className="lead"><b className="num">{all.length}</b> unit dengan retensi · <b className="num">{Math.round(pctCair * 100)}%</b> sudah cair</p></div>
-        {canEdit && <button className="btn pri" onClick={onAdd}>+ Tambah Retensi</button>}
+        {canEdit && <div className="acts"><button className="btn pri" onClick={onAdd}>+ Tambah Retensi</button><button className="btn plus" onClick={onQuickAdd} aria-label="Tambah retensi lewat pop-up" title="Tambah cepat (pop-up)">+</button></div>}
       </div>
 
       <div className="stats four">

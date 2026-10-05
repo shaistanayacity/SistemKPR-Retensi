@@ -11,7 +11,7 @@ const STEP_C: Record<string, string> = { Pemberkasan: "var(--s1)", "Proses Bank"
 const STEP_ICON = ["file", "clip", "check", "key", "slash"];
 const DESC: Record<string, string> = { Pemberkasan: "belum diajukan ke bank", "Proses Bank": "menunggu hasil bank", "ACC Bank": "siap dijadwalkan akad", "Non KPR": "tunai / hardcash" };
 
-export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; canAdd: boolean; onOpen: (r: Kpr) => void; onAdd: () => void; onImport: () => void }) {
+export function KprView({ all, canAdd, onOpen, onAdd, onQuickAdd, onImport }: { all: Kpr[]; canAdd: boolean; onOpen: (r: Kpr) => void; onAdd: () => void; onQuickAdd: () => void; onImport: () => void }) {
   const [dl, setDl] = useState("");
   const [f, setF] = useState<KprFilter>(emptyKprFilter);
   const set = (p: Partial<KprFilter>) => setF(x => ({ ...x, ...p }));
@@ -56,7 +56,7 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
           <h1>Berkas KPR</h1>
           <p className="lead"><b className="num">{all.length}</b> unit terjual · <b className="num">{belum}</b> belum akad · total plafond KPR <b className="num">{rpShort(sumPlAll)}</b></p>
         </div>
-        {canAdd && <button className="btn pri" onClick={onAdd}>+ Tambah Unit</button>}
+        {canAdd && <div className="acts"><button className="btn pri" onClick={onAdd}>+ Tambah Unit</button><button className="btn plus" onClick={onQuickAdd} aria-label="Tambah unit lewat pop-up" title="Tambah cepat (pop-up)">+</button></div>}
       </div>
 
       <div className="stats">

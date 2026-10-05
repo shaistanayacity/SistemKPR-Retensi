@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { hue, initials, titleCase } from "../lib/format";
 
 export const Chev = () => (
@@ -17,11 +17,16 @@ export function Who({ name, sub }: { name: string; sub?: ReactNode }) {
   );
 }
 
-export function Drawer({ title, subtitle, onClose, footer, children }: { title: string; subtitle?: string; onClose: () => void; footer: ReactNode; children: ReactNode }) {
+export function Drawer({ title, subtitle, onClose, footer, children, modal }: { title: string; subtitle?: string; onClose: () => void; footer: ReactNode; children: ReactNode; modal?: boolean }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <>
       <div className="ovl" onClick={onClose} />
-      <aside className="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title">
+      <aside className={modal ? "drawer modal" : "drawer"} role="dialog" aria-modal="true" aria-labelledby="dr-title">
         <div className="dr-h"><h3 id="dr-title">{title}{subtitle && <span>{subtitle}</span>}</h3><button className="x" onClick={onClose} aria-label="Tutup">×</button></div>
         <div className="dr-b">{children}</div>
         <div className="dr-f">{footer}</div>
