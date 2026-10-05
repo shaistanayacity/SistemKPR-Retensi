@@ -5,8 +5,7 @@ Pemilik: Arifah Dona (Head of Digital Marketing, Shaistanaya City / PT Neo Pudji
 
 ## Aturan kerja
 - Bahasa antarmuka dan jawaban: Indonesia, sopan dan formal. Pakai "tidak", bukan "ga".
-- Tampilan: selalu terang (putih), monokrom (hitam, putih, abu-abu), bersih, tanpa emoji.
-  Status dibedakan lewat tingkat gelap-terang dan garis tepi, bukan warna.
+- Tampilan: terang, kaca lembut (kartu putih tembus pandang, latar biru keabuan dengan kilau emas), bentuk kapsul untuk tombol, tab, isian, dan bar; aksen biru tua dan emas selaras dengan logo; tanpa emoji. Status dibedakan lewat warna pastel dan label teks. Tema ada di bagian "Tema lembut" di `src/style.css`. Ubah tampilan tidak boleh menggeser tata letak (diverifikasi dengan mengukur posisi elemen sebelum dan sesudah).
 - Jangan ubah fitur yang sudah ada tanpa diminta. Tampilan tabel KPR sengaja ringkas; detail lengkap muncul saat baris diklik (panel samping).
 - Purwarupa yang sudah jalan ada di `prototype/dashboard-prototype.html` (satu file HTML). Jadikan acuan tampilan dan perilaku.
 
