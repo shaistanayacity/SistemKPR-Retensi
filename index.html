@@ -1,0 +1,1228 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Berkas KPR &amp; Retensi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: dark app bar with tabs → page header → pipeline summary → follow-up + bank cards → one panel holding status tabs, filters and the table; detail opens in a right drawer. Light only. */
+:root{
+  --bg:#f5f5f5; --surface:#ffffff; --surface-2:#fafafa; --line:#e2e2e2; --line-2:#eeeeee;
+  --fg:#111111; --muted:#666666; --faint:#9a9a9a;
+  --top:#111111; --top-fg:#f5f5f5; --top-muted:#9a9a9a; --top-pill:#2b2b2b;
+  --accent:#111111; --accent-hover:#000000; --accent-fg:#ffffff; --accent-soft:#ececec; --accent-2:#555555;
+  --track:#e8e8e8;
+  --s1:#c4c4c4; --s2:#8f8f8f; --s3:#5e5e5e; --s4:#111111; --s5:#d9d9d9;
+  --ok-bg:#e4e4e4; --ok-fg:#111111; --warn-bg:#efefef; --warn-fg:#333333;
+  --info-bg:#ffffff; --info-fg:#111111; --bad-bg:#ffffff; --bad-fg:#666666;
+  --neu-bg:#f0f0f0; --neu-fg:#555555; --vio-bg:#ffffff; --vio-fg:#444444;
+  --av-s:0%; --av-l:90%; --av-fg:#222222;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 1px rgba(0,0,0,.03);
+  --overlay:rgba(0,0,0,.36);
+  --font:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:12px; --r-sm:8px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+svg{flex:none}
+
+/* App bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--top);color:var(--top-fg)}
+.top-in{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:22px;padding:10px 24px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;white-space:nowrap}
+.mark{width:30px;height:30px;border-radius:8px;background:var(--accent-2);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800;letter-spacing:.03em}
+.brand small{display:block;font-weight:500;font-size:11px;color:var(--top-muted)}
+.nav{display:flex;gap:4px}
+.nav button{background:none;border:0;color:var(--top-muted);padding:8px 13px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.nav button:hover{color:var(--top-fg)}
+.nav button[aria-selected="true"]{background:var(--top-pill);color:var(--top-fg)}
+.cnt{background:rgba(255,255,255,.1);color:var(--top-fg);font-size:11px;font-weight:700;padding:1px 7px;border-radius:6px}
+.nav button[aria-selected="true"] .cnt{background:#fff;color:#111}
+.sync{margin-left:auto;font-size:11.5px;color:var(--top-muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.dot.on{background:#e6e6e6;box-shadow:0 0 0 3px rgba(255,255,255,.14)}
+
+/* Page */
+.wrap{max-width:1360px;margin:0 auto;padding:24px 24px 56px}
+.view{display:grid;gap:16px}
+.view[hidden]{display:none}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);margin:0 0 4px}
+.ph h1{font-size:24px;line-height:1.15;margin:0;letter-spacing:-.02em;font-weight:800;text-wrap:balance}
+.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+.lead b{color:var(--fg);font-weight:700}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:12.5px;white-space:nowrap;color:var(--fg)}
+.btn:hover{background:var(--surface-2);border-color:#cfcfcf}
+.btn svg{width:15px;height:15px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.pri:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--bad-fg);border-color:var(--bad-bg);background:var(--bad-bg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.icon-btn svg{width:15px;height:15px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px 0}
+.card-h h2{font-size:13.5px;margin:0;font-weight:700}
+.card-h .sub{font-size:12px}
+.card-b{padding:12px 18px 16px}
+
+/* Pipeline */
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,.9fr)}
+.step{position:relative;border:0;background:none;text-align:left;padding:16px 18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line-2);min-width:0}
+.step:last-child{border-right:0;background:var(--surface-2);border-radius:0 var(--r) var(--r) 0}
+.step:first-child{border-radius:var(--r) 0 0 var(--r)}
+.step:hover{background:var(--surface-2)}
+.step[aria-pressed="true"]{background:var(--accent-soft)}
+.step[aria-pressed="true"]::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
+.step .lbl{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.step .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;background:var(--c)}
+.step .n.o{background:none;border:1.5px solid var(--c);color:var(--c)}
+.step .v{font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-top:6px}
+.step .s{font-size:11.5px;color:var(--faint);min-height:17px}
+.step .t{height:4px;border-radius:3px;background:var(--track);margin-top:8px;overflow:hidden}
+.step .t i{display:block;height:100%;background:var(--c);border-radius:3px}
+.step .arr{position:absolute;right:-9px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--faint);z-index:1}
+.step .arr svg{width:10px;height:10px}
+
+.row2{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px}
+
+/* Follow-up list */
+.fu{display:grid}
+.fu-i{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 4px;border:0;border-top:1px solid var(--line-2);background:none;text-align:left;cursor:pointer;border-radius:0}
+.fu-i:first-child{border-top:0}
+.fu-i:hover{background:var(--surface-2)}
+.fu-i b{font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fu-i b em{font-style:normal;color:var(--muted);font-weight:600;margin-right:6px}
+.fu-i span.why{font-size:12px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link{border:0;background:none;color:var(--accent);font-weight:700;cursor:pointer;padding:0;font-size:12px;display:inline-flex;align-items:center;gap:4px}
+.link:hover{text-decoration:underline}
+.link svg{width:12px;height:12px}
+
+/* Bars */
+.bars{display:grid;gap:11px}
+.bar{display:grid;grid-template-columns:92px minmax(0,1fr) 64px;align-items:center;gap:12px;font-size:12.5px}
+.bar .bn{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .bt{height:8px;background:var(--track);border-radius:5px;overflow:hidden}
+.bar .bt i{display:block;height:100%;background:var(--accent-2);border-radius:5px}
+.bar .bc{color:var(--muted);text-align:right}
+.bar .bc b{color:var(--fg)}
+.totals{display:grid;gap:7px;border-top:1px solid var(--line-2);margin-top:14px;padding-top:12px}
+.totals div{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+.totals div b{color:var(--fg)}
+.totals .big{font-size:14px;color:var(--fg);font-weight:700}
+
+/* Money summary (retensi) */
+.money{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.money > div{padding:16px 18px;border-right:1px solid var(--line-2);display:flex;flex-direction:column;gap:2px;min-width:0}
+.money > div:last-child{border-right:0}
+.money .lbl{font-size:12px;font-weight:600;color:var(--muted)}
+.money .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:6px;white-space:nowrap}
+.money .s{font-size:11.5px;color:var(--faint)}
+.money .hero{background:var(--accent);color:var(--accent-fg);border-radius:0}
+.money .hero .lbl,.money .hero .s{color:rgba(255,255,255,.72)}
+.money .hero .t{height:5px;background:rgba(255,255,255,.2);border-radius:3px;margin-top:8px;overflow:hidden}
+.money .hero .t i{display:block;height:100%;background:#ffffff;border-radius:3px}
+
+/* Panel with toolbar + table */
+.panel{overflow:hidden}
+.seg{display:flex;gap:2px;padding:10px 12px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.seg button{border:0;background:none;padding:9px 12px 11px;font-weight:600;font-size:12.5px;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.seg .k{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--neu-bg);color:var(--neu-fg)}
+.seg button[aria-pressed="true"] .k{background:var(--accent);color:#fff}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px}
+.search{position:relative;flex:0 1 260px;min-width:180px}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--faint)}
+.search input{width:100%;padding:8px 10px 8px 31px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+.search input:focus{background:var(--surface)}
+.sel{padding:8px 28px 8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-weight:500;font-size:12.5px;max-width:180px;color:var(--fg)}
+.tools .sp{flex:1}
+.tools.dt{padding-top:0}
+.dtl{color:var(--muted);font-size:12px}
+input.sel{max-width:150px;padding-right:10px}
+.btn.sm{padding:6px 10px;font-size:12px}
+.meta{color:var(--muted);font-size:12px;padding:0 16px 10px;margin:0}
+.meta b{color:var(--fg)}
+
+.tbl{overflow-x:auto;border-top:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:1080px}
+th{background:var(--surface-2);color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#fafafa}
+tr.click{cursor:pointer}
+tfoot td{background:var(--surface-2);font-weight:700;border-top:1px solid var(--line);vertical-align:middle}
+td.r,th.r{text-align:right}
+th:last-child,td:last-child{position:sticky;right:0;background:var(--surface);width:1%}
+th:last-child,tfoot td:last-child{background:var(--surface-2)}
+tbody tr:hover td:last-child{background:#fafafa}
+.unit{font-weight:800;white-space:nowrap;font-size:13px}
+.who{display:flex;align-items:flex-start;gap:10px;min-width:180px}
+.av{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:10.5px;font-weight:800;background:hsl(var(--h) var(--av-s) var(--av-l));color:var(--av-fg)}
+.who b{font-weight:700;display:block;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--muted);font-size:11.5px;display:block}
+.dash{color:var(--faint)}
+.money-c{white-space:nowrap}
+.money-c b{font-weight:700;display:block}
+.trunc{max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:4px;max-width:210px}
+.chip{font-size:11px;padding:2px 7px;border-radius:6px;background:var(--neu-bg);color:var(--neu-fg);white-space:nowrap;font-weight:600}
+.chip.acc{background:var(--ok-bg);color:var(--ok-fg)}
+.chip.no{background:var(--bad-bg);color:var(--bad-fg);text-decoration:line-through}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-ok{background:var(--ok-bg);color:var(--ok-fg)} .p-warn{background:var(--warn-bg);color:var(--warn-fg)}
+.p-info{background:var(--info-bg);color:var(--info-fg)} .p-bad{background:var(--bad-bg);color:var(--bad-fg)}
+.p-neu{background:var(--neu-bg);color:var(--neu-fg)} .p-vio{background:var(--vio-bg);color:var(--vio-fg)}
+.p-acc{background:var(--accent);color:var(--accent-fg)}
+.p-info,.p-bad,.p-vio{box-shadow:inset 0 0 0 1px #c9c9c9}
+.p-bad{border-style:dashed}
+.prog{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.prog .t{width:52px;height:5px;background:var(--track);border-radius:3px;overflow:hidden}
+.prog .t i{display:block;height:100%;background:var(--s4)}
+.prog .t i.part{background:var(--s2)}
+.bpl{display:grid;gap:7px;width:220px}
+.bph{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.bpm{font-size:11px;color:var(--muted);white-space:nowrap}
+.bpk{font-size:11.5px;color:var(--fg);margin-top:3px;padding-left:8px;border-left:2px solid var(--line);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
+.akad b{font-weight:700;white-space:nowrap;display:block}
+.hist{display:grid;gap:3px;font-size:11.5px;white-space:nowrap}
+.hist span{color:var(--muted)} .hist b{font-weight:700;color:var(--ok-fg)}
+.acts{display:flex;gap:6px;align-items:center}
+.empty{padding:48px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--fg);font-size:14px;margin-bottom:4px}
+.none{color:var(--muted);font-size:12.5px;padding:10px 0}
+
+/* Drawer */
+.ovl{position:fixed;inset:0;background:var(--overlay);z-index:20;backdrop-filter:blur(1.5px)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(780px,100%);background:var(--bg);z-index:21;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.16)}
+.dr-h{display:flex;align-items:center;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 22px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.dr-h h3{margin:0;font-size:17px;flex:1;min-width:0;font-weight:800;letter-spacing:-.01em}
+.dr-h h3 span{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;letter-spacing:0}
+.x{border:1px solid var(--line);background:var(--surface);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:18px;color:var(--muted)}
+.dr-b{flex:1;overflow-y:auto;padding:14px 22px 28px;display:grid;gap:12px;align-content:start}
+.dr-f{border-top:1px solid var(--line);background:var(--surface);padding:12px 22px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dr-f .sp{flex:1}
+.dr-f .msg{color:var(--bad-fg);font-size:12px;flex-basis:100%}
+.dr-f .msg:empty{display:none}
+fieldset{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 16px 16px;margin:0;min-width:0}
+legend{float:left;width:100%;font-size:13px;font-weight:700;padding:0;margin:0 0 12px;color:var(--fg)}
+legend + *{clear:both}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld label{font-size:11.5px;font-weight:600;color:var(--muted)}
+.fld input,.fld select,.fld textarea,.rowf input,.rowf select{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:8px 10px;width:100%;min-width:0;min-height:36px}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.rowf input:focus,.rowf select:focus{border-color:var(--accent-2);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.fld textarea{min-height:68px;resize:vertical}
+.fld.w2{grid-column:span 2}
+.hint{font-size:11px;color:var(--accent-2);font-weight:600;min-height:15px}
+.calc{padding:8px 10px;border-radius:var(--r-sm);background:var(--surface-2);font-weight:700;min-height:36px;border:1px dashed var(--line)}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks .grp{font-size:11.5px;color:var(--muted);font-weight:600;width:100%;margin-top:4px}
+.checks .grp:first-child{margin-top:0}
+.ck{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;font-size:12.5px;user-select:none;background:var(--surface)}
+.ck input{accent-color:var(--accent);margin:0}
+.ck:has(input:checked){background:var(--accent-soft);border-color:var(--accent-2);color:var(--fg)}
+.rows{display:grid;gap:8px}
+.rowf{display:grid;gap:8px;align-items:end;padding:10px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--surface-2)}
+.rowf.bp{grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,.8fr) minmax(0,1.6fr) 30px}
+.rowf.pc{grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 70px 30px}
+.rowf.cr{grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.5fr) 30px}
+.rowf label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}
+.rowf .ix{font-weight:800;color:var(--muted);padding-bottom:9px}
+.rm{border:0;background:none;color:var(--bad-fg);cursor:pointer;font-size:18px;padding-bottom:7px}
+.add{margin-top:10px}
+.sumrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.sumrow .calc.neg{color:var(--bad-fg)}
+.compline{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--top);color:var(--top-fg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:40;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.drop{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;padding:26px 16px;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--surface-2);cursor:pointer}
+.drop:hover,.sr:focus-visible + .drop,.drop:has(+ .sr:focus-visible){border-color:var(--accent-2);background:var(--accent-soft)}
+.drop b{font-size:13.5px} .drop span{color:var(--muted);font-size:12px}
+.impstat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.impstat div{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:12px 14px;display:flex;flex-direction:column}
+.impstat b{font-size:24px;font-weight:800;letter-spacing:-.02em} .impstat span{font-size:12px;color:var(--muted)}
+.implist{display:grid}
+.impr{padding:10px 0;border-top:1px solid var(--line-2);display:grid;gap:6px} .impr:first-child{border-top:0;padding-top:0}
+.impr-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .impr-h span:not(.pill){color:var(--muted)}
+@media (max-width:1000px){.row2{grid-template-columns:minmax(0,1fr)} .pipe{grid-template-columns:repeat(3,minmax(0,1fr))} .step:nth-child(3){border-right:0} .step:nth-child(n+4){border-top:1px solid var(--line-2)} .step .arr{display:none} .step,.step:first-child,.step:last-child{border-radius:0} .money{grid-template-columns:repeat(2,minmax(0,1fr))} .money>div:nth-child(2){border-right:0} .money>div:nth-child(n+3){border-top:1px solid var(--line-2)}}
+@media (max-width:640px){
+  .top-in,.wrap{padding-inline:16px} .nav{order:3;width:100%} .sync{margin-left:auto}
+  .pipe{grid-template-columns:repeat(2,minmax(0,1fr))} .step{border-right:1px solid var(--line-2)!important} .step:nth-child(2n){border-right:0!important} .step:nth-child(n+3){border-top:1px solid var(--line-2)}
+  .money .v{font-size:20px}
+  .search{flex:1 1 100%} .tools .sp{display:none} .sel{flex:1 1 40%;max-width:none}
+  .rowf.bp,.rowf.pc,.rowf.cr{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .rowf .ix{display:none} .sumrow{grid-template-columns:minmax(0,1fr)}
+  .fld.w2{grid-column:auto} .bar{grid-template-columns:80px minmax(0,1fr) 60px}
+}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .22s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+
+<header class="top"><div class="top-in">
+  <div class="brand"><span class="mark">SC</span><div>Berkas KPR &amp; Retensi<small>Shaistanaya City</small></div></div>
+  <nav class="nav" role="tablist">
+    <button id="tab-kpr" role="tab" aria-selected="true" data-tab="kpr">Berkas KPR <span class="cnt num" id="cnt-kpr">0</span></button>
+    <button id="tab-ret" role="tab" aria-selected="false" data-tab="ret">Retensi / Escrow <span class="cnt num" id="cnt-ret">0</span></button>
+  </nav>
+  <div class="sync"><span class="dot" id="sync-dot"></span><span id="sync-txt">Menghubungkan…</span></div>
+</div></header>
+
+<main class="wrap">
+  <!-- KPR -->
+  <section class="view" id="view-kpr">
+    <div class="ph">
+      <div><p class="eyebrow">Kelengkapan berkas &amp; proses bank</p><h1>Berkas KPR</h1><p class="lead" id="kpr-lead">Memuat data…</p></div>
+      <button class="btn pri" id="kpr-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tambah Unit</button>
+    </div>
+    <div class="card pipe" id="kpr-pipe"></div>
+    <div class="row2">
+      <div class="card"><div class="card-h"><h2>Perlu ditindaklanjuti</h2><span class="sub" id="fu-sub"></span></div><div class="card-b"><div class="fu" id="kpr-fu"></div></div></div>
+      <div class="card"><div class="card-h"><h2>Bank KPR</h2><span class="sub">unit ACC &amp; akad</span></div><div class="card-b"><div class="bars" id="kpr-bars"></div></div></div>
+    </div>
+    <div class="card panel">
+      <div class="seg" id="kpr-seg" aria-label="Filter status"></div>
+      <div class="tools">
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="kpr-q" type="search" placeholder="Cari nama atau unit" aria-label="Cari nama atau unit"></label>
+        <select class="sel" id="kpr-year" aria-label="Tahun UTJ"></select>
+        <select class="sel" id="kpr-bank" aria-label="Bank"></select>
+        <select class="sel" id="kpr-bayar" aria-label="Cara bayar"></select>
+        <select class="sel" id="kpr-sort" aria-label="Urutan"><option value="baru">Berkas terbaru dulu</option><option value="lama">Berkas terlama dulu</option><option value="diubah">Terakhir diubah</option><option value="unit">Unit A–Z</option></select>
+        <span class="sp"></span>
+        <button class="btn pri" id="kpr-imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m-4 4 4-4 4 4M5 15v4h14v-4"/></svg>Unggah Excel</button>
+        <button class="btn" id="kpr-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6m-3-3 3 3 3-3"/></svg>Unduh PDF</button>
+        <button class="btn" id="kpr-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>Unduh Excel</button>
+      </div>
+      <div class="tools dt"><span class="dtl">Tanggal</span><select class="sel" id="kpr-dtb" aria-label="Jenis tanggal"><option value="utj">Tanggal UTJ</option><option value="spr">Tanggal SPR &amp; PPJB</option><option value="bank">Tanggal proses bank</option><option value="acc">Tanggal ACC</option><option value="akad">Tanggal akad</option><option value="cair">Tanggal pencairan KPR</option></select><input class="sel" type="date" id="kpr-d1" aria-label="Dari tanggal"><span class="dtl">s/d</span><input class="sel" type="date" id="kpr-d2" aria-label="Sampai tanggal">
+        <button class="btn sm" data-dp="kpr:month">Bulan ini</button><button class="btn sm" data-dp="kpr:last">Bulan lalu</button><button class="btn sm" data-dp="kpr:30">30 hari</button><button class="btn sm" id="kpr-dclr" data-dp="kpr:clr" hidden>Reset tanggal</button></div>
+      <p class="meta" id="kpr-meta"></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Unit</th><th>Pembeli</th><th class="r">Nilai</th><th>Proses Bank</th><th>ACC &amp; Akad</th><th>Berkas</th><th>Status</th><th></th></tr></thead>
+        <tbody id="kpr-body"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- RETENSI -->
+  <section class="view" id="view-ret" hidden>
+    <div class="ph">
+      <div><p class="eyebrow">Escrow yang ditahan bank</p><h1>Retensi</h1><p class="lead" id="ret-lead">Memuat data…</p></div>
+      <button class="btn pri" id="ret-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tambah Retensi</button>
+    </div>
+    <div class="card money" id="ret-money"></div>
+    <div class="row2">
+      <div class="card"><div class="card-h"><h2>Pencairan terbaru</h2><span class="sub" id="rc-sub"></span></div><div class="card-b"><div class="fu" id="ret-recent"></div></div></div>
+      <div class="card"><div class="card-h"><h2>Sisa per komponen</h2><span class="sub">belum cair</span></div><div class="card-b"><div class="bars" id="ret-bars"></div></div></div>
+    </div>
+    <div class="card panel">
+      <div class="seg" id="ret-seg" aria-label="Filter status"></div>
+      <div class="tools">
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="ret-q" type="search" placeholder="Cari nama atau blok" aria-label="Cari nama atau blok"></label>
+        <select class="sel" id="ret-bank" aria-label="Bank"></select>
+        <select class="sel" id="ret-notaris" aria-label="Notaris"></select>
+        <select class="sel" id="ret-sort" aria-label="Urutan"><option value="blok">Blok A–Z</option><option value="sisa">Sisa retensi terbesar</option><option value="diubah">Terakhir diubah / cair</option></select>
+        <span class="sp"></span>
+        <button class="btn pri" id="ret-imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m-4 4 4-4 4 4M5 15v4h14v-4"/></svg>Unggah Excel</button>
+        <button class="btn" id="ret-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6m-3-3 3 3 3-3"/></svg>Unduh PDF</button>
+        <button class="btn" id="ret-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>Unduh Excel</button>
+      </div>
+      <div class="tools dt"><span class="dtl">Tanggal</span><span class="dtl" style="font-weight:600;color:var(--fg)">Tanggal pencairan</span><input class="sel" type="date" id="ret-d1" aria-label="Dari tanggal"><span class="dtl">s/d</span><input class="sel" type="date" id="ret-d2" aria-label="Sampai tanggal">
+        <button class="btn sm" data-dp="ret:month">Bulan ini</button><button class="btn sm" data-dp="ret:last">Bulan lalu</button><button class="btn sm" data-dp="ret:30">30 hari</button><button class="btn sm" id="ret-dclr" data-dp="ret:clr" hidden>Reset tanggal</button></div>
+      <p class="meta" id="ret-meta"></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Blok</th><th>Pemilik</th><th class="r">Nilai &amp; Diterima</th><th class="r">Sisa Retensi</th><th>Per Komponen</th><th>Riwayat Pencairan</th><th>Status</th><th>Catatan</th><th></th></tr></thead>
+        <tbody id="ret-body"></tbody>
+        <tfoot id="ret-foot"></tfoot>
+      </table></div>
+    </div>
+  </section>
+</main>
+
+<div id="ovl" class="ovl" hidden></div>
+<aside id="drawer" class="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="dr-title">
+  <div class="dr-h"><h3 id="dr-title"></h3><button class="x" id="dr-x" aria-label="Tutup">×</button></div>
+  <form class="dr-b" id="dr-form" autocomplete="off"></form>
+  <div class="dr-f" id="dr-foot"></div>
+</aside>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const rp = n => n ? Math.round(n).toLocaleString("id-ID") : "–";
+const rpShort = n => { n = num(n); if (Math.abs(n) >= 1e9) return "Rp " + (n/1e9).toLocaleString("id-ID",{maximumFractionDigits:2}) + " M"; if (Math.abs(n) >= 1e6) return "Rp " + (n/1e6).toLocaleString("id-ID",{maximumFractionDigits:1}) + " jt"; return "Rp " + Math.round(n).toLocaleString("id-ID"); };
+const BLN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const tgl = s => { if (!s) return ""; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); return m ? `${+m[3]} ${BLN[+m[2]-1]} ${m[1]}` : s; };
+const initials = s => (s||"?").replace(/[^A-Za-z\s]/g,"").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase() || "?";
+const hue = s => { let h = 0; for (const c of String(s)) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
+const avatar = (name, sub) => `<div class="who"><span class="av" style="--h:${hue(name)}">${esc(initials(name))}</span><div><b title="${esc(name)}">${esc(name)}</b>${sub ? `<span>${sub}</span>` : ""}</div></div>`;
+const today = () => { const d = new Date(); return `${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`; };
+const stamp = () => new Date().toISOString().slice(0,10);
+const clone = o => o ? JSON.parse(JSON.stringify(o)) : {};
+const natural = (a,b) => String(a).localeCompare(String(b), "id", {numeric:true, sensitivity:"base"});
+
+const BANKS = ["BTN SYARIAH","BSI","BRI","BTN","BNI","MANDIRI","BSN","BCA","CIMB","DANAMON","PERMATA","OCBC","MAYBANK","JATIM","MEGA","PANIN"];
+const brand = s => { const u = String(s||"").toUpperCase(); if (!u.trim()) return ""; for (const b of BANKS) if (u.includes(b)) return b === "BTN SYARIAH" ? "BTN Syariah" : b; const w = u.split(/[\s-]+/).filter(Boolean); return (w[0] === "BANK" && w[1]) ? w[1] : w[0]; };
+
+const DOCS = { ktp:"KTP", npwp:"NPWP", kk:"KK", akta:"Akta nikah / belum nikah", rk3:"RK 3 bln", suket:"Suket kerja", slip:"Slip gaji", rk6:"RK 6 bln", nib:"NIB", lapkeu:"Lapkeu" };
+const DOC_GROUPS = [["Data diri",["ktp","npwp","kk","akta"]],["Data pekerjaan (karyawan)",["rk3","suket","slip"]],["Data usaha (wiraswasta)",["rk6","nib","lapkeu"]]];
+const LEGAL = { potongPokok:"Potong pokok", roya:"Roya", ambilSertifikat:"Ambil sertifikat", verifikasi:"Verifikasi", validasi:"Validasi", lunasDP:"S. lunas DP", siLPP:"SI LPP", feeKPR:"S. fee KPR", pbg:"PBG" };
+const LEGAL_GROUPS = [["SHGB",["potongPokok","roya","ambilSertifikat"]],["Pajak",["verifikasi","validasi"]],["Berkas akad",["lunasDP","siLPP","feeKPR","pbg"]]];
+const HASIL = ["Diajukan","Proses","ACC","Ditolak","Batal"];
+const RET_KOMP = { bangunan:"Bangunan", ajb:"AJB", sertifikat:"Sertifikat balik nama", pbg:"PBG", pdam:"PDAM", listrik:"Listrik", pajak:"Pajak" };
+const RET_STATUS = ["Progress Bangun","Menunggu AJB dan Balik Nama dari Notaris","Disiapkan","Sudah diajukan","Bisa dicairkan","Belum bisa dicairkan"];
+const RET_PILL = {"Progress Bangun":"p-neu","Menunggu AJB dan Balik Nama dari Notaris":"p-warn","Disiapkan":"p-vio","Sudah diajukan":"p-info","Bisa dicairkan":"p-ok","Belum bisa dicairkan":"p-bad","Lunas":"p-acc"};
+const RET_SHORT = {"Menunggu AJB dan Balik Nama dari Notaris":"Menunggu AJB & BN"};
+const KPR_STAT = ["Pemberkasan","Proses Bank","ACC Bank","Sudah Akad","Non KPR"];
+const KPR_PILL = {"Pemberkasan":"p-neu","Proses Bank":"p-warn","ACC Bank":"p-info","Sudah Akad":"p-ok","Non KPR":"p-vio"};
+
+const S = { tab:"kpr", kpr:[], ret:[], ready:{kpr:false,ret:false}, db:null, dl:null, failed:false,
+  f:{q:"",year:"",status:"",bank:"",bayar:"",sort:"baru",dtb:"utj",d1:"",d2:""}, rf:{q:"",status:"",bank:"",notaris:"",sort:"blok",d1:"",d2:""}, edit:null };
+
+/* ---------- derived ---------- */
+const isKPR = r => /KPR/i.test(r.caraBayar||"");
+function status(r){
+  if (!isKPR(r)) return "Non KPR";
+  if (r.tglAkad) return "Sudah Akad";
+  if (r.tglACC || num(r.accBank) > 0 || (r.bankProses||[]).some(b => b.hasil === "ACC")) return "ACC Bank";
+  if ((r.bankProses||[]).length) return "Proses Bank";
+  return "Pemberkasan";
+}
+const jenis = r => r.jenisPekerjaan || ((r.berkas?.nib || r.berkas?.lapkeu) && !r.berkas?.slip ? "Wiraswasta" : "Karyawan");
+function berkasNeed(r){ const core = ["ktp","npwp","kk","akta"]; if (!isKPR(r)) return core; return core.concat(jenis(r) === "Wiraswasta" ? ["rk6","nib","lapkeu"] : ["rk3","suket","slip"]); }
+function berkasScore(r){ const need = berkasNeed(r); const have = need.filter(k => r.berkas?.[k]).length; return {have, need:need.length, missing: need.filter(k => !r.berkas?.[k]).map(k => DOCS[k])}; }
+const accBankName = r => { const a = (r.bankProses||[]).find(b => b.hasil === "ACC"); return a ? a.bank : ""; };
+const kprBrand = r => brand(r.tempatAkad) || brand(accBankName(r));
+const kprBanks = r => { const s = new Set((r.bankProses||[]).map(b => brand(b.bank)).filter(Boolean)); const t = brand(r.tempatAkad); if (t) s.add(t); return [...s]; };
+const retAwal = r => Object.keys(RET_KOMP).reduce((a,k) => a + num(r.ret?.[k]), 0);
+const retCair = r => (r.cair||[]).reduce((a,c) => a + num(c.nominal), 0);
+const retSisa = r => retAwal(r) - retCair(r);
+const compSisa = (r,k) => num(r.ret?.[k]) - (r.cair||[]).filter(c => c.komponen === k).reduce((a,c) => a + num(c.nominal), 0);
+const retNilai = r => num(r.nilaiUM) + num(r.nilaiKPR);
+const retTerima = r => num(r.terimaUM) + num(r.terimaKPR) + retCair(r);
+const retStatus = r => (retAwal(r) > 0 && retSisa(r) <= 0) ? "Lunas" : (r.status || "");
+const cairSorted = r => [...(r.cair||[])].sort((a,b) => String(a.tgl).localeCompare(String(b.tgl)));
+const kompShort = k => (RET_KOMP[k]||k||"").replace(" balik nama","");
+
+/* ---------- filters ---------- */
+const inRange = (d, a, b) => d && (!a || d >= a) && (!b || d <= b);
+const anyIn = (arr, a, b) => (arr||[]).some(x => inRange(String(x.tgl||"").slice(0,10), a, b));
+function kprDateOK(r, f){
+  if (!f.d1 && !f.d2) return true;
+  const g = k => String(r[k]||"").slice(0,10);
+  switch (f.dtb) {
+    case "spr": return inRange(g("tglSPR"), f.d1, f.d2);
+    case "acc": return inRange(g("tglACC"), f.d1, f.d2);
+    case "akad": return inRange(g("tglAkad"), f.d1, f.d2);
+    case "bank": return anyIn(r.bankProses, f.d1, f.d2);
+    case "cair": return anyIn(r.pencairan, f.d1, f.d2);
+    default: return inRange(g("tglUTJ"), f.d1, f.d2);
+  }
+}
+function kprRows(){
+  const f = S.f, q = f.q.trim().toLowerCase();
+  return S.kpr.filter(r => {
+    if (q && !(`${r.nama} ${r.unit}`.toLowerCase().includes(q))) return false;
+    if (f.year && String(r.tglUTJ||"").slice(0,4) !== f.year) return false;
+    const st = status(r);
+    if (f.status === "belum") { if (!["Pemberkasan","Proses Bank","ACC Bank"].includes(st)) return false; }
+    else if (f.status && st !== f.status) return false;
+    if (!kprDateOK(r, f)) return false;
+    if (f.bank && !kprBanks(r).includes(f.bank)) return false;
+    if (f.bayar && (r.caraBayar||"").toUpperCase() !== f.bayar) return false;
+    return true;
+  }).sort((a,b) => {
+    const so = S.f.sort, ua = String(a.tglUTJ||""), ub = String(b.tglUTJ||"");
+    if (so === "unit") return natural(a.unit,b.unit);
+    if (so === "lama") return (ua||"9999").localeCompare(ub||"9999") || num(a.ord) - num(b.ord);
+    if (so === "diubah") return String(b.updatedAt||"").localeCompare(String(a.updatedAt||"")) || ub.localeCompare(ua) || num(b.ord) - num(a.ord);
+    return ub.localeCompare(ua) || num(b.ord) - num(a.ord);
+  });
+}
+function retRows(){
+  const f = S.rf, q = f.q.trim().toLowerCase();
+  return S.ret.filter(r => {
+    if (q && !(`${r.nama} ${r.blok}`.toLowerCase().includes(q))) return false;
+    if (f.status && retStatus(r) !== f.status) return false;
+    if (f.bank && (r.bank||"") !== f.bank) return false;
+    if (f.notaris && (r.notaris||"") !== f.notaris) return false;
+    if ((f.d1 || f.d2) && !anyIn(r.cair, f.d1, f.d2)) return false;
+    return true;
+  }).sort((a,b) => {
+    const so = S.rf.sort;
+    if (so === "sisa") return retSisa(b) - retSisa(a) || natural(a.blok,b.blok);
+    if (so === "diubah") { const la = x => String([x.updatedAt||"", ...(x.cair||[]).map(c => c.tgl||"")].sort().pop()); return la(b).localeCompare(la(a)) || natural(a.blok,b.blok); }
+    return natural(a.blok,b.blok);
+  });
+}
+const rangeLabel = (a, b) => a && b ? tgl(a) + " – " + tgl(b) : a ? "sejak " + tgl(a) : "s/d " + tgl(b);
+function filterLabel(){
+  const f = S.f, p = [];
+  if (f.status) p.push(f.status === "belum" ? "Belum akad" : f.status);
+  if (f.bank) p.push("Bank " + f.bank);
+  if (f.year) p.push("UTJ " + f.year);
+  if (f.d1 || f.d2) p.push(({utj:"UTJ",spr:"SPR & PPJB",bank:"Proses bank",acc:"ACC",akad:"Akad",cair:"Pencairan"}[f.dtb]||"Tanggal") + " " + rangeLabel(f.d1, f.d2));
+  if (f.bayar) p.push(f.bayar);
+  if (f.q) p.push(`Cari "${f.q}"`);
+  p.push({baru:"berkas terbaru dulu",lama:"berkas terlama dulu",diubah:"terakhir diubah",unit:"unit A–Z"}[f.sort]);
+  return p.join(" · ");
+}
+function retFilterLabel(){
+  const f = S.rf, p = [];
+  if (f.status) p.push(f.status); if (f.bank) p.push(f.bank); if (f.notaris) p.push("Notaris " + f.notaris); if (f.d1 || f.d2) p.push("Cair " + rangeLabel(f.d1, f.d2)); if (f.q) p.push(`Cari "${f.q}"`);
+  return p.length ? p.join(" · ") : "Semua unit";
+}
+
+/* ---------- render ---------- */
+const ICON_CHEV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>`;
+const titleCase = s => { const parts = String(s||"").split(","); return parts.map((p,i) => i === 0 ? p.toLowerCase().replace(/(^|[\s.'(-])([a-z])/g, (m,a,b) => a + b.toUpperCase()) : p).join(","); };
+const STEP_C = {"Pemberkasan":"var(--s1)","Proses Bank":"var(--s2)","ACC Bank":"var(--s3)","Sudah Akad":"var(--s4)","Non KPR":"var(--s5)"};
+const dash = `<span class="dash">–</span>`;
+
+function fillSelect(el, first, values, cur){
+  el.innerHTML = `<option value="">${esc(first)}</option>` + values.map(v => `<option value="${esc(v)}"${v===cur?" selected":""}>${esc(v)}</option>`).join("");
+}
+function emptyRow(cols, ready){
+  if (S.failed) return `<tr><td colspan="${cols}"><div class="empty"><b>Data tidak bisa dimuat di tampilan ini</b>Buka halaman ini di claude.ai dengan akun yang punya akses.</div></td></tr>`;
+  if (!ready) return `<tr><td colspan="${cols}"><div class="empty"><b>Memuat data…</b>Data unit dan retensi sedang diambil.</div></td></tr>`;
+  return `<tr><td colspan="${cols}"><div class="empty"><b>Tidak ada data yang cocok</b>Ubah filter, atau klik Tambah untuk mengisi data baru.</div></td></tr>`;
+}
+function who(name, sub){ return `<div class="who"><span class="av" style="--h:${hue(name)}">${esc(initials(name))}</span><div style="min-width:0"><b title="${esc(name)}">${esc(titleCase(name))}</b>${sub ? `<span class="sub">${sub}</span>` : ""}</div></div>`; }
+const juta = n => rpShort(n).replace("Rp ","");
+
+function followUp(r){
+  const st = status(r), bp = r.bankProses || [], last = bp[bp.length-1];
+  if (st === "ACC Bank") { const a = bp.find(b => b.hasil === "ACC"); return `ACC ${a ? brand(a.bank) : "bank"}${r.tglACC ? " " + tgl(r.tglACC) : ""} · jadwalkan akad`; }
+  if (st === "Proses Bank") {
+    if (last && (last.hasil === "Ditolak" || last.hasil === "Batal")) return `${last.hasil} ${brand(last.bank)} · ajukan ke bank lain`;
+    return `Menunggu hasil ${brand(last?.bank) || "bank"}${last?.tgl ? " sejak " + tgl(last.tgl) : ""}${last?.ket ? " · " + last.ket : ""}`;
+  }
+  const sc = berkasScore(r);
+  return sc.missing.length ? `Kurang ${sc.missing.join(", ")}` : "Berkas lengkap · belum diajukan ke bank";
+}
+
+function renderKPR(){
+  const all = S.kpr, kprAll = all.filter(isKPR);
+  $("#cnt-kpr").textContent = all.length;
+  const years = [...new Set(all.map(r => String(r.tglUTJ||"").slice(0,4)).filter(Boolean))].sort().reverse();
+  fillSelect($("#kpr-year"), "Semua tahun UTJ", years, S.f.year);
+  fillSelect($("#kpr-bank"), "Semua bank", [...new Set(all.flatMap(kprBanks))].sort(), S.f.bank);
+  fillSelect($("#kpr-bayar"), "Semua cara bayar", [...new Set(all.map(r => (r.caraBayar||"").toUpperCase()).filter(Boolean))].sort(), S.f.bayar);
+
+  const by = {}; KPR_STAT.forEach(s => by[s] = {n:0, v:0});
+  all.forEach(r => { const s = status(r); by[s].n++; by[s].v += isKPR(r) ? num(r.plafond) : num(r.hargaTransaksi); });
+  const belum = by["Pemberkasan"].n + by["Proses Bank"].n + by["ACC Bank"].n;
+  const sumPlAll = kprAll.reduce((a,r) => a + num(r.plafond), 0);
+  $("#kpr-lead").innerHTML = S.ready.kpr ? `<b class="num">${all.length}</b> unit terjual · <b class="num">${belum}</b> belum akad · total plafond KPR <b class="num">${rpShort(sumPlAll)}</b>` : "Memuat data…";
+
+  // pipeline
+  const desc = {"Pemberkasan":"belum diajukan ke bank","Proses Bank":"menunggu hasil bank","ACC Bank":"siap dijadwalkan akad","Sudah Akad":"plafond " + rpShort(by["Sudah Akad"].v),"Non KPR":"tunai / hardcash"};
+  $("#kpr-pipe").innerHTML = KPR_STAT.map((s,i) => {
+    const share = s === "Non KPR" ? (all.length ? by[s].n/all.length : 0) : (kprAll.length ? by[s].n/kprAll.length : 0);
+    return `<button class="step" style="--c:${STEP_C[s]}" data-st="${esc(s)}" aria-pressed="${S.f.status===s}">
+      <span class="lbl">${i < 4 ? `<span class="n">${i+1}</span>` : `<span class="n o">-</span>`}${s}</span>
+      <span class="v num">${by[s].n}</span><span class="s">${desc[s]}</span>
+      <span class="t"><i style="width:${(share*100).toFixed(1)}%"></i></span>
+      ${i < 3 ? `<span class="arr">${ICON_CHEV}</span>` : ""}</button>`;
+  }).join("");
+
+  // follow-up
+  const rank = {"ACC Bank":0,"Proses Bank":1,"Pemberkasan":2};
+  const fu = all.filter(r => rank[status(r)] !== undefined).sort((a,b) => rank[status(a)] - rank[status(b)] || String(a.tglUTJ||"9").localeCompare(String(b.tglUTJ||"9")));
+  $("#fu-sub").textContent = fu.length ? `${fu.length} unit belum akad` : "";
+  $("#kpr-fu").innerHTML = !S.ready.kpr ? `<p class="none">Memuat data…</p>` : fu.length ? fu.slice(0,5).map(r => { const st = status(r); return `<button class="fu-i" data-open-kpr="${esc(r.id)}">
+      <span class="av" style="--h:${hue(r.nama)}">${esc(initials(r.nama))}</span>
+      <span style="min-width:0"><b><em>${esc(r.unit)}</em>${esc(titleCase(r.nama))}</b><span class="why" title="${esc(followUp(r))}">${esc(followUp(r))}</span></span>
+      <span class="pill ${KPR_PILL[st]}">${st}</span></button>`; }).join("")
+      + (fu.length > 5 ? `<div style="padding-top:10px;border-top:1px solid var(--line-2)"><button class="link" data-st="belum">Lihat semua ${fu.length} unit belum akad ${ICON_CHEV}</button></div>` : "")
+    : `<p class="none">Semua unit KPR sudah akad.</p>`;
+
+  // banks
+  const cnt = {}; kprAll.forEach(r => { const b = kprBrand(r); if (b) cnt[b] = (cnt[b]||0) + 1; });
+  const top = Object.entries(cnt).sort((a,b) => b[1]-a[1]).slice(0,7); const max = top[0]?.[1] || 1;
+  $("#kpr-bars").innerHTML = top.length ? top.map(([b,n]) => `<div class="bar"><span class="bn">${esc(b)}</span><span class="bt"><i style="width:${(n/max*100).toFixed(1)}%"></i></span><span class="bc num"><b>${n}</b> unit</span></div>`).join("") : `<p class="none">${S.ready.kpr ? "Belum ada unit yang ACC atau akad." : "Memuat data…"}</p>`;
+
+  // status tabs
+  const segs = [["","Semua",all.length],["belum","Belum akad",belum]].concat(KPR_STAT.map(s => [s, s, by[s].n]));
+  $("#kpr-seg").innerHTML = segs.map(([v,l,n]) => `<button data-st="${esc(v)}" aria-pressed="${S.f.status===v}">${esc(l)} <span class="k num">${n}</span></button>`).join("");
+
+  // table
+  const rows = kprRows();
+  $("#kpr-dclr").hidden = !(S.f.d1 || S.f.d2);
+  const sumPl = rows.reduce((a,r) => a + (isKPR(r) ? num(r.plafond) : 0), 0);
+  $("#kpr-meta").innerHTML = `Menampilkan <b class="num">${rows.length}</b> dari ${all.length} unit · ${esc(filterLabel())}${sumPl ? ` · plafond <b class="num">${rpShort(sumPl)}</b>` : ""}`;
+  $("#kpr-body").innerHTML = rows.length ? rows.map(r => {
+    const st = status(r), sc = berkasScore(r), kpr = isKPR(r);
+    const bp = (r.bankProses||[]).map(b => { const h = b.hasil || "Diajukan", cls = h==="ACC"?"acc":(h==="Ditolak"||h==="Batal")?"no":"";
+      return `<div><div class="bph"><span class="chip ${cls}" title="${esc(b.bank)}">${esc(brand(b.bank)||b.bank)}</span><span class="bpm">${esc([b.tgl ? tgl(b.tgl) : "", h].filter(Boolean).join(" · "))}</span></div>${b.ket ? `<div class="bpk" title="${esc(b.ket)}">${esc(b.ket)}</div>` : ""}</div>`; }).join("");
+    const nilai = `<div class="money-c"><b class="num">${rp(num(r.hargaTransaksi))}</b>${kpr ? `<span class="sub num">UM ${num(r.totalUM) > 0 ? juta(r.totalUM) : "–"} · KPR ${num(r.plafond) ? juta(r.plafond) : "–"}</span>` : `<span class="sub">${esc(titleCase(r.caraBayar||""))}</span>`}</div>`;
+    let akad = dash;
+    if (r.tglAkad) akad = `<div class="akad"><b class="num">Akad ${tgl(r.tglAkad)}</b><span class="sub trunc" title="${esc(r.tempatAkad)}">${esc(r.tempatAkad||"")}</span><span class="sub trunc" title="${esc(r.notaris)}">${esc(titleCase(r.notaris||""))}</span></div>`;
+    else if (st === "ACC Bank") akad = `<div class="akad"><b class="num">ACC${num(r.accBank) ? " " + rpShort(r.accBank) : ""}</b><span class="sub">${r.tglACC ? tgl(r.tglACC) : "tanggal ACC belum diisi"}</span><span class="sub">belum akad</span></div>`;
+    const pct = sc.need ? sc.have/sc.need : 0;
+    return `<tr class="click" data-row-kpr="${esc(r.id)}">
+      <td class="unit">${esc(r.unit)}</td>
+      <td>${who(r.nama, esc([kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")) + `<span class="sub num" style="display:block">SPR &amp; PPJB ${r.tglSPR ? esc(tgl(r.tglSPR)) : "belum"}</span>`)}</td>
+      <td class="r">${nilai}</td>
+      <td>${bp ? `<div class="bpl">${bp}</div>` : (kpr ? `<span class="sub">Belum diajukan</span>` : dash)}</td>
+      <td>${akad}</td>
+      <td><span class="prog" title="${sc.missing.length ? "Kurang: " + esc(sc.missing.join(", ")) : "Lengkap"}"><span class="t"><i class="${pct<1?"part":""}" style="width:${(pct*100).toFixed(0)}%"></i></span><span class="num">${sc.have}/${sc.need}</span></span>${sc.missing.length ? `<span class="sub trunc" style="max-width:120px">kurang ${esc(sc.missing.length)} dok</span>` : ""}</td>
+      <td><span class="pill ${KPR_PILL[st]}">${st}</span></td>
+      <td><button class="icon-btn" data-open-kpr="${esc(r.id)}" aria-label="Detail ${esc(r.unit)}" title="Lihat detail">${ICON_CHEV}</button></td>
+    </tr>`;
+  }).join("") : emptyRow(8, S.ready.kpr);
+}
+
+function renderRet(){
+  const all = S.ret;
+  $("#cnt-ret").textContent = all.length;
+  fillSelect($("#ret-bank"), "Semua bank", [...new Set(all.map(r => r.bank).filter(Boolean))].sort(), S.rf.bank);
+  fillSelect($("#ret-notaris"), "Semua notaris", [...new Set(all.map(r => r.notaris).filter(Boolean))].sort(), S.rf.notaris);
+
+  const gAwal = all.reduce((a,r) => a + retAwal(r), 0), gCair = all.reduce((a,r) => a + retCair(r), 0), gSisa = gAwal - gCair;
+  const nCair = all.reduce((a,r) => a + (r.cair||[]).length, 0), nLunas = all.filter(r => retStatus(r) === "Lunas").length;
+  const pctCair = gAwal ? Math.min(1, gCair/gAwal) : 0;
+  $("#ret-lead").innerHTML = S.ready.ret ? `<b class="num">${all.length}</b> unit dengan retensi · <b class="num">${Math.round(pctCair*100)}%</b> sudah cair` : "Memuat data…";
+  $("#ret-money").innerHTML = `
+    <div><span class="lbl">Retensi awal</span><span class="v num">${rpShort(gAwal)}</span><span class="s">ditahan bank saat akad</span></div>
+    <div><span class="lbl">Sudah cair</span><span class="v num" style="color:var(--ok-fg)">${rpShort(gCair)}</span><span class="s num">${nCair} kali pencairan</span></div>
+    <div class="hero"><span class="lbl">Sisa retensi</span><span class="v num">${rpShort(gSisa)}</span><span class="t"><i style="width:${(pctCair*100).toFixed(1)}%"></i></span><span class="s num">${Math.round(pctCair*100)}% sudah cair</span></div>
+    <div><span class="lbl">Unit lunas</span><span class="v num">${nLunas}<span style="font-size:15px;color:var(--faint);font-weight:700"> / ${all.length}</span></span><span class="s">retensi habis dicairkan</span></div>`;
+
+  // recent cair
+  const recent = all.flatMap(r => (r.cair||[]).map(c => ({r, c}))).sort((a,b) => String(b.c.tgl).localeCompare(String(a.c.tgl)));
+  $("#rc-sub").textContent = recent.length ? `${recent.length} pencairan tercatat` : "";
+  $("#ret-recent").innerHTML = !S.ready.ret ? `<p class="none">Memuat data…</p>` : recent.length ? recent.slice(0,5).map(({r,c}) => `<button class="fu-i" data-open-ret="${esc(r.id)}">
+      <span class="av" style="--h:${hue(r.nama)}">${esc(initials(r.nama))}</span>
+      <span style="min-width:0"><b><em>${esc(r.blok)}</em>${esc(titleCase(r.nama))}</b><span class="why">${esc([tgl(c.tgl) || "tanpa tanggal", kompShort(c.komponen), c.ket].filter(Boolean).join(" · "))}</span></span>
+      <b class="num" style="color:var(--ok-fg)">+ ${esc(rpShort(c.nominal))}</b></button>`).join("")
+    : `<p class="none">Belum ada pencairan tercatat. Klik <b>+ Cair</b> pada baris unit di tabel untuk mencatat tanggal dan nominal yang cair.</p>`;
+
+  // komponen
+  const comp = Object.keys(RET_KOMP).map(k => [k, all.reduce((a,r) => a + Math.max(0, compSisa(r,k)), 0)]).filter(x => x[1] > 0).sort((a,b) => b[1]-a[1]);
+  const max = comp[0]?.[1] || 1;
+  $("#ret-bars").innerHTML = (comp.length ? comp.map(([k,v]) => `<div class="bar"><span class="bn">${esc(kompShort(k))}</span><span class="bt"><i style="width:${Math.max(1.5, v/max*100).toFixed(1)}%"></i></span><span class="bc num">${esc(juta(v))}</span></div>`).join("") : `<p class="none">${S.ready.ret ? "Tidak ada retensi tertahan." : "Memuat data…"}</p>`);
+
+  // status tabs
+  const by = {}; all.forEach(r => { const s = retStatus(r) || "Tanpa status"; by[s] = (by[s]||0) + 1; });
+  const sts = [...new Set(RET_STATUS.concat(all.map(r => r.status).filter(Boolean), ["Lunas"]))].filter(s => by[s] || S.rf.status === s);
+  $("#ret-seg").innerHTML = [["","Semua",all.length]].concat(sts.map(s => [s, RET_SHORT[s]||s, by[s]||0])).map(([v,l,n]) => `<button data-rst="${esc(v)}" aria-pressed="${S.rf.status===v}">${esc(l)} <span class="k num">${n}</span></button>`).join("");
+
+  // table
+  const rows = retRows(); $("#ret-dclr").hidden = !(S.rf.d1 || S.rf.d2);
+  const tSisa = rows.reduce((a,r) => a + retSisa(r), 0), tNilai = rows.reduce((a,r) => a + retNilai(r), 0), tTerima = rows.reduce((a,r) => a + retTerima(r), 0), tCair = rows.reduce((a,r) => a + retCair(r), 0);
+  $("#ret-meta").innerHTML = `Menampilkan <b class="num">${rows.length}</b> dari ${all.length} unit · ${esc(retFilterLabel())} · sudah cair <b class="num">${rpShort(tCair)}</b> · sisa <b class="num">${rpShort(tSisa)}</b>`;
+  $("#ret-body").innerHTML = rows.length ? rows.map(r => {
+    const p = num(r.persenCair), awal = retAwal(r), cair = retCair(r), sisa = awal - cair, st = retStatus(r);
+    const komp = Object.keys(RET_KOMP).filter(k => num(r.ret?.[k]) > 0).map(k => { const cs = compSisa(r,k); return `<span class="chip ${cs<=0?"acc":""}" title="${esc(RET_KOMP[k])}: awal Rp ${rp(num(r.ret[k]))}, sisa Rp ${rp(Math.max(0,cs))}">${esc(kompShort(k))} ${cs<=0 ? "lunas" : esc(juta(cs))}</span>`; }).join("");
+    const hist = cairSorted(r), shown = hist.slice(-3);
+    const histHtml = hist.length ? `<div class="hist">${hist.length > 3 ? `<span>+${hist.length-3} pencairan sebelumnya</span>` : ""}${shown.map(c => `<div title="${esc([kompShort(c.komponen), c.ket].filter(Boolean).join(" · "))}"><span class="num">${esc(tgl(c.tgl) || "tanpa tanggal")}</span> · <b class="num">${esc(juta(c.nominal))}</b> <span>${esc(kompShort(c.komponen))}</span></div>`).join("")}</div>` : `<span class="sub">Belum ada</span>`;
+    const pct = awal ? Math.min(1, Math.max(0, cair/awal)) : 0;
+    return `<tr class="click" data-row-ret="${esc(r.id)}">
+      <td class="unit">${esc(r.blok)}</td>
+      <td>${who(r.nama, esc([r.bank, r.notaris && titleCase(r.notaris)].filter(Boolean).join(" · ")))}</td>
+      <td class="r"><div class="money-c"><b class="num">${rp(retNilai(r))}</b><span class="sub num">diterima ${juta(retTerima(r))} · KPR cair ${(p*100).toLocaleString("id-ID",{maximumFractionDigits:1})}%</span></div></td>
+      <td class="r"><div class="money-c"><b class="num" style="${sisa<0?"color:var(--bad-fg)":""}">${sisa ? rp(sisa) : "0"}</b><span class="prog" style="justify-content:flex-end;margin-top:4px" title="Sudah cair ${Math.round(pct*100)}% dari retensi awal Rp ${rp(awal)}"><span class="t"><i style="width:${(pct*100).toFixed(0)}%"></i></span><span class="sub num" style="display:inline">dari ${esc(juta(awal))}</span></span></div></td>
+      <td>${komp ? `<div class="chips">${komp}</div>` : dash}</td>
+      <td>${histHtml}</td>
+      <td>${st ? `<span class="pill ${RET_PILL[st]||"p-neu"}" title="${esc(st)}">${esc(RET_SHORT[st]||st)}</span>` : dash}</td>
+      <td><span class="trunc" title="${esc(r.catatan)}">${r.catatan ? esc(r.catatan) : dash}</span></td>
+      <td><div class="acts"><button class="btn sm pri" data-cair-ret="${esc(r.id)}"${sisa<=0?" disabled":""} title="Catat pencairan retensi">+ Cair</button><button class="icon-btn" data-open-ret="${esc(r.id)}" aria-label="Detail ${esc(r.blok)}" title="Lihat detail">${ICON_CHEV}</button></div></td>
+    </tr>`;
+  }).join("") : emptyRow(9, S.ready.ret);
+  $("#ret-foot").innerHTML = rows.length ? `<tr><td colspan="2">Total ${rows.length} unit</td><td class="r num">${rp(tNilai)}</td><td class="r num">${rp(tSisa)}</td><td></td><td class="num" style="color:var(--ok-fg)">cair ${rp(tCair)}</td><td colspan="2"></td><td></td></tr>` : "";
+}
+
+function renderTabs(){
+  ["kpr","ret"].forEach(t => {
+    const on = S.tab === t;
+    $("#view-" + t).hidden = !on;
+    $("#tab-" + t).setAttribute("aria-selected", on);
+  });
+}
+function render(){ renderTabs(); renderKPR(); renderRet(); syncButtons(); }
+function syncButtons(){
+  const noDl = !S.dl, noDb = !S.db;
+  ["#kpr-pdf","#kpr-xls","#ret-pdf","#ret-xls"].forEach(s => { $(s).disabled = noDl; $(s).title = noDl ? "Unduhan tidak tersedia di tampilan ini" : ""; });
+  ["#kpr-add","#ret-add","#kpr-imp","#ret-imp"].forEach(s => { $(s).disabled = noDb; });
+}
+function setSync(on, txt){ $("#sync-dot").classList.toggle("on", on); $("#sync-txt").textContent = txt; }
+let toastT; function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+function updateHints(){ document.querySelectorAll("[data-hint]").forEach(h => { const i = document.getElementById(h.dataset.hint); const v = i ? num(i.value) : 0; h.textContent = v ? "Rp " + Math.round(v).toLocaleString("id-ID") : ""; }); }
+
+/* ---------- drawer ---------- */
+const fld = (id, label, val, type="text", extra="") => `<div class="fld${extra.includes("w2")?" w2":""}"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${esc(val ?? "")}"${type==="number"?' inputmode="decimal" step="any"':""}${extra.includes("list:")?` list="${extra.split("list:")[1]}"`:""}>${type==="number" && label.includes("(Rp)") ? `<span class="hint num" data-hint="${id}"></span>` : ""}</div>`;
+const sel = (id, label, val, opts) => `<div class="fld"><label for="${id}">${label}</label><select id="${id}">${opts.map(o => `<option${o===val?" selected":""}>${esc(o)}</option>`).join("")}</select></div>`;
+const checks = (prefix, groups, labels, obj) => `<div class="checks">${groups.map(([g, keys]) => `<span class="grp">${g}</span>` + keys.map(k => `<label class="ck"><input type="checkbox" id="${prefix}-${k}"${obj?.[k]?" checked":""}>${esc(labels[k])}</label>`).join("")).join("")}</div>`;
+const datalist = (id, vals) => `<datalist id="${id}">${[...new Set(vals.filter(Boolean))].sort().map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
+
+let rowSeq = 0;
+function bpRow(b = {}){ const i = rowSeq++; return `<div class="rowf bp" data-bp>
+  <div><label for="bp-bank-${i}">Bank / marketing bank</label><input id="bp-bank-${i}" data-k="bank" value="${esc(b.bank||"")}" list="dl-bank" placeholder="BRI DIPO - TUNJUNG"></div>
+  <div><label for="bp-tgl-${i}">Tanggal</label><input id="bp-tgl-${i}" data-k="tgl" type="date" value="${esc(b.tgl||"")}"></div>
+  <div><label for="bp-hasil-${i}">Hasil</label><select id="bp-hasil-${i}" data-k="hasil">${HASIL.map(h => `<option${(b.hasil||"Diajukan")===h?" selected":""}>${h}</option>`).join("")}</select></div>
+  <div><label for="bp-ket-${i}">Keterangan</label><input id="bp-ket-${i}" data-k="ket" value="${esc(b.ket||"")}" placeholder="mis. kurang RK, appraisal 12 Okt"></div>
+  <button type="button" class="rm" data-rm aria-label="Hapus baris">×</button></div>`; }
+function pcRow(p = {}, n = 1){ const i = rowSeq++; return `<div class="rowf pc" data-pc>
+  <span class="ix">${n}</span>
+  <div><label for="pc-tgl-${i}">Tanggal</label><input id="pc-tgl-${i}" data-k="tgl" type="date" value="${esc(p.tgl||"")}"></div>
+  <div><label for="pc-nom-${i}">Nominal (Rp)</label><input id="pc-nom-${i}" data-k="nominal" type="number" step="any" value="${esc(p.nominal||"")}"></div>
+  <div><label>% plafond</label><div class="calc num" data-pct>–</div></div>
+  <button type="button" class="rm" data-rm aria-label="Hapus baris">×</button></div>`; }
+
+function openKPR(id){
+  const r = id ? clone(S.kpr.find(x => x.id === id)) : {caraBayar:"KPR", berkas:{}, legal:{}, bankProses:[], pencairan:[]};
+  S.edit = {type:"kpr", id, rec:r};
+  $("#dr-title").innerHTML = id ? `${esc(r.unit)} · ${esc(titleCase(r.nama))}<span>${status(r)} · diperbarui ${r.updatedAt ? esc(tgl(r.updatedAt.slice(0,10))) : "dari rekap Excel"}</span>` : `Tambah unit<span>Isi data pembeli dan berkas KPR</span>`;
+  const bayarOpts = [...new Set(["KPR","Hardcash","Tunai Bertahap", r.caraBayar].filter(Boolean))];
+  $("#dr-form").innerHTML = `
+    ${datalist("dl-bank", S.kpr.flatMap(x => (x.bankProses||[]).map(b => b.bank)))}
+    ${datalist("dl-tempat", S.kpr.map(x => x.tempatAkad))}
+    ${datalist("dl-notaris", S.kpr.map(x => x.notaris))}
+    <fieldset><legend>Unit &amp; pembeli</legend><div class="grid">
+      ${fld("f-unit","Unit *",r.unit)}${fld("f-nama","Nama pembeli *",r.nama,"text","w2")}
+      ${sel("f-bayar","Cara bayar",r.caraBayar||"KPR",bayarOpts)}${sel("f-jenis","Pekerjaan",jenis(r),["Karyawan","Wiraswasta"])}
+      ${fld("f-utjd","Tanggal UTJ",r.tglUTJ,"date")}${fld("f-spr","Tanggal SPR & PPJB",r.tglSPR,"date")}
+    </div></fieldset>
+    <fieldset><legend>Harga &amp; uang muka</legend><div class="grid">
+      ${fld("f-hb","Harga bank (Rp)",r.hargaBank,"number")}${fld("f-ht","Harga transaksi (Rp)",r.hargaTransaksi,"number")}
+      ${fld("f-utj","UTJ (Rp)",r.utj,"number")}${fld("f-aum","Angsuran UM (Rp)",r.angsuranUM,"number")}
+      ${fld("f-cb","Cashback UM (Rp)",r.cashbackUM,"number")}${fld("f-tum","Total uang muka (Rp)",r.totalUM,"number")}
+      ${fld("f-pl","Plafond KPR (Rp)",r.plafond,"number")}${fld("f-tumb","TUM (Rp)",r.tum,"number")}
+    </div></fieldset>
+    <fieldset><legend>Kelengkapan berkas</legend>${checks("b", DOC_GROUPS, DOCS, r.berkas)}</fieldset>
+    <fieldset><legend>Proses bank</legend><div class="rows" id="bp-rows">${(r.bankProses||[]).map(b => bpRow(b)).join("")}</div>
+      <button type="button" class="btn sm add" id="bp-add">+ Tambah bank</button></fieldset>
+    <fieldset><legend>ACC &amp; akad</legend><div class="grid">
+      ${fld("f-acc","Nominal ACC bank (Rp)",r.accBank,"number")}${fld("f-tacc","Tanggal ACC / SP3K",r.tglACC,"date")}
+      ${fld("f-takad","Tanggal akad",r.tglAkad,"date")}${fld("f-tempat","Tempat akad",r.tempatAkad,"text","list:dl-tempat")}
+      ${fld("f-notaris","Notaris",r.notaris,"text","w2 list:dl-notaris")}
+    </div></fieldset>
+    <fieldset><legend>Legal, pajak &amp; berkas akad</legend>${checks("l", LEGAL_GROUPS, LEGAL, r.legal)}</fieldset>
+    <fieldset><legend>Pencairan KPR</legend><div class="rows" id="pc-rows">${(r.pencairan||[]).map((p,i) => pcRow(p,i+1)).join("")}</div>
+      <button type="button" class="btn sm add" id="pc-add">+ Tambah pencairan</button></fieldset>
+    <fieldset><legend>Serah terima</legend><div class="grid">
+      ${fld("f-prog","Progres bangun (%)",r.progressBangun!=null&&r.progressBangun!==""?Math.round(num(r.progressBangun)*100):"","number")}
+      <div class="fld"><label for="f-ajbd">AJB</label><div style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="f-ajb" aria-label="Sudah AJB"${r.ajb?" checked":""} style="width:auto;accent-color:var(--accent)"><input id="f-ajbd" type="date" value="${esc(r.tglAJB||"")}"></div></div>
+      <div class="fld"><label for="f-stud">STU (serah terima unit)</label><div style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="f-stu" aria-label="Sudah STU"${r.stu?" checked":""} style="width:auto;accent-color:var(--accent)"><input id="f-stud" type="date" value="${esc(r.tglSTU||"")}"></div></div>
+    </div></fieldset>
+    <fieldset><legend>Catatan</legend><div class="grid">
+      <div class="fld w2"><label for="f-ket">Keterangan</label><textarea id="f-ket">${esc(r.keterangan||"")}</textarea></div>
+      <div class="fld w2"><label for="f-promo">Promo &amp; souvenir</label><textarea id="f-promo">${esc(r.promo||"")}</textarea></div>
+    </div></fieldset>`;
+  footer(!!id);
+  updatePct();
+  showDrawer(true);
+}
+function updatePct(){
+  const base = num($("#f-acc")?.value) || num($("#f-pl")?.value);
+  document.querySelectorAll("#pc-rows [data-pc]").forEach((row, i) => {
+    row.querySelector(".ix").textContent = i + 1;
+    const v = num(row.querySelector('[data-k="nominal"]').value);
+    row.querySelector("[data-pct]").textContent = base && v ? (v/base*100).toLocaleString("id-ID",{maximumFractionDigits:1}) + "%" : "–";
+  });
+}
+const v = id => $("#" + id).value.trim();
+const n = id => { const x = $("#" + id).value; return x === "" ? 0 : num(x); };
+const ck = id => $("#" + id).checked;
+function collectKPR(){
+  const r = S.edit.rec;
+  const out = { ...r,
+    unit:v("f-unit"), nama:v("f-nama").toUpperCase(), caraBayar:v("f-bayar"), jenisPekerjaan:v("f-jenis"), tglUTJ:v("f-utjd"), tglSPR:v("f-spr"),
+    hargaBank:n("f-hb"), hargaTransaksi:n("f-ht"), utj:n("f-utj"), angsuranUM:n("f-aum"), cashbackUM:n("f-cb"), totalUM:n("f-tum"), plafond:n("f-pl"), tum:n("f-tumb"),
+    berkas:Object.fromEntries(Object.keys(DOCS).map(k => [k, ck("b-"+k)])),
+    legal:Object.fromEntries(Object.keys(LEGAL).map(k => [k, ck("l-"+k)])),
+    bankProses:[...document.querySelectorAll("#bp-rows [data-bp]")].map(row => ({bank:row.querySelector('[data-k="bank"]').value.trim(), tgl:row.querySelector('[data-k="tgl"]').value, hasil:row.querySelector('[data-k="hasil"]').value, ket:row.querySelector('[data-k="ket"]').value.trim()})).filter(b => b.bank || b.tgl || b.ket),
+    accBank:n("f-acc"), tglACC:v("f-tacc"), tglAkad:v("f-takad"), tempatAkad:v("f-tempat"), notaris:v("f-notaris"),
+    pencairan:[...document.querySelectorAll("#pc-rows [data-pc]")].map(row => ({tgl:row.querySelector('[data-k="tgl"]').value, nominal:num(row.querySelector('[data-k="nominal"]').value)})).filter(p => p.tgl || p.nominal),
+    progressBangun:$("#f-prog").value === "" ? 0 : Math.min(100, num($("#f-prog").value))/100,
+    ajb:ck("f-ajb"), tglAJB:v("f-ajbd"), stu:ck("f-stu"), tglSTU:v("f-stud"),
+    keterangan:v("f-ket"), promo:v("f-promo"), updatedAt:new Date().toISOString() };
+  delete out.id;
+  if (!out.ord) out.ord = S.kpr.reduce((m,x) => Math.max(m, num(x.ord)), 0) + 1;
+  return out;
+}
+
+function cairRow(c = {}, keys){ const i = rowSeq++; const ks = keys && keys.length ? keys : Object.keys(RET_KOMP); const cur = c.komponen || ks[0]; return `<div class="rowf cr" data-cr>
+  <div><label for="cr-tgl-${i}">Tanggal cair</label><input id="cr-tgl-${i}" data-k="tgl" type="date" value="${esc(c.tgl||"")}"></div>
+  <div><label for="cr-nom-${i}">Nominal (Rp)</label><input id="cr-nom-${i}" data-k="nominal" type="number" step="any" value="${esc(c.nominal||"")}"></div>
+  <div><label for="cr-k-${i}">Komponen</label><select id="cr-k-${i}" data-k="komponen">${[...new Set(ks.concat(cur ? [cur] : []))].map(k => `<option value="${esc(k)}"${k===cur?" selected":""}>${esc(kompShort(k))}</option>`).join("")}</select></div>
+  <div><label for="cr-ket-${i}">Keterangan</label><input id="cr-ket-${i}" data-k="ket" value="${esc(c.ket||"")}" placeholder="mis. cair setelah BAST"></div>
+  <button type="button" class="rm" data-rm aria-label="Hapus baris">×</button></div>`; }
+function retKeys(){ const ks = Object.keys(RET_KOMP).filter(k => $("#r-k-"+k) && n("r-k-"+k) > 0); return ks.length ? ks : Object.keys(RET_KOMP); }
+const isoToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+
+function openRet(id, addCair){
+  const r = id ? clone(S.ret.find(x => x.id === id)) : {pembayaran:"KPR", ret:{}, cair:[], status:"Progress Bangun"};
+  S.edit = {type:"ret", id, rec:r};
+  $("#dr-title").innerHTML = id ? `${esc(r.blok)} · ${esc(titleCase(r.nama))}<span>${esc(retStatus(r)||"Tanpa status")} · sisa retensi Rp ${rp(retSisa(r))}</span>` : `Tambah retensi<span>Data escrow / retensi bank per unit</span>`;
+  const stOpts = [...new Set(RET_STATUS.concat(r.status ? [r.status] : []))];
+  const ks0 = Object.keys(RET_KOMP).filter(k => num(r.ret?.[k]) > 0);
+  $("#dr-form").innerHTML = `
+    ${datalist("dl-rbank", S.ret.map(x => x.bank))}${datalist("dl-rnot", S.ret.map(x => x.notaris))}
+    <fieldset><legend>Unit &amp; pemilik</legend><div class="grid">
+      ${fld("r-blok","Blok *",r.blok)}${fld("r-nama","Nama *",r.nama,"text","w2")}
+      ${sel("r-bayar","Pembayaran",r.pembayaran||"KPR",[...new Set(["KPR","Tunai",r.pembayaran].filter(Boolean))])}
+      ${fld("r-bank","Bank KPR",r.bank,"text","list:dl-rbank")}${fld("r-not","Notaris",r.notaris,"text","list:dl-rnot")}
+    </div></fieldset>
+    <fieldset><legend>Nilai transaksi &amp; diterima</legend><div class="grid">
+      ${fld("r-num","Nilai UTJ / UM (Rp)",r.nilaiUM,"number")}${fld("r-nkpr","Nilai KPR (Rp)",r.nilaiKPR,"number")}<div class="fld"><label>Total nilai</label><div class="calc num" id="r-ntot"></div></div>
+      ${fld("r-tum","Diterima UTJ / UM (Rp)",r.terimaUM,"number")}${fld("r-tkpr","Diterima KPR (Rp)",r.terimaKPR,"number")}<div class="fld"><label>Total diterima + retensi cair</label><div class="calc num" id="r-ttot"></div></div>
+      ${fld("r-pct","% pencairan KPR dari bank",r.persenCair!=null&&r.persenCair!==""?+(num(r.persenCair)*100).toFixed(2):"","number")}
+    </div></fieldset>
+    <fieldset><legend>Retensi awal (ditahan bank)</legend><div class="grid">
+      ${Object.keys(RET_KOMP).map(k => fld("r-k-"+k, RET_KOMP[k]+" (Rp)", r.ret?.[k] || "", "number")).join("")}
+      <div class="fld"><label>Total retensi awal</label><div class="calc num" id="r-awal"></div></div>
+    </div></fieldset>
+    <fieldset id="cair-set"><legend>Pencairan retensi</legend>
+      <div class="rows" id="cr-rows">${cairSorted(r).map(c => cairRow(c, ks0)).join("")}</div>
+      <button type="button" class="btn sm add" id="cr-add">+ Catat pencairan</button>
+      <div class="sumrow">
+        <div class="fld"><label>Retensi awal</label><div class="calc num" id="r-sum-awal"></div></div>
+        <div class="fld"><label>Sudah cair</label><div class="calc num" id="r-sum-cair"></div></div>
+        <div class="fld"><label>Sisa retensi</label><div class="calc num" id="r-sisa"></div></div>
+      </div>
+      <div class="compline" id="r-comp"></div>
+    </fieldset>
+    <fieldset><legend>Status &amp; catatan</legend><div class="grid">
+      ${sel("r-status","Status",r.status||"Progress Bangun",stOpts)}
+      <div class="fld w2"><label for="r-cat">Catatan</label><textarea id="r-cat">${esc(r.catatan||"")}</textarea></div>
+    </div></fieldset>`;
+  footer(!!id);
+  showDrawer(true);
+  if (addCair) addCairRow(true);
+  updateRetCalc();
+}
+function addCairRow(fromQuick){
+  const keys = retKeys();
+  const sisaK = keys.find(k => compSisaForm(k) > 0) || keys[0];
+  $("#cr-rows").insertAdjacentHTML("beforeend", cairRow({tgl:isoToday(), komponen:sisaK}, keys));
+  const row = $("#cr-rows").lastElementChild;
+  setTimeout(() => { $("#cair-set").scrollIntoView({block: fromQuick ? "start" : "nearest"}); row.querySelector('[data-k="nominal"]').focus({preventScroll:true}); }, fromQuick ? 60 : 0);
+  updateRetCalc();
+}
+function formCair(){ return [...document.querySelectorAll("#cr-rows [data-cr]")].map(row => ({tgl:row.querySelector('[data-k="tgl"]').value, nominal:num(row.querySelector('[data-k="nominal"]').value), komponen:row.querySelector('[data-k="komponen"]').value, ket:row.querySelector('[data-k="ket"]').value.trim()})); }
+function compSisaForm(k){ return n("r-k-"+k) - formCair().filter(c => c.komponen === k).reduce((a,c) => a + c.nominal, 0); }
+function updateRetCalc(){
+  if (!$("#r-sisa")) return;
+  const awal = Object.keys(RET_KOMP).reduce((a,k) => a + n("r-k-"+k), 0);
+  const cair = formCair().reduce((a,c) => a + c.nominal, 0), sisa = awal - cair;
+  $("#r-ntot").textContent = "Rp " + rp(n("r-num") + n("r-nkpr"));
+  $("#r-ttot").textContent = "Rp " + rp(n("r-tum") + n("r-tkpr") + cair);
+  $("#r-awal").textContent = "Rp " + rp(awal);
+  $("#r-sum-awal").textContent = "Rp " + rp(awal);
+  $("#r-sum-cair").textContent = cair ? "− Rp " + rp(cair) : "Rp 0";
+  const el = $("#r-sisa"); el.textContent = sisa < 0 ? "Lebih Rp " + rp(-sisa) : (sisa ? "Rp " + rp(sisa) : "Lunas"); el.classList.toggle("neg", sisa < 0);
+  $("#r-comp").innerHTML = Object.keys(RET_KOMP).filter(k => n("r-k-"+k) > 0 || formCair().some(c => c.komponen === k && c.nominal)).map(k => { const cs = compSisaForm(k); return `<span class="chip ${cs<0?"no":cs===0?"acc":""}" style="${cs<0?"text-decoration:none":""}">${esc(kompShort(k))}: ${cs===0 ? "lunas" : cs<0 ? "lebih " + esc(rpShort(-cs)) : "sisa " + esc(rpShort(cs))}</span>`; }).join("");
+}
+function collectRet(){
+  const out = { ...S.edit.rec,
+    blok:v("r-blok"), nama:v("r-nama").toUpperCase(), pembayaran:v("r-bayar"), bank:v("r-bank"), notaris:v("r-not"),
+    nilaiUM:n("r-num"), nilaiKPR:n("r-nkpr"), terimaUM:n("r-tum"), terimaKPR:n("r-tkpr"),
+    persenCair:$("#r-pct").value === "" ? 0 : num($("#r-pct").value)/100,
+    ret:Object.fromEntries(Object.keys(RET_KOMP).map(k => [k, n("r-k-"+k)])),
+    cair:formCair().filter(c => c.tgl || c.nominal).sort((a,b) => String(a.tgl).localeCompare(String(b.tgl))),
+    status:v("r-status"), catatan:v("r-cat"), updatedAt:new Date().toISOString() };
+  delete out.id;
+  if (!out.ord) out.ord = S.ret.reduce((m,x) => Math.max(m, num(x.ord)), 0) + 1;
+  return out;
+}
+
+function footer(existing, confirming){
+  $("#dr-foot").innerHTML = confirming
+    ? `<span>Hapus data ini secara permanen?</span><span class="sp"></span><button class="btn" id="dr-nodel">Batal</button><button class="btn danger" id="dr-yesdel">Ya, hapus</button><div class="msg" id="dr-msg"></div>`
+    : `${existing ? `<button class="btn danger" id="dr-del">Hapus</button>` : ""}<span class="sp"></span><button class="btn" id="dr-cancel">Batal</button><button class="btn pri" id="dr-save">Simpan</button><div class="msg" id="dr-msg"></div>`;
+}
+let lastFocus = null;
+function showDrawer(on){
+  $("#drawer").hidden = !on; $("#ovl").hidden = !on;
+  if (on) { updateHints(); lastFocus = document.activeElement; $("#dr-form").scrollTop = 0; setTimeout(() => $("#dr-form input")?.focus({preventScroll:true}), 30); }
+  else { S.edit = null; lastFocus?.focus?.(); }
+}
+async function save(){
+  const e = S.edit; if (!e || !S.db || e.type === "import") return;
+  const msg = $("#dr-msg");
+  const rec = e.type === "kpr" ? collectKPR() : collectRet();
+  if (e.type === "kpr" ? !(rec.unit && rec.nama) : !(rec.blok && rec.nama)) { msg.textContent = e.type === "kpr" ? "Isi unit dan nama pembeli dulu." : "Isi blok dan nama dulu."; return; }
+  const col = S.db.collection(e.type === "kpr" ? "kpr" : "retensi");
+  const ref = e.id ? col.doc(e.id) : col.doc();
+  const btn = $("#dr-save"); btn.disabled = true; btn.textContent = "Menyimpan…";
+  try { await ref.set(rec); toast(e.id ? "Perubahan tersimpan" : "Data baru tersimpan"); showDrawer(false); }
+  catch (err) {
+    btn.disabled = false; btn.textContent = "Simpan";
+    msg.textContent = err?.code === "invalid_argument" ? "Akun Anda hanya bisa melihat data ini, tidak bisa mengubahnya." : err?.code === "quota_exceeded" ? "Penyimpanan penuh. Hapus data lama lalu coba lagi." : "Gagal menyimpan. Periksa koneksi lalu klik Simpan lagi.";
+  }
+}
+async function del(){
+  const e = S.edit; if (!e?.id || !S.db) return;
+  try { await S.db.collection(e.type === "kpr" ? "kpr" : "retensi").doc(e.id).delete(); toast("Data dihapus"); showDrawer(false); }
+  catch { $("#dr-msg").textContent = "Gagal menghapus. Coba lagi."; }
+}
+
+/* ---------- exports ---------- */
+const libs = {};
+function loadScript(src){ return libs[src] ||= new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => { delete libs[src]; no(new Error("load")); }; document.head.appendChild(s); }); }
+const JSPDF = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+const AUTOTABLE = "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js";
+const XLSXJS = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+async function offer(filename, blob, btn){
+  try { await S.dl.save({filename, data:blob}); toast("File siap: " + filename); }
+  catch (err) { if (err?.code === "declined") return; toast(err?.code === "rate_limited" ? "Tunggu sebentar, unduhan sebelumnya masih terbuka." : "Unduhan tidak bisa dibuat di tampilan ini."); }
+}
+async function withBusy(btn, fn){ const t = btn.innerHTML; btn.disabled = true; btn.lastChild.textContent = "Menyiapkan…"; try { await fn(); } catch { toast("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); } finally { btn.innerHTML = t; btn.disabled = !S.dl; } }
+
+async function pdfDoc(title, sub, head, body, foot, colStyles){
+  await loadScript(JSPDF); await loadScript(AUTOTABLE);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:"landscape", unit:"mm", format:"a4"});
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text(title, 10, 12);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(100); doc.text(sub, 10, 17.5);
+  doc.autoTable({ head:[head], body, foot: foot ? [foot] : undefined, startY:21, margin:{left:10,right:10,bottom:12}, theme:"grid",
+    styles:{fontSize:6.6, cellPadding:1.3, lineColor:[225,225,225], lineWidth:.15, textColor:[17,17,17], valign:"middle", overflow:"linebreak"},
+    headStyles:{fillColor:[17,17,17], textColor:255, fontStyle:"bold", fontSize:6.8},
+    footStyles:{fillColor:[238,238,238], textColor:[20,24,28], fontStyle:"bold"},
+    alternateRowStyles:{fillColor:[247,247,247]}, columnStyles:colStyles || {}, showFoot:"lastPage",
+    didDrawPage: d => { doc.setFontSize(7); doc.setTextColor(140); doc.text(`Halaman ${d.pageNumber}`, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 6, {align:"right"}); doc.text("Shaistanaya City · " + title, 10, doc.internal.pageSize.getHeight() - 6); } });
+  return doc.output("blob");
+}
+async function kprPDF(){
+  const rows = kprRows(); if (!rows.length) { toast("Tidak ada data pada filter ini."); return; }
+  const body = rows.map((r,i) => [i+1, r.unit, r.nama, r.caraBayar||"", rp(num(r.hargaTransaksi)), num(r.totalUM) > 0 ? rp(num(r.totalUM)) : "–", isKPR(r) ? rp(num(r.plafond)) : "–",
+    (r.bankProses||[]).map(b => [b.bank, b.tgl && tgl(b.tgl), b.hasil || "Diajukan", b.ket].filter(Boolean).join(" · ")).join("\n") || "–",
+    tgl(r.tglACC) || (num(r.accBank) ? "ACC " + rp(num(r.accBank)) : "–"), tgl(r.tglAkad) || "–", r.tempatAkad || "–", r.notaris || "–", tgl(r.tglSPR) || "–",
+    (s => s.missing.length ? `${s.have}/${s.need} (kurang: ${s.missing.join(", ")})` : `${s.have}/${s.need} lengkap`)(berkasScore(r)), status(r)]);
+  const sumPl = rows.reduce((a,r) => a + (isKPR(r) ? num(r.plafond) : 0), 0), sumH = rows.reduce((a,r) => a + num(r.hargaTransaksi), 0);
+  const blob = await pdfDoc("Rekap Berkas KPR", `${filterLabel()} · ${rows.length} unit · dicetak ${today()}`,
+    ["No","Unit","Nama","Cara Bayar","Harga Transaksi","Uang Muka","Plafond KPR","Proses Bank (bank · tgl · hasil · ket)","Tgl ACC","Tgl Akad","Tempat Akad","Notaris","SPR & PPJB","Berkas","Status"],
+    body, ["","","Total","",rp(sumH),"",rp(sumPl),"","","","","","","",""],
+    {0:{cellWidth:6,halign:"right"},1:{cellWidth:13,fontStyle:"bold"},2:{cellWidth:28},4:{halign:"right"},5:{halign:"right"},6:{halign:"right"},7:{cellWidth:40},13:{cellWidth:22}});
+  const slug = S.f.status ? "_" + (S.f.status === "belum" ? "belum-akad" : S.f.status.toLowerCase().replace(/\s+/g,"-")) : "";
+  await offer(`Berkas_KPR${slug}_${stamp()}.pdf`, blob);
+}
+async function retPDF(){
+  const rows = retRows(); if (!rows.length) { toast("Tidak ada data pada filter ini."); return; }
+  const K = Object.keys(RET_KOMP);
+  const body = rows.map((r,i) => [i+1, r.blok, r.nama, r.bank||"", r.notaris||"", rp(retNilai(r)), rp(retTerima(r)),
+    K.filter(k => num(r.ret?.[k]) > 0).map(k => `${kompShort(k)}: ${rp(num(r.ret[k]))}`).join("\n") || "–",
+    rp(retAwal(r)),
+    cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")).join("\n") || "Belum ada",
+    rp(retCair(r)), rp(retSisa(r)) === "–" ? "0" : rp(retSisa(r)), retStatus(r)||"", r.catatan||""]);
+  const sum = f => rp(rows.reduce((a,r) => a + f(r), 0));
+  const blob = await pdfDoc("Rekap Retensi / Escrow", `${retFilterLabel()} · ${rows.length} unit · dicetak ${today()}`,
+    ["No","Blok","Nama","Bank KPR","Notaris","Nilai Transaksi","Diterima","Rincian Retensi Awal","Retensi Awal","Riwayat Pencairan Retensi","Sudah Cair","Sisa Retensi","Status","Catatan"],
+    body, ["","","Total","","",sum(retNilai),sum(retTerima),"",sum(retAwal),"",sum(retCair),sum(retSisa),"",""],
+    {0:{cellWidth:6,halign:"right"},1:{fontStyle:"bold",cellWidth:12},2:{cellWidth:28},5:{halign:"right"},6:{halign:"right"},7:{cellWidth:32},8:{halign:"right"},9:{cellWidth:44},10:{halign:"right"},11:{halign:"right",fontStyle:"bold"},12:{cellWidth:22}});
+  await offer(`Retensi_${stamp()}.pdf`, blob);
+}
+function xlsxBlob(sheets){
+  const wb = XLSX.utils.book_new();
+  sheets.forEach(([name, rows, widths, header]) => { const ws = XLSX.utils.json_to_sheet(rows, header ? {header} : undefined); if (widths) ws["!cols"] = widths.map(w => ({wch:w})); XLSX.utils.book_append_sheet(wb, ws, name); });
+  const buf = XLSX.write(wb, {type:"array", bookType:"xlsx"});
+  return new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+async function kprXLS(){
+  const rows = kprRows(); if (!rows.length) { toast("Tidak ada data pada filter ini."); return; }
+  await loadScript(XLSXJS);
+  const maxB = Math.max(1, ...rows.map(r => (r.bankProses||[]).length)), maxP = Math.max(1, ...rows.map(r => (r.pencairan||[]).length));
+  const data = rows.map((r,i) => {
+    const o = {"No":i+1,"Unit":r.unit,"Nama":r.nama,"Status":status(r),"Cara Bayar":r.caraBayar,"Pekerjaan":jenis(r),"Tgl UTJ":r.tglUTJ,"Tgl SPR & PPJB":r.tglSPR,
+      "Harga Bank":num(r.hargaBank),"Harga Transaksi":num(r.hargaTransaksi),"UTJ":num(r.utj),"Angsuran UM":num(r.angsuranUM),"Cashback UM":num(r.cashbackUM),"Total UM":num(r.totalUM),"Plafond KPR":num(r.plafond),"TUM":num(r.tum)};
+    Object.keys(DOCS).forEach(k => o[DOCS[k]] = r.berkas?.[k] ? "Ya" : "");
+    o["Berkas Lengkap"] = (s => `${s.have}/${s.need}`)(berkasScore(r));
+    for (let j = 0; j < maxB; j++) { const b = (r.bankProses||[])[j] || {}; o[`Bank ${j+1}`] = b.bank||""; o[`Tgl Bank ${j+1}`] = b.tgl||""; o[`Hasil Bank ${j+1}`] = b.bank ? (b.hasil||"Diajukan") : ""; o[`Ket Bank ${j+1}`] = b.ket||""; }
+    Object.assign(o, {"Nominal ACC":num(r.accBank),"Tgl ACC":r.tglACC||"","Tgl Akad":r.tglAkad||"","Tempat Akad":r.tempatAkad||"","Notaris":r.notaris||""});
+    Object.keys(LEGAL).forEach(k => o[LEGAL[k]] = r.legal?.[k] ? "Ya" : "");
+    for (let j = 0; j < maxP; j++) { const p = (r.pencairan||[])[j] || {}; o[`Tgl Cair ${j+1}`] = p.tgl||""; o[`Cair ${j+1}`] = num(p.nominal) || ""; }
+    Object.assign(o, {"Progres Bangun %":Math.round(num(r.progressBangun)*100),"AJB":r.ajb?"Ya":"","Tgl AJB":r.tglAJB||"","STU":r.stu?"Ya":"","Tgl STU":r.tglSTU||"","Keterangan":r.keterangan||"","Promo":r.promo||""});
+    return o;
+  });
+  const slug = S.f.status ? "_" + (S.f.status === "belum" ? "belum-akad" : S.f.status.toLowerCase().replace(/\s+/g,"-")) : "";
+  await offer(`Berkas_KPR${slug}_${stamp()}.xlsx`, xlsxBlob([["Berkas KPR", data, [5,10,30,12,14,11,11,13]]]));
+}
+async function retXLS(){
+  const rows = retRows(); if (!rows.length) { toast("Tidak ada data pada filter ini."); return; }
+  await loadScript(XLSXJS);
+  const K = Object.keys(RET_KOMP);
+  const data = rows.map((r,i) => { const o = {"No":i+1,"Blok":r.blok,"Nama":r.nama,"Pembayaran":r.pembayaran||"","Bank KPR":r.bank||"","Notaris":r.notaris||"",
+    "Nilai UTJ/UM":num(r.nilaiUM),"Nilai KPR":num(r.nilaiKPR),"Total Nilai":retNilai(r),"Diterima UTJ/UM":num(r.terimaUM),"Diterima KPR":num(r.terimaKPR),"% Pencairan KPR":num(r.persenCair)};
+    K.forEach(k => o["Retensi Awal " + RET_KOMP[k]] = num(r.ret?.[k]));
+    o["Total Retensi Awal"] = retAwal(r); o["Sudah Cair"] = retCair(r); o["Jumlah Pencairan"] = (r.cair||[]).length;
+    const last = cairSorted(r).slice(-1)[0]; o["Tgl Cair Terakhir"] = last?.tgl || "";
+    K.forEach(k => o["Sisa " + RET_KOMP[k]] = compSisa(r,k));
+    Object.assign(o, {"Sisa Retensi":retSisa(r),"Total Diterima + Cair":retTerima(r),"Status":retStatus(r)||"","Catatan":r.catatan||""}); return o; });
+  const hist = rows.flatMap(r => cairSorted(r).map(c => ({"Blok":r.blok,"Nama":r.nama,"Bank KPR":r.bank||"","Tanggal Cair":c.tgl||"","Komponen":RET_KOMP[c.komponen]||c.komponen||"","Nominal":num(c.nominal),"Keterangan":c.ket||""})));
+  await offer(`Retensi_${stamp()}.xlsx`, xlsxBlob([["Retensi", data, [5,9,30,10,16,10]], ["Riwayat Pencairan", hist, [9,30,16,12,22,14,30], ["Blok","Nama","Bank KPR","Tanggal Cair","Komponen","Nominal","Keterangan"]]]));
+}
+
+/* ---------- import excel ---------- */
+const UP_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m-4 4 4-4 4 4M5 15v4h14v-4"/></svg>`;
+const BULAN = {januari:1,februari:2,maret:3,april:4,mei:5,juni:6,juli:7,agustus:8,agust:8,september:9,oktober:10,november:11,desember:12,jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,agu:8,agt:8,sep:9,okt:10,nov:11,des:12};
+const p2 = n => String(n).padStart(2,"0");
+function xd(v){
+  if (v == null || v === "") return "";
+  if (typeof v === "number") { if (v > 30000 && v < 60000) return new Date(Date.UTC(1899,11,30) + Math.floor(v)*86400000).toISOString().slice(0,10); return ""; }
+  const s = String(v).trim(); let m;
+  if ((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/.exec(s))) return `${m[3]}-${p2(m[2])}-${p2(m[1])}`;
+  if ((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2})$/.exec(s))) return `20${m[3]}-${p2(m[2])}-${p2(m[1])}`;
+  if ((m = /^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/.exec(s)) && BULAN[m[2].toLowerCase()]) return `${m[3]}-${p2(BULAN[m[2].toLowerCase()])}-${p2(m[1])}`;
+  return "";
+}
+const xn = v => (typeof v === "number" && Number.isFinite(v)) ? (Number.isInteger(v) ? v : Math.round(v*100)/100) : 0;
+const xt = v => { if (v == null) return ""; const s = String(v).trim(); return (s === "-" || s === "#DIV/0!") ? "" : s; };
+const xc = v => v != null && !["","-","x","X"].includes(String(v).trim());
+const normUnit = s => String(s||"").replace(/\s*-\s*/g,"-").replace(/\s+/g," ").trim().toUpperCase();
+const normBank = s => String(s||"").replace(/\s+/g," ").trim().toUpperCase();
+
+function parseKPRRows(rows){
+  const h = rows.findIndex(r => String(r?.[1] ?? "").trim().toUpperCase() === "UNIT");
+  if (h < 0) return null;
+  const out = []; let n = 0;
+  for (const r of rows.slice(h + 2)) {
+    if (!r) continue;
+    const unit = String(r[1] ?? "").replace(/\s*-\s*/g,"-").trim(), nama = xt(r[2]);
+    if (!unit || !nama) continue;
+    n++;
+    const bankNames = [25,26,27,28].map(c => xt(r[c])).filter(Boolean);
+    const bankProses = bankNames.map(b => ({bank:b, tgl:"", ket:"", hasil:""}));
+    if (bankProses.length && xt(r[29])) bankProses[bankProses.length-1].ket = xt(r[29]);
+    const promoParts = [["Subsidi asuransi: ",68],["Bonus: ",69],["Subsidi angsuran: ",70],["Diskon PPN: ",71]].filter(([,c]) => xt(r[c])).map(([l,c]) => l + xt(r[c]));
+    out.push({ ord: typeof r[0] === "number" ? r[0] : n, unit, nama, tglUTJ:xd(r[3]), tglSPR:xd(r[4]), caraBayar:xt(r[5]),
+      hargaBank:xn(r[6]), hargaTransaksi:xn(r[7]), utj:xn(r[8]), angsuranUM:xn(r[9]), cashbackUM:xn(r[10]), totalUM:xn(r[11]),
+      plafond:xn(r[12]), accBank:xn(r[13]), tum:xn(r[14]),
+      berkas:Object.fromEntries(["ktp","npwp","kk","akta","rk3","suket","slip","rk6","nib","lapkeu"].map((k,i) => [k, xc(r[15+i])])),
+      bankProses,
+      legal:Object.fromEntries(["potongPokok","roya","ambilSertifikat","verifikasi","validasi","lunasDP","siLPP","feeKPR","pbg"].map((k,i) => [k, xc(r[30+i])])),
+      tglAkad:xd(r[39]), tempatAkad:xt(r[40]), notaris:xt(r[41]),
+      pencairan:[42,45,48,51,54].filter(c => xn(r[c+1]) || xd(r[c])).map(c => ({tgl:xd(r[c]), nominal:xn(r[c+1])})),
+      progressBangun:xn(r[62]), ajb:xc(r[63]), tglAJB:xd(r[64]), stu:xc(r[65]), tglSTU:xd(r[66]),
+      keterangan:xt(r[67]), promo:promoParts.join("; ") });
+  }
+  return out;
+}
+function parseRetRows(rows){
+  const h = rows.findIndex(r => String(r?.[0] ?? "").trim().toLowerCase() === "blok");
+  if (h < 0) return null;
+  const out = [];
+  for (const r of rows.slice(h + 1)) {
+    if (!r) continue;
+    const blok = xt(r[0]), nama = xt(r[1]);
+    if (!blok || !nama) continue;
+    out.push({ blok, nama, pembayaran:xt(r[2]), nilaiUM:xn(r[3]), nilaiKPR:xn(r[4]), terimaUM:xn(r[6]), terimaKPR:xn(r[7]), persenCair:xn(r[9]),
+      ret:{bangunan:Math.round(xn(r[10])), ajb:xn(r[11]), sertifikat:xn(r[12]), pbg:xn(r[13]), pdam:xn(r[14]), listrik:xn(r[15]), pajak:xn(r[16])},
+      status:xt(r[18]), bank:xt(r[19]), notaris:xt(r[20]), catatan:[xt(r[21]), xt(r[22])].filter(Boolean).join("; ") });
+  }
+  return out;
+}
+
+const FL_KPR = {unit:"Unit",nama:"Nama",tglUTJ:"Tgl UTJ",tglSPR:"Tgl SPR",caraBayar:"Cara bayar",hargaBank:"Harga bank",hargaTransaksi:"Harga transaksi",utj:"UTJ",angsuranUM:"Angsuran UM",cashbackUM:"Cashback UM",totalUM:"Uang muka",plafond:"Plafond",accBank:"Nominal ACC",tum:"TUM",tglAkad:"Tgl akad",tempatAkad:"Tempat akad",notaris:"Notaris",progressBangun:"Progres bangun",ajb:"AJB",tglAJB:"Tgl AJB",stu:"STU",tglSTU:"Tgl STU",keterangan:"Keterangan",promo:"Promo",berkas:"Berkas",legal:"Legal & pajak",pencairan:"Pencairan KPR",bankProses:"Bank"};
+const FL_RET = {nama:"Nama",pembayaran:"Pembayaran",nilaiUM:"Nilai UM",nilaiKPR:"Nilai KPR",terimaUM:"Diterima UM",terimaKPR:"Diterima KPR",persenCair:"% cair",ret:"Retensi",status:"Status",bank:"Bank",notaris:"Notaris",catatan:"Catatan"};
+const isEmptyV = v => v === "" || v == null || v === 0 || v === false;
+function nz(v){
+  if (Array.isArray(v)) return v.length ? JSON.stringify(v) : null;
+  if (v && typeof v === "object") { const e = Object.entries(v).filter(([,x]) => !isEmptyV(x)).sort(([a],[b]) => a < b ? -1 : 1); return e.length ? JSON.stringify(e) : null; }
+  return isEmptyV(v) ? null : v;
+}
+const diffKeys = (a, b, labels) => Object.keys(labels).filter(k => nz(a[k]) !== nz(b[k]));
+function fv(k, v){
+  if (v == null || v === "" || v === 0 || v === false) return "kosong";
+  if (v === true) return "ya";
+  if (typeof v === "number") return k === "persenCair" || k === "progressBangun" ? Math.round(v*100) + "%" : (Math.abs(v) >= 1e6 ? juta(v) : String(v));
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return tgl(v);
+  if (typeof v === "string") return v.length > 28 ? v.slice(0,27) + "…" : v;
+  return "";
+}
+function mergeKPR(old, x, ow){
+  const m = clone(old);
+  ["unit","nama","tglUTJ","tglSPR","caraBayar","hargaBank","hargaTransaksi","utj","angsuranUM","cashbackUM","totalUM","plafond","accBank","tum","tglAkad","tempatAkad","notaris","progressBangun","tglAJB","tglSTU","keterangan","promo"].forEach(k => { if (ow || !isEmptyV(x[k])) m[k] = x[k]; });
+  if (ow || x.ajb) m.ajb = x.ajb; if (ow || x.stu) m.stu = x.stu;
+  ["berkas","legal"].forEach(g => { m[g] = ow ? {...x[g]} : Object.fromEntries(Object.keys(x[g]).map(k => [k, !!(old[g]?.[k] || x[g][k])])); });
+  if (ow || x.pencairan.length) m.pencairan = x.pencairan;
+  const have = new Set((m.bankProses||[]).map(b => normBank(b.bank)));
+  m.bankProses = [...(m.bankProses||[])];
+  x.bankProses.forEach(b => { if (!have.has(normBank(b.bank))) { m.bankProses.push({...b}); have.add(normBank(b.bank)); } });
+  if (!m.ord) m.ord = x.ord;
+  return m;
+}
+function mergeRet(old, x, ow){
+  const m = clone(old), hasCair = (old.cair||[]).length > 0;
+  ["nama","pembayaran","nilaiUM","nilaiKPR","terimaUM","terimaKPR","persenCair","status","bank","notaris","catatan"].forEach(k => { if (ow || !isEmptyV(x[k])) m[k] = x[k]; });
+  let skipped = false;
+  if (!hasCair) m.ret = {...x.ret}; else if (nz(old.ret) !== nz(x.ret)) skipped = true;
+  return {m, skipped};
+}
+
+function planImport(){
+  const imp = S.imp, ow = !!$("#imp-ow")?.checked;
+  const plan = {news:[], upd:[], same:0, skipped:0, writes:[]};
+  if (imp.type === "kpr") {
+    const kd = (list, ordered) => { const c = {}, m = new Map(); (ordered ? [...list].sort((a, b) => (a.ord||0) - (b.ord||0)) : list).forEach(r => { const u = normUnit(r.unit); c[u] = (c[u]||0) + 1; m.set(c[u] > 1 ? u + "#" + c[u] : u, r); }); return m; };
+    const idx = kd(S.kpr, true), seen = kd(imp.items, false);
+    seen.forEach((x, key) => {
+      const old = idx.get(key);
+      if (!old) { plan.news.push({label:x.unit, sub:titleCase(x.nama)}); plan.writes.push({col:"kpr", id:null, rec:{...x, tglACC:""}}); return; }
+      const m = mergeKPR(old, x, ow), ch = diffKeys(old, m, FL_KPR);
+      if (!ch.length) { plan.same++; return; }
+      plan.upd.push({label:old.unit, sub:titleCase(m.nama), ch:ch.map(k => ({k, l:FL_KPR[k], a:fv(k, old[k]), b:fv(k, m[k])}))});
+      const {id, ...rest} = m; plan.writes.push({col:"kpr", id:old.id, rec:rest});
+    });
+  } else {
+    const idx = new Map(S.ret.map(r => [String(r.blok).trim().toUpperCase(), r])), seen = new Map(imp.items.map(x => [x.blok.trim().toUpperCase(), x]));
+    seen.forEach((x, key) => {
+      const old = idx.get(key);
+      if (!old) { plan.news.push({label:x.blok, sub:titleCase(x.nama)}); plan.writes.push({col:"retensi", id:null, rec:{...x, cair:[], ord:S.ret.length + plan.news.length}}); return; }
+      const {m, skipped} = mergeRet(old, x, ow); if (skipped) plan.skipped++;
+      const ch = diffKeys(old, m, FL_RET);
+      if (!ch.length) { plan.same++; return; }
+      plan.upd.push({label:old.blok, sub:titleCase(m.nama), ch:ch.map(k => ({k, l:FL_RET[k], a:k === "ret" ? "" : fv(k, old[k]), b:k === "ret" ? "" : fv(k, m[k])}))});
+      const {id, ...rest} = m; plan.writes.push({col:"retensi", id:old.id, rec:rest});
+    });
+  }
+  return plan;
+}
+
+function openImport(){
+  S.edit = {type:"import"}; S.imp = null; S.plan = null;
+  $("#dr-title").innerHTML = `Unggah Excel<span>Perbarui data dari file Excel terbaru</span>`;
+  $("#dr-form").innerHTML = `
+    <fieldset><legend>Pilih file</legend>
+      <label class="drop" for="imp-file"><b>Klik untuk memilih file, atau seret ke sini</b><span>File .xlsx rekap penjualan KPR atau data retensi. Jenisnya dikenali otomatis.</span></label>
+      <input class="sr" id="imp-file" type="file" accept=".xlsx,.xlsm,.xls">
+      <p class="sub" style="margin-top:10px">Unit yang sudah ada diperbarui, unit baru ditambahkan. Tidak ada data yang dihapus. Anda bisa melihat dan membatalkan sebelum disimpan.</p>
+    </fieldset>
+    <div id="imp-out"></div>`;
+  $("#dr-foot").innerHTML = `<span class="sp"></span><button class="btn" id="dr-cancel">Batal</button><button class="btn pri" id="imp-apply" disabled>Terapkan</button><div class="msg" id="dr-msg"></div>`;
+  showDrawer(true);
+}
+async function handleImportFile(file){
+  const out = $("#imp-out"); if (!file || !out) return;
+  out.innerHTML = `<div class="card" style="padding:16px"><b>Membaca ${esc(file.name)}…</b></div>`;
+  try {
+    await loadScript(XLSXJS);
+    const wb = XLSX.read(await file.arrayBuffer(), {type:"array"});
+    let found = null;
+    for (const name of wb.SheetNames) {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1});
+      const k = parseKPRRows(rows); if (k && k.length) { found = {type:"kpr", items:k, sheet:name}; break; }
+      const r = parseRetRows(rows); if (r && r.length) { found = {type:"ret", items:r, sheet:name}; break; }
+    }
+    if (!found) { out.innerHTML = `<div class="card" style="padding:16px"><b>File ini tidak dikenali</b><p class="sub">Pastikan ada sheet dengan kolom UNIT dan NAMA (rekap KPR) atau kolom Blok dan Nama (retensi).</p></div>`; return; }
+    S.imp = {...found, fileName:file.name};
+    renderImport();
+  } catch (err) { out.innerHTML = `<div class="card" style="padding:16px"><b>File tidak bisa dibaca</b><p class="sub">Coba simpan ulang sebagai .xlsx lalu unggah lagi.</p></div>`; }
+}
+function renderImport(){
+  const imp = S.imp, out = $("#imp-out"); if (!imp || !out) return;
+  const ow = !!$("#imp-ow")?.checked;
+  const plan = S.plan = planImport(), n = plan.writes.length;
+  const isK = imp.type === "kpr";
+  const rows = [...plan.news.map(x => ({...x, baru:true})), ...plan.upd].slice(0, 14);
+  out.innerHTML = `
+    <fieldset><legend>${isK ? "Rekap KPR" : "Data retensi"} · ${esc(imp.fileName)}</legend>
+      <p class="sub" style="margin:0 0 12px">Sheet "${esc(imp.sheet)}", ${imp.items.length} baris terbaca.</p>
+      <div class="impstat"><div><b class="num">${plan.news.length}</b><span>unit baru</span></div><div><b class="num">${plan.upd.length}</b><span>diperbarui</span></div><div><b class="num">${plan.same}</b><span>tidak berubah</span></div></div>
+      <label class="ck" style="margin-top:12px"><input type="checkbox" id="imp-ow"${ow ? " checked" : ""}>Timpa juga isian yang kosong di Excel</label>
+      <p class="sub" style="margin:6px 0 0">Biarkan tidak dicentang agar kolom kosong di Excel tidak menghapus data yang sudah Anda isi di dashboard.</p>
+      ${plan.skipped ? `<p class="sub" style="margin:8px 0 0;color:var(--warn-fg)">${plan.skipped} unit sudah punya riwayat pencairan retensi, jadi nilai retensinya tidak diubah.</p>` : ""}
+    </fieldset>
+    <fieldset><legend>Perubahan yang akan disimpan</legend>
+      ${rows.length ? `<div class="implist">${rows.map(x => `<div class="impr"><div class="impr-h"><b>${esc(x.label)}</b><span>${esc(x.sub)}</span>${x.baru ? `<span class="pill p-ok">Baru</span>` : ""}</div>${x.baru ? "" : `<div class="chips" style="max-width:none">${x.ch.slice(0,4).map(c => `<span class="chip" title="${esc(c.l)}">${esc(c.l)}${c.a || c.b ? `: ${esc(c.a)} → ${esc(c.b)}` : ""}</span>`).join("")}${x.ch.length > 4 ? `<span class="chip">+${x.ch.length-4} lainnya</span>` : ""}</div>`}</div>`).join("")}${n > rows.length ? `<p class="sub" style="padding-top:8px">…dan ${n - rows.length} unit lainnya.</p>` : ""}</div>` : `<p class="none">Tidak ada perbedaan. Data di dashboard sudah sama dengan file ini.</p>`}
+    </fieldset>`;
+  const btn = $("#imp-apply"); btn.disabled = n === 0; btn.textContent = n ? `Terapkan ${n} perubahan` : "Tidak ada perubahan";
+}
+async function applyImport(btn){
+  const plan = S.plan; if (!plan || !plan.writes.length || !S.db) return;
+  const msg = $("#dr-msg"); msg.textContent = "";
+  btn.disabled = true; $("#dr-cancel").disabled = true;
+  const stampNow = new Date().toISOString(), q = plan.writes.map(w => ({...w, rec:{...w.rec, updatedAt:stampNow}})), total = q.length;
+  let done = 0, fail = 0;
+  const put = it => { const c = S.db.collection(it.col); return (it.id ? c.doc(it.id) : c.doc()).set(it.rec); };
+  const worker = async () => { while (q.length) { const it = q.shift(); try { await put(it); } catch (e) { if (e?.code === "resource_exhausted" || e?.code === "unavailable") { await new Promise(r => setTimeout(r, 900)); try { await put(it); } catch { fail++; } } else fail++; } done++; btn.textContent = `Menyimpan ${done} / ${total}…`; } };
+  await Promise.all([worker(), worker(), worker()]);
+  $("#dr-cancel").disabled = false;
+  if (fail) { btn.disabled = false; btn.textContent = "Coba lagi"; msg.textContent = `${total - fail} unit tersimpan, ${fail} gagal. Muat ulang file ini lalu klik Terapkan lagi untuk mengulang yang gagal.`; return; }
+  toast(`${total} unit berhasil diperbarui`); showDrawer(false);
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, [data-tab]");
+  if (!t) { const tr = e.target.closest("tr[data-row-kpr], tr[data-row-ret]"); if (tr && !getSelection().toString()) { tr.dataset.rowKpr ? openKPR(tr.dataset.rowKpr) : openRet(tr.dataset.rowRet); } return; }
+  if (t.dataset.tab) { S.tab = t.dataset.tab; try { localStorage.setItem("kpr-tab", S.tab); } catch {} renderTabs(); return; }
+  if (t.dataset.openKpr) return openKPR(t.dataset.openKpr);
+  if (t.dataset.openRet) return openRet(t.dataset.openRet);
+  if (t.dataset.cairRet) return openRet(t.dataset.cairRet, true);
+  if (t.dataset.st !== undefined) { S.f.status = (S.f.status === t.dataset.st && !t.closest(".seg")) ? "" : t.dataset.st; renderKPR(); if (t.classList.contains("link")) $("#kpr-seg").scrollIntoView({behavior:"smooth", block:"start"}); return; }
+  if (t.dataset.rst !== undefined) { S.rf.status = (S.rf.status === t.dataset.rst && !t.closest(".seg")) ? "" : t.dataset.rst; renderRet(); return; }
+  if (t.hasAttribute("data-rm")) { t.closest(".rowf").remove(); updatePct(); updateRetCalc(); return; }
+  switch (t.id) {
+    case "kpr-add": return openKPR(null);
+    case "ret-add": return openRet(null);
+    case "dr-x": case "dr-cancel": return showDrawer(false);
+    case "dr-save": return save();
+    case "dr-del": return footer(true, true);
+    case "dr-nodel": return footer(true, false);
+    case "dr-yesdel": return del();
+    case "bp-add": $("#bp-rows").insertAdjacentHTML("beforeend", bpRow()); $("#bp-rows").lastElementChild.querySelector("input").focus(); return;
+    case "cr-add": return addCairRow(false);
+    case "pc-add": $("#pc-rows").insertAdjacentHTML("beforeend", pcRow({}, $("#pc-rows").children.length + 1)); updatePct(); return;
+    case "kpr-imp": case "ret-imp": return openImport();
+    case "imp-apply": return applyImport(t);
+    case "kpr-pdf": return withBusy(t, kprPDF);
+    case "kpr-xls": return withBusy(t, kprXLS);
+    case "ret-pdf": return withBusy(t, retPDF);
+    case "ret-xls": return withBusy(t, retXLS);
+  }
+});
+$("#ovl").addEventListener("click", () => showDrawer(false));
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#drawer").hidden) showDrawer(false); });
+$("#dr-form").addEventListener("submit", e => { e.preventDefault(); save(); });
+$("#dr-form").addEventListener("input", () => { updatePct(); updateRetCalc(); updateHints(); });
+const bind = (id, obj, key, ev, fn) => $(id).addEventListener(ev, e => { obj[key] = e.target.value; fn(); });
+bind("#kpr-dtb", S.f, "dtb", "change", renderKPR); bind("#kpr-d1", S.f, "d1", "change", renderKPR); bind("#kpr-d2", S.f, "d2", "change", renderKPR); bind("#ret-d1", S.rf, "d1", "change", renderRet); bind("#ret-d2", S.rf, "d2", "change", renderRet);
+document.addEventListener("click", e => { const b = e.target.closest("[data-dp]"); if (!b) return; const [k, m] = b.dataset.dp.split(":"), f = k === "kpr" ? S.f : S.rf;
+  const iso = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"), n = new Date();
+  if (m === "month") { f.d1 = iso(new Date(n.getFullYear(), n.getMonth(), 1)); f.d2 = iso(new Date(n.getFullYear(), n.getMonth()+1, 0)); }
+  else if (m === "last") { f.d1 = iso(new Date(n.getFullYear(), n.getMonth()-1, 1)); f.d2 = iso(new Date(n.getFullYear(), n.getMonth(), 0)); }
+  else if (m === "30") { f.d2 = iso(n); f.d1 = iso(new Date(n.getFullYear(), n.getMonth(), n.getDate()-30)); }
+  else { f.d1 = f.d2 = ""; }
+  $("#" + k + "-d1").value = f.d1; $("#" + k + "-d2").value = f.d2; (k === "kpr" ? renderKPR : renderRet)(); });
+bind("#kpr-q", S.f, "q", "input", renderKPR); bind("#kpr-year", S.f, "year", "change", renderKPR); bind("#kpr-bank", S.f, "bank", "change", renderKPR); bind("#kpr-bayar", S.f, "bayar", "change", renderKPR);
+bind("#ret-q", S.rf, "q", "input", renderRet);
+bind("#ret-bank", S.rf, "bank", "change", renderRet); bind("#kpr-sort", S.f, "sort", "change", renderKPR); bind("#ret-sort", S.rf, "sort", "change", renderRet);
+document.addEventListener("change", e => { if (e.target.id === "imp-file") handleImportFile(e.target.files[0]); else if (e.target.id === "imp-ow") renderImport(); });
+$("#dr-form").addEventListener("dragover", e => { if (S.edit?.type === "import") e.preventDefault(); });
+$("#dr-form").addEventListener("drop", e => { if (S.edit?.type === "import") { e.preventDefault(); handleImportFile(e.dataTransfer.files[0]); } }); bind("#ret-notaris", S.rf, "notaris", "change", renderRet);
+
+/* ---------- boot ---------- */
+try { const t = localStorage.getItem("kpr-tab"); if (t === "ret" || t === "kpr") S.tab = t; if (location.hash === "#retensi") S.tab = "ret"; } catch {}
+render();
+(async () => {
+  const c = window.claude;
+  if (!c || typeof c.use !== "function") { S.failed = true; setSync(false, "Offline"); render(); return; }
+  const [db, dl] = await Promise.all([c.use("db").catch(() => null), c.use("downloads").catch(() => null)]);
+  S.db = db; S.dl = dl;
+  if (!db) { S.failed = true; setSync(false, "Data tidak tersedia"); render(); return; }
+  setSync(true, "Tersinkron");
+  const sub = (col, key) => db.collection(col).limit(1000).onSnapshot(snap => {
+    S[key] = snap.docs.map(d => ({id:d.id, ...d.data()})); S.ready[key] = true;
+    key === "kpr" ? renderKPR() : renderRet();
+  }, err => { setSync(false, "Sinkron terputus, muat ulang halaman"); });
+  sub("kpr", "kpr"); sub("retensi", "ret");
+  syncButtons();
+})();
+})();
+</script>
+
+</body></html>
