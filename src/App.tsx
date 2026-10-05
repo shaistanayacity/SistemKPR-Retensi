@@ -52,7 +52,7 @@ function Dashboard() {
     <>
       <div className={"shell" + (hidden ? " no-side" : "")}>
         <aside className="side">
-          <div className="brandbox"><img className="logo" src="/logo.png" alt="Shaistanaya City" width="34" height="34" /><div><b>Shaistanaya City</b><small>Berkas KPR &amp; Retensi</small></div></div>
+          <div className="brandbox"><img className="logo" src="/logo.png?v=2" alt="Shaistanaya City" width="34" height="34" /><div><b>Shaistanaya City</b><small>Berkas KPR &amp; Retensi</small></div></div>
           <nav className="snav" role="tablist" aria-label="Menu">
             <button role="tab" aria-selected={tab === "kpr"} onClick={() => setTab("kpr")}><Icon name="file" size={17} />Berkas KPR <span className="cnt num">{kpr.length}</span></button>
             <button role="tab" aria-selected={tab === "ret"} onClick={() => setTab("ret")}><Icon name="wallet" size={17} />Retensi / Escrow <span className="cnt num">{ret.length}</span></button>
