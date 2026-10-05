@@ -12,18 +12,30 @@ export interface Kpr {
   tglSPR?: string;
   caraBayar?: string;
   jenisPekerjaan?: string;
+  hargaBank?: number;
   hargaTransaksi?: number;
+  utj?: number;
+  angsuranUM?: number;
+  cashbackUM?: number;
+  tum?: number;
   totalUM?: number;
   plafond?: number;
   accBank?: number;
   tglACC?: string;
   berkas?: Partial<Record<"ktp" | "npwp" | "kk" | "akta" | "rk3" | "suket" | "slip" | "rk6" | "nib" | "lapkeu", boolean>>;
+  legal?: Record<string, boolean>;
   bankProses?: BankProses[];
   tglAkad?: string;
   tempatAkad?: string;
   notaris?: string;
   pencairan?: Pencairan[];
+  progressBangun?: number | string;
+  ajb?: boolean;
+  tglAJB?: string;
+  stu?: boolean;
+  tglSTU?: string;
   keterangan?: string;
+  promo?: string;
   updatedAt?: string;
 }
 
@@ -36,6 +48,8 @@ export interface Retensi {
   ord: number;
   blok: string;
   nama: string;
+  pembayaran?: string;
+  persenCair?: number;
   nilaiUM?: number;
   nilaiKPR?: number;
   terimaUM?: number;

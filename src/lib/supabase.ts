@@ -22,3 +22,23 @@ export async function myRole(): Promise<Role> {
   const { data } = await supabase.from("profiles").select("role").single();
   return (data?.role as Role) ?? "pembaca";
 }
+
+// Simpan: kolom inti dipisah, sisanya masuk jsonb `data`.
+export async function saveKpr(r: Kpr) {
+  const { id, ord, unit, nama, updatedAt: _u, ...data } = r;
+  const row = { ord, unit, nama, data, updated_at: new Date().toISOString() };
+  const q = id ? supabase.from("kpr").update(row).eq("id", id) : supabase.from("kpr").insert(row);
+  const { error } = await q;
+  if (error) throw error;
+}
+export async function saveRetensi(r: Retensi) {
+  const { id, ord, blok, nama, updatedAt: _u, ...data } = r;
+  const row = { ord, blok, nama, data, updated_at: new Date().toISOString() };
+  const q = id ? supabase.from("retensi").update(row).eq("id", id) : supabase.from("retensi").insert(row);
+  const { error } = await q;
+  if (error) throw error;
+}
+export async function removeRow(table: "kpr" | "retensi", id: string) {
+  const { error } = await supabase.from(table).delete().eq("id", id);
+  if (error) throw error;
+}

@@ -9,4 +9,4 @@ Dashboard Berkas KPR dan Retensi/Escrow (Shaistanaya City). Aturan kerja dan log
 4. `npm run dev` (tes: `npm test`)
 
 ## Status
-Tahap 1: kerangka Vite + React + TypeScript, skema database dengan peran (admin, sales, pembaca) dan riwayat perubahan, logika bisnis dengan tes, login, dan tabel dasar. Panel detail, filter, unduh PDF/Excel, dan impor Excel masih perlu dipindahkan dari purwarupa.
+Tahap 2: tampilan lengkap dari purwarupa (kartu alur, tindak lanjut, bagan bank, filter dan tanggal, tabel, panel detail dengan ubah/tambah/hapus, pencairan retensi) dengan akses per peran. Belum ada: unduh PDF/Excel, impor Excel, tombol WhatsApp, pengingat unit macet, hubungan KPR-Retensi.

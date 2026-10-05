@@ -31,10 +31,99 @@ export function berkasNeed(r: Kpr): DocKey[] {
 export function berkasScore(r: Kpr) {
   const need = berkasNeed(r);
   const missing = need.filter(k => !r.berkas?.[k]);
-  return { have: need.length - missing.length, need: need.length, missing };
+  return { have: need.length - missing.length, need: need.length, missing: missing.map(k => DOCS[k]) };
 }
 
 export const retAwal = (r: Retensi) => RET_KOMP.reduce((a, k) => a + num(r.ret?.[k]), 0);
 export const retCair = (r: Retensi) => (r.cair ?? []).reduce((a, c) => a + num(c.nominal), 0);
 export const retSisa = (r: Retensi) => retAwal(r) - retCair(r);
 export const retStatus = (r: Retensi) => (retAwal(r) > 0 && retSisa(r) <= 0 ? "Lunas" : r.status ?? "");
+
+// ---- Turunan tambahan (dari purwarupa) ----
+import { brand, DOCS, kompShort, natural, tgl } from "./format";
+
+export const retNilai = (r: Retensi) => num(r.nilaiUM) + num(r.nilaiKPR);
+export const retTerima = (r: Retensi) => num(r.terimaUM) + num(r.terimaKPR) + retCair(r);
+export const compSisa = (r: Retensi, k: string) =>
+  num(r.ret?.[k as keyof NonNullable<Retensi["ret"]>]) - (r.cair ?? []).filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0);
+export const cairSorted = (r: Retensi) => [...(r.cair ?? [])].sort((a, b) => String(a.tgl).localeCompare(String(b.tgl)));
+
+export const accBankName = (r: Kpr) => (r.bankProses ?? []).find(b => b.hasil === "ACC")?.bank ?? "";
+export const kprBrand = (r: Kpr) => brand(r.tempatAkad) || brand(accBankName(r));
+export const kprBanks = (r: Kpr) => {
+  const s = new Set((r.bankProses ?? []).map(b => brand(b.bank)).filter(Boolean));
+  const t = brand(r.tempatAkad);
+  if (t) s.add(t);
+  return [...s];
+};
+
+export function followUp(r: Kpr): string {
+  const st = status(r), bp = r.bankProses ?? [], last = bp[bp.length - 1];
+  if (st === "ACC Bank") { const a = bp.find(b => b.hasil === "ACC"); return `ACC ${a ? brand(a.bank) : "bank"}${r.tglACC ? " " + tgl(r.tglACC) : ""} · jadwalkan akad`; }
+  if (st === "Proses Bank") {
+    if (last && (last.hasil === "Ditolak" || last.hasil === "Batal")) return `${last.hasil} ${brand(last.bank)} · ajukan ke bank lain`;
+    return `Menunggu hasil ${brand(last?.bank) || "bank"}${last?.tgl ? " sejak " + tgl(last.tgl) : ""}${last?.ket ? " · " + last.ket : ""}`;
+  }
+  const sc = berkasScore(r);
+  return sc.missing.length ? `Kurang ${sc.missing.join(", ")}` : "Berkas lengkap · belum diajukan ke bank";
+}
+
+// ---- Filter ----
+export interface KprFilter { q: string; year: string; status: string; bank: string; bayar: string; sort: string; dtb: string; d1: string; d2: string }
+export interface RetFilter { q: string; status: string; bank: string; notaris: string; sort: string; d1: string; d2: string }
+export const emptyKprFilter: KprFilter = { q: "", year: "", status: "", bank: "", bayar: "", sort: "baru", dtb: "utj", d1: "", d2: "" };
+export const emptyRetFilter: RetFilter = { q: "", status: "", bank: "", notaris: "", sort: "blok", d1: "", d2: "" };
+
+const inRange = (d: string, a: string, b: string) => !!d && (!a || d >= a) && (!b || d <= b);
+const anyIn = (arr: { tgl?: string }[] | undefined, a: string, b: string) => (arr ?? []).some(x => inRange(String(x.tgl ?? "").slice(0, 10), a, b));
+
+function kprDateOK(r: Kpr, f: KprFilter) {
+  if (!f.d1 && !f.d2) return true;
+  const g = (k: keyof Kpr) => String(r[k] ?? "").slice(0, 10);
+  switch (f.dtb) {
+    case "spr": return inRange(g("tglSPR"), f.d1, f.d2);
+    case "acc": return inRange(g("tglACC"), f.d1, f.d2);
+    case "akad": return inRange(g("tglAkad"), f.d1, f.d2);
+    case "bank": return anyIn(r.bankProses, f.d1, f.d2);
+    case "cair": return anyIn(r.pencairan, f.d1, f.d2);
+    default: return inRange(g("tglUTJ"), f.d1, f.d2);
+  }
+}
+
+export function kprRows(all: Kpr[], f: KprFilter): Kpr[] {
+  const q = f.q.trim().toLowerCase();
+  return all.filter(r => {
+    if (q && !`${r.nama} ${r.unit}`.toLowerCase().includes(q)) return false;
+    if (f.year && String(r.tglUTJ ?? "").slice(0, 4) !== f.year) return false;
+    const st = status(r);
+    if (f.status === "belum") { if (!isBelumAkad(r)) return false; }
+    else if (f.status && st !== f.status) return false;
+    if (!kprDateOK(r, f)) return false;
+    if (f.bank && !kprBanks(r).includes(f.bank)) return false;
+    if (f.bayar && (r.caraBayar ?? "").toUpperCase() !== f.bayar) return false;
+    return true;
+  }).sort((a, b) => {
+    const ua = String(a.tglUTJ ?? ""), ub = String(b.tglUTJ ?? "");
+    if (f.sort === "unit") return natural(a.unit, b.unit);
+    if (f.sort === "lama") return (ua || "9999").localeCompare(ub || "9999") || num(a.ord) - num(b.ord);
+    if (f.sort === "diubah") return String(b.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")) || ub.localeCompare(ua) || num(b.ord) - num(a.ord);
+    return ub.localeCompare(ua) || num(b.ord) - num(a.ord);
+  });
+}
+
+export function retRows(all: Retensi[], f: RetFilter): Retensi[] {
+  const q = f.q.trim().toLowerCase();
+  return all.filter(r => {
+    if (q && !`${r.nama} ${r.blok}`.toLowerCase().includes(q)) return false;
+    if (f.status && retStatus(r) !== f.status) return false;
+    if (f.bank && (r.bank ?? "") !== f.bank) return false;
+    if (f.notaris && (r.notaris ?? "") !== f.notaris) return false;
+    if ((f.d1 || f.d2) && !anyIn(r.cair, f.d1, f.d2)) return false;
+    return true;
+  }).sort((a, b) => {
+    if (f.sort === "sisa") return retSisa(b) - retSisa(a) || natural(a.blok, b.blok);
+    if (f.sort === "diubah") { const la = (x: Retensi) => String([x.updatedAt ?? "", ...(x.cair ?? []).map(c => c.tgl ?? "")].sort().pop()); return la(b).localeCompare(la(a)) || natural(a.blok, b.blok); }
+    return natural(a.blok, b.blok);
+  });
+}
+export { kompShort };
