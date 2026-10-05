@@ -12,6 +12,7 @@ const P: Record<string, string> = {
   layers: "M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5",
   search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5",
   out: "M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 8l4 4-4 4M20 12H9",
+  panel: "M4 5h16v14H4zM9 5v14",
   grid: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
 };
 export function Icon({ name, size = 16 }: { name: keyof typeof P | string; size?: number }) {
