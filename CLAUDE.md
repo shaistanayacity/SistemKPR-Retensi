@@ -1,0 +1,66 @@
+# Dashboard Berkas KPR & Retensi — Shaistanaya City
+
+Aplikasi web internal untuk memantau kelengkapan berkas KPR dan retensi (escrow) tiap unit rumah.
+Pemilik: Arifah Dona (Head of Digital Marketing, Shaistanaya City / PT Neo Pudji Jaya).
+
+## Aturan kerja
+- Bahasa antarmuka dan jawaban: Indonesia, sopan dan formal. Pakai "tidak", bukan "ga".
+- Tampilan: selalu terang (putih), monokrom (hitam, putih, abu-abu), bersih, tanpa emoji.
+  Status dibedakan lewat tingkat gelap-terang dan garis tepi, bukan warna.
+- Jangan ubah fitur yang sudah ada tanpa diminta. Tampilan tabel KPR sengaja ringkas; detail lengkap muncul saat baris diklik (panel samping).
+- Purwarupa yang sudah jalan ada di `prototype/dashboard-prototype.html` (satu file HTML). Jadikan acuan tampilan dan perilaku.
+
+## Isi folder
+- `prototype/dashboard-prototype.html` — purwarupa final (Versi 13 di Claude Artifact). Semua logika ada di sini.
+- `data/kpr.json` (178 unit) dan `data/retensi.json` (20 blok) — data terakhir, termasuk perubahan manual.
+- `data/excel-asli/` — dua file Excel sumber.
+- `referensi/` — skrip konversi Excel ke JSON dan kode impor Excel dari purwarupa (pemetaan kolom ada di sini).
+
+## Fitur yang sudah ada
+Tab Berkas KPR:
+- Kartu alur: Pemberkasan, Proses Bank, ACC Bank, Sudah Akad, Non KPR. Daftar "Perlu ditindaklanjuti". Bagan unit per bank.
+- Tab status, pencarian nama/unit, filter tahun UTJ, bank, cara bayar, urutan (default berkas terbaru dulu menurut tanggal UTJ).
+- Filter tanggal (UTJ, SPR & PPJB, proses bank, ACC, akad, pencairan KPR) dengan rentang dari/sampai dan tombol Bulan ini, Bulan lalu, 30 hari.
+- Tabel 8 kolom: Unit, Pembeli, Nilai, Proses Bank (bank, tanggal, keterangan), ACC & Akad, Berkas, Status. Klik baris membuka panel detail untuk melihat dan mengubah.
+- Panel detail: data pembeli, harga & uang muka, kelengkapan berkas (KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji, RK 6 bln, NIB, lapkeu), proses bank per bank (tanggal, hasil, keterangan), ACC & akad (nominal, tanggal, tempat, notaris), legal/pajak/berkas akad, pencairan KPR, serah terima, catatan.
+- Unduh PDF dan Excel sesuai filter aktif. Unggah Excel (lihat aturan impor di bawah).
+Tab Retensi/Escrow:
+- Kartu: retensi awal, sudah cair, sisa, unit lunas. Pencairan terbaru. Sisa per komponen.
+- Pencairan dicatat per tanggal dan nominal (tombol "+ Cair"), sisa retensi berkurang otomatis.
+- Filter status, bank, notaris, tanggal pencairan. Unduh PDF dan Excel. Unggah Excel.
+
+## Logika bisnis (jangan diubah tanpa konfirmasi)
+Status unit KPR, diperiksa berurutan:
+1. Cara bayar tidak mengandung "KPR" → Non KPR
+2. Ada tanggal akad → Sudah Akad
+3. Ada tanggal ACC, atau nominal ACC bank > 0, atau ada bank berhasil "ACC" → ACC Bank
+4. Ada data proses bank → Proses Bank
+5. Selain itu → Pemberkasan
+"Belum akad" = Pemberkasan + Proses Bank + ACC Bank.
+Retensi: awal = jumlah semua komponen (bangunan, ajb, sertifikat, pbg, pdam, listrik, pajak). Cair = jumlah semua pencairan. Sisa = awal − cair. Status "Lunas" otomatis saat awal > 0 dan sisa ≤ 0.
+Kelengkapan berkas: jumlah dokumen terpenuhi dari yang dibutuhkan (karyawan: KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji; wiraswasta: KTP, NPWP, KK, akta nikah, RK 6 bln, NIB, lapkeu).
+
+## Model data
+KPR: ord, unit, nama, tglUTJ, tglSPR, caraBayar, jenisPekerjaan, hargaBank, hargaTransaksi, utj, angsuranUM, cashbackUM, totalUM, plafond, accBank, tglACC, tum, berkas{ktp,npwp,kk,akta,rk3,suket,slip,rk6,nib,lapkeu}, bankProses[{bank,tgl,ket,hasil}], legal{potongPokok,roya,ambilSertifikat,verifikasi,validasi,lunasDP,siLPP,feeKPR,pbg}, tglAkad, tempatAkad, notaris, pencairan[{tgl,nominal}], progressBangun, ajb, tglAJB, stu, tglSTU, keterangan, promo, updatedAt.
+Retensi: ord, blok, nama, pembayaran, nilaiUM, nilaiKPR, terimaUM, terimaKPR, persenCair, ret{bangunan,ajb,sertifikat,pbg,pdam,listrik,pajak}, cair[{tgl,nominal,komponen,ket}], status, bank, notaris, catatan, updatedAt.
+Tanggal disimpan ISO (YYYY-MM-DD). Nominal dalam rupiah (angka bulat).
+
+## Aturan impor Excel
+- Rekap KPR: baris header ditemukan lewat sel kolom B bernilai "UNIT"; data mulai 2 baris di bawahnya. Retensi: header di kolom A bernilai "Blok".
+- Tanggal bisa berupa serial Excel atau teks Indonesia ("31 Agustus 2023", "31/8/23").
+- Kunci pencocokan: nomor unit (KPR) atau blok (retensi), huruf besar, spasi di sekitar "-" diabaikan. Unit kembar di file (contoh F2-03, F12-09) diperlakukan sebagai dua data terpisah menurut urutan.
+- Unit yang ada diperbarui, unit baru ditambahkan, tidak ada yang dihapus. Tampilkan pratinjau perubahan sebelum menyimpan.
+- Retensi: nilai retensi tidak ditimpa jika blok itu sudah punya riwayat pencairan.
+- Uji: mengunggah ulang dua file asli harus menghasilkan "tidak ada perubahan".
+
+## Rencana pengembangan (urutan prioritas)
+1. Pindah dari penyimpanan purwarupa ke database sungguhan dengan login. Rekomendasi: Supabase (Postgres + Auth) dan Next.js atau Vite + React, dengan peran: admin (ubah), sales (ubah terbatas), pembaca (lihat saja).
+2. Riwayat perubahan (siapa mengubah apa, kapan).
+3. Tombol WhatsApp ke pembeli untuk berkas yang kurang (link wa.me dengan pesan siap kirim, tanpa API).
+4. Pengingat unit macet: lama di proses bank tanpa hasil, atau sudah ACC tetapi belum dijadwalkan akad.
+5. Hubungan KPR dan Retensi per unit.
+6. Lampiran dokumen per unit, catatan harian, laporan bulanan, cetak kartu satu unit.
+Catatan: unduhan PDF/Excel di purwarupa belum diuji sampai file benar-benar terbuka, jadi uji di aplikasi baru.
+
+## Privasi
+Data berisi nama dan data keuangan pembeli. Jangan taruh data asli di repositori publik. Gunakan `.gitignore` untuk folder `data/`.
