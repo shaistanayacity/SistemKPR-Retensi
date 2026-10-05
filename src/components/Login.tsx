@@ -24,6 +24,13 @@ export function Login() {
   const [paused, setPaused] = useState(false);
   const hero = useRef<HTMLDivElement>(null);
 
+  // Warna latar halaman ikut biru tua selama di halaman masuk, supaya tidak ada tepi terang.
+  useEffect(() => {
+    const html = document.documentElement, body = document.body, prev = [html.style.background, body.style.background];
+    html.style.background = body.style.background = "#0a1224";
+    return () => { html.style.background = prev[0]; body.style.background = prev[1]; };
+  }, []);
+
   // Ganti teks otomatis; berhenti saat disorot atau jika pengguna meminta gerakan dikurangi.
   useEffect(() => {
     if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
