@@ -6,6 +6,7 @@ import { RetView } from "./components/RetView";
 import { KprForm, RetForm } from "./components/Forms";
 import { ImportDrawer } from "./components/ImportDrawer";
 import { Icon } from "./components/Icon";
+import { Login } from "./components/Login";
 import { tgl } from "./lib/format";
 
 const ROLE_LABEL: Record<Role, string> = { admin: "Admin", sales: "Sales", pembaca: "Pembaca", none: "Tanpa akses" };
@@ -20,28 +21,6 @@ export function App() {
   }, []);
   if (session === null) return <p className="none" style={{ padding: 24 }}>Memuat…</p>;
   return session ? <Dashboard /> : <Login />;
-}
-
-function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState("");
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setErr("Email atau kata sandi tidak sesuai.");
-  };
-  return (
-    <form className="card login-box" onSubmit={submit}>
-      <img className="logo big" src="/logo.png" alt="Shaistanaya City" width="64" height="64" />
-      <h1>Berkas KPR &amp; Retensi</h1>
-      <p className="lead">Shaistanaya City</p>
-      <div className="fld"><label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></label></div>
-      <div className="fld"><label>Kata sandi<input type="password" value={password} onChange={e => setPassword(e.target.value)} required /></label></div>
-      {err && <p className="none">{err}</p>}
-      <button className="btn pri" style={{ justifyContent: "center" }}>Masuk</button>
-    </form>
-  );
 }
 
 type Editing = { type: "import"; kind: "kpr" | "ret" } | { type: "kpr"; rec: Kpr; isNew: boolean } | { type: "ret"; rec: Retensi; isNew: boolean; addCair?: boolean } | null;
