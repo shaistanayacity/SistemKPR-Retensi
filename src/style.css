@@ -1,0 +1,16 @@
+/* Selalu terang, monokrom (lihat CLAUDE.md). */
+:root{--fg:#111;--muted:#666;--line:#e2e2e2;--bg:#f5f5f5;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 "Plus Jakarta Sans",system-ui,sans-serif}
+.top{display:flex;gap:20px;align-items:center;padding:10px 24px;background:#111;color:#f5f5f5}
+.top nav{display:flex;gap:4px}.top nav button{background:none;border:0;color:#9a9a9a;padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:600}
+.top nav button[aria-selected=true]{background:#2b2b2b;color:#f5f5f5}.who{margin-left:auto;color:#9a9a9a}
+.wrap{max-width:1360px;margin:0 auto;padding:24px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line)}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid #eee}th{color:var(--muted);font-size:11px;text-transform:uppercase}.r{text-align:right}
+.pill{padding:3px 10px;border-radius:999px;background:#efefef;font-weight:700;font-size:11.5px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px}.login{display:grid;gap:10px;max-width:340px;margin:12vh auto;padding:24px}
+input{padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+.btn{padding:9px 13px;border-radius:9px;border:1px solid #111;background:#111;color:#fff;font-weight:600;cursor:pointer}
+.link{background:none;border:0;color:#fff;text-decoration:underline;cursor:pointer;padding:0}
+.err{color:var(--muted)}.note{padding:24px}
