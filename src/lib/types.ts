@@ -1,4 +1,4 @@
-export type Role = "admin" | "sales" | "pembaca";
+export type Role = "admin" | "sales" | "pembaca" | "none";
 
 export interface BankProses { bank: string; tgl: string; ket: string; hasil: string }
 export interface Pencairan { tgl: string; nominal: number }

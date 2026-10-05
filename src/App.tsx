@@ -44,7 +44,7 @@ function Dashboard() {
   const [tab, setTab] = useState<"kpr" | "ret">("kpr");
   const [kpr, setKpr] = useState<Kpr[]>([]);
   const [ret, setRet] = useState<Retensi[]>([]);
-  const [role, setRole] = useState<Role>("pembaca");
+  const [role, setRole] = useState<Role | null>(null);
   const [ready, setReady] = useState(false);
   const [err, setErr] = useState("");
   const [edit, setEdit] = useState<Editing>(null);
@@ -54,7 +54,7 @@ function Dashboard() {
     try { const d = await loadAll(); setKpr(d.kpr); setRet(d.retensi); setReady(true); setErr(""); }
     catch { setErr("Data tidak bisa dimuat. Periksa koneksi lalu muat ulang."); }
   }, []);
-  useEffect(() => { void reload(); void myRole().then(setRole); }, [reload]);
+  useEffect(() => { void myRole().then(r => { setRole(r); if (r !== "none") void reload(); }); }, [reload]);
 
   const say = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2600); };
   const admin = role === "admin", canKpr = role === "admin" || role === "sales";
@@ -69,13 +69,14 @@ function Dashboard() {
           <button role="tab" aria-selected={tab === "kpr"} onClick={() => setTab("kpr")}>Berkas KPR <span className="cnt num">{kpr.length}</span></button>
           <button role="tab" aria-selected={tab === "ret"} onClick={() => setTab("ret")}>Retensi / Escrow <span className="cnt num">{ret.length}</span></button>
         </nav>
-        <div className="sync"><span className={"dot" + (ready ? " on" : "")} /><span>{ready ? role : "Menghubungkan…"}</span> · <button className="link" style={{ color: "inherit" }} onClick={() => supabase.auth.signOut()}>Keluar</button></div>
+        <div className="sync"><span className={"dot" + (ready ? " on" : "")} /><span>{role ?? "Menghubungkan…"}</span> · <button className="link" style={{ color: "inherit" }} onClick={() => supabase.auth.signOut()}>Keluar</button></div>
       </div></header>
       <main className="wrap">
-        {err && <p className="none">{err}</p>}
-        {tab === "kpr"
+        {role === "none" && <div className="card" style={{ padding: 24, maxWidth: 520, margin: "10vh auto" }}><b>Akun ini belum punya akses</b><p className="lead">Hubungi admin untuk diberi peran (admin, sales, atau pembaca), lalu masuk kembali.</p></div>}
+        {role !== "none" && err && <p className="none">{err}</p>}
+        {role !== "none" && (tab === "kpr"
           ? <KprView all={kpr} canAdd={admin} onImport={() => setEdit({ type: "import", kind: "kpr" })} onOpen={r => setEdit({ type: "kpr", rec: r, isNew: false })} onAdd={() => setEdit({ type: "kpr", isNew: true, rec: { id: "", ord: nextOrd(kpr), unit: "", nama: "", caraBayar: "KPR", berkas: {}, legal: {}, bankProses: [], pencairan: [] } })} />
-          : <RetView all={ret} canEdit={admin} onImport={() => setEdit({ type: "import", kind: "ret" })} onOpen={r => setEdit({ type: "ret", rec: r, isNew: false })} onCair={r => setEdit({ type: "ret", rec: r, isNew: false, addCair: true })} onAdd={() => setEdit({ type: "ret", isNew: true, rec: { id: "", ord: nextOrd(ret), blok: "", nama: "", pembayaran: "KPR", ret: {}, cair: [], status: "Progress Bangun" } })} />}
+          : <RetView all={ret} canEdit={admin} onImport={() => setEdit({ type: "import", kind: "ret" })} onOpen={r => setEdit({ type: "ret", rec: r, isNew: false })} onCair={r => setEdit({ type: "ret", rec: r, isNew: false, addCair: true })} onAdd={() => setEdit({ type: "ret", isNew: true, rec: { id: "", ord: nextOrd(ret), blok: "", nama: "", pembayaran: "KPR", ret: {}, cair: [], status: "Progress Bangun" } })} />)}
       </main>
 
       {edit?.type === "kpr" && <KprForm key={edit.rec.id || "new"} initial={edit.rec} isNew={edit.isNew} all={kpr} canEdit={canKpr && (!edit.isNew || admin)} canDelete={admin} onClose={() => setEdit(null)}

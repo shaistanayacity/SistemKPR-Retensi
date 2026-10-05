@@ -19,8 +19,10 @@ export async function loadAll() {
 }
 
 export async function myRole(): Promise<Role> {
-  const { data } = await supabase.from("profiles").select("role").single();
-  return (data?.role as Role) ?? "pembaca";
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return "none";
+  const { data } = await supabase.from("kpr_profiles").select("role").eq("id", u.user.id).maybeSingle();
+  return (data?.role as Role) ?? "none";
 }
 
 // Simpan: kolom inti dipisah, sisanya masuk jsonb `data`.
