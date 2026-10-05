@@ -36,14 +36,27 @@ export function save(filename: string, blob: Blob) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
+let logoCache: Promise<string | null> | null = null;
+/** Logo sebagai data URL untuk disematkan di PDF; null bila gagal dimuat (PDF tetap dibuat tanpa logo). */
+function loadLogo(): Promise<string | null> {
+  return (logoCache ??= fetch("/logo.png")
+    .then(r => (r.ok ? r.blob() : Promise.reject()))
+    .then(b => new Promise<string>((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.onerror = no; fr.readAsDataURL(b); }))
+    .catch(() => null));
+}
+
 async function pdfDoc(title: string, sub: string, head: string[], body: (string | number)[][], foot: (string | number)[], colStyles: Record<number, object>) {
   const { default: JsPDF } = await import("jspdf");
   const { default: autoTable } = await import("jspdf-autotable");
   const doc = new JsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text(title, 10, 12);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(100); doc.text(sub, 10, 17.5);
+  // Kop: logo di kiri, lalu judul dan keterangan filter di sebelah kanannya.
+  const logo = await loadLogo();
+  if (logo) doc.addImage(logo, "PNG", 10, 6, 14, 14);
+  const tx = logo ? 27 : 10;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(17); doc.text(title, tx, 12.5);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(100); doc.text(sub, tx, 18);
   autoTable(doc, {
-    head: [head], body, foot: [foot], startY: 21, margin: { left: 10, right: 10, bottom: 12 }, theme: "grid",
+    head: [head], body, foot: [foot], startY: 24, margin: { left: 10, right: 10, bottom: 12 }, theme: "grid",
     styles: { fontSize: 6.6, cellPadding: 1.3, lineColor: [225, 225, 225], lineWidth: 0.15, textColor: [17, 17, 17], valign: "middle", overflow: "linebreak" },
     headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: "bold", fontSize: 6.8 },
     footStyles: { fillColor: [238, 238, 238], textColor: [20, 24, 28], fontStyle: "bold" },
