@@ -349,10 +349,3 @@ button.stat[aria-pressed="true"]{border-color:#111;box-shadow:0 0 0 1px #111}
   .stat .st-r{display:none}
   .stat .v{font-size:26px}
 }
-
-/* Pop-up (dipakai untuk Tambah Unit / Tambah Retensi) */
-.drawer.modal{top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(780px,calc(100vw - 32px));max-height:min(90vh,860px);border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.28)}
-.drawer.modal .dr-h{padding-top:16px}
-@media (prefers-reduced-motion:no-preference){.drawer.modal{animation:pop .18s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}}}
-@media (max-width:640px){.drawer.modal{width:100vw;max-height:100vh;height:100vh;border-radius:0;top:0;left:0;transform:none}}
-.btn.plus{width:36px;padding:0;justify-content:center;font-size:18px;line-height:1;font-weight:500}
