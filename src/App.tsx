@@ -54,6 +54,8 @@ function Dashboard() {
   const [err, setErr] = useState("");
   const [edit, setEdit] = useState<Editing>(null);
   const [toast, setToast] = useState("");
+  const [hidden, setHidden] = useState(() => { try { return localStorage.getItem("side-hidden") === "1"; } catch { return false; } });
+  const toggleSide = () => setHidden(h => { const n = !h; try { localStorage.setItem("side-hidden", n ? "1" : "0"); } catch { /* abaikan */ } return n; });
 
   const reload = useCallback(async () => {
     try { const d = await loadAll(); setKpr(d.kpr); setRet(d.retensi); setReady(true); setErr(""); }
@@ -68,7 +70,7 @@ function Dashboard() {
 
   return (
     <>
-      <div className="shell">
+      <div className={"shell" + (hidden ? " no-side" : "")}>
         <aside className="side">
           <div className="brandbox"><span className="mark">SC</span><div><b>Shaistanaya City</b><small>Berkas KPR &amp; Retensi</small></div></div>
           <nav className="snav" role="tablist" aria-label="Menu">
@@ -83,8 +85,16 @@ function Dashboard() {
           </div>
         </aside>
         <div className="main">
-          <header className="topbar"><span className="crumb"><Icon name="grid" size={17} />Dashboard</span><span className="sep">/</span><span className="here">{tab === "kpr" ? "Berkas KPR" : "Retensi / Escrow"}</span>
-            <span className="upd">Diperbarui {tglHariIni()}</span></header>
+          <header className="topbar">
+            <button className="icon-btn" aria-label={hidden ? "Buka menu samping" : "Tutup menu samping"} title={hidden ? "Buka menu samping" : "Tutup menu samping"} aria-expanded={!hidden} onClick={toggleSide}><Icon name="panel" size={16} /></button>
+            <span className="crumb"><Icon name="grid" size={17} />Dashboard</span><span className="sep">/</span><span className="here">{tab === "kpr" ? "Berkas KPR" : "Retensi / Escrow"}</span>
+            {hidden && <div className="tabs-mini" role="tablist" aria-label="Menu">
+              <button role="tab" aria-selected={tab === "kpr"} onClick={() => setTab("kpr")}>Berkas KPR <span className="num">{kpr.length}</span></button>
+              <button role="tab" aria-selected={tab === "ret"} onClick={() => setTab("ret")}>Retensi / Escrow <span className="num">{ret.length}</span></button>
+            </div>}
+            <span className="upd">Diperbarui {tglHariIni()}</span>
+            {hidden && <button className="icon-btn" aria-label="Keluar" title={"Keluar (" + (role ? ROLE_LABEL[role] : "") + ")"} onClick={() => supabase.auth.signOut()}><Icon name="out" size={15} /></button>}
+          </header>
           <main className="wrap">
             {role === "none" && <div className="card" style={{ padding: 24, maxWidth: 520, margin: "10vh auto" }}><b>Akun ini belum punya akses</b><p className="lead">Hubungi admin untuk diberi peran (admin, sales, atau pembaca), lalu masuk kembali.</p></div>}
             {role !== "none" && err && <p className="none">{err}</p>}
