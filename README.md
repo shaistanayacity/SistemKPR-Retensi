@@ -9,4 +9,4 @@ Dashboard Berkas KPR dan Retensi/Escrow (Shaistanaya City). Aturan kerja dan log
 4. `npm run dev` (tes: `npm test`)
 
 ## Status
-Tahap 2: tampilan lengkap dari purwarupa (kartu alur, tindak lanjut, bagan bank, filter dan tanggal, tabel, panel detail dengan ubah/tambah/hapus, pencairan retensi) dengan akses per peran. Belum ada: unduh PDF/Excel, impor Excel, tombol WhatsApp, pengingat unit macet, hubungan KPR-Retensi.
+Tahap 3: unduh PDF/Excel sesuai filter, unggah Excel dengan pratinjau perubahan (admin), di atas tampilan lengkap dan akses per peran dari tahap 2. Belum ada: tombol WhatsApp, pengingat unit macet, hubungan KPR-Retensi, lampiran dokumen. Catatan: pustaka xlsx versi npm (0.18.5) punya advisori yang belum ada perbaikannya di npm; dipakai hanya untuk file yang diunggah admin.

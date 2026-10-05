@@ -2,12 +2,14 @@ import { useMemo, useState } from "react";
 import { berkasScore, emptyKprFilter, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
 import { brand, juta, KPR_PILL, KPR_STAT, num, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Kpr } from "../lib/types";
+import { kprPDF, kprXLS } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 
 const STEP_C: Record<string, string> = { Pemberkasan: "var(--s1)", "Proses Bank": "var(--s2)", "ACC Bank": "var(--s3)", "Sudah Akad": "var(--s4)", "Non KPR": "var(--s5)" };
 const DESC: Record<string, string> = { Pemberkasan: "belum diajukan ke bank", "Proses Bank": "menunggu hasil bank", "ACC Bank": "siap dijadwalkan akad", "Non KPR": "tunai / hardcash" };
 
-export function KprView({ all, canAdd, onOpen, onAdd }: { all: Kpr[]; canAdd: boolean; onOpen: (r: Kpr) => void; onAdd: () => void }) {
+export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; canAdd: boolean; onOpen: (r: Kpr) => void; onAdd: () => void; onImport: () => void }) {
+  const [dl, setDl] = useState("");
   const [f, setF] = useState<KprFilter>(emptyKprFilter);
   const set = (p: Partial<KprFilter>) => setF(x => ({ ...x, ...p }));
   const kprAll = all.filter(isKPR);
@@ -30,6 +32,12 @@ export function KprView({ all, canAdd, onOpen, onAdd }: { all: Kpr[]; canAdd: bo
   const maxBank = topBanks[0]?.[1] ?? 1;
 
   const rows = kprRows(all, f);
+  const run = async (k: "pdf" | "xls") => {
+    if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
+    setDl(k);
+    try { await (k === "pdf" ? kprPDF(rows, f) : kprXLS(rows, f)); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
+    setDl("");
+  };
   const sumPl = rows.reduce((a, r) => a + (isKPR(r) ? num(r.plafond) : 0), 0);
   const years = [...new Set(all.map(r => String(r.tglUTJ ?? "").slice(0, 4)).filter(Boolean))].sort().reverse();
   const banks = [...new Set(all.flatMap(kprBanks))].sort();
@@ -98,6 +106,10 @@ export function KprView({ all, canAdd, onOpen, onAdd }: { all: Kpr[]; canAdd: bo
           <select className="sel" aria-label="Urutan" value={f.sort} onChange={e => set({ sort: e.target.value })}>
             <option value="baru">Berkas terbaru dulu</option><option value="lama">Berkas terlama dulu</option><option value="diubah">Terakhir diubah</option><option value="unit">Unit A–Z</option>
           </select>
+          <span className="sp" />
+          {canAdd && <button className="btn pri" onClick={onImport}>Unggah Excel</button>}
+          <button className="btn" disabled={!!dl} onClick={() => void run("pdf")}>{dl === "pdf" ? "Menyiapkan…" : "Unduh PDF"}</button>
+          <button className="btn" disabled={!!dl} onClick={() => void run("xls")}>{dl === "xls" ? "Menyiapkan…" : "Unduh Excel"}</button>
         </div>
         <div className="tools dt">
           <span className="dtl">Tanggal</span>

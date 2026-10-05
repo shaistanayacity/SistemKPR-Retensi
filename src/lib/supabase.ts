@@ -42,3 +42,18 @@ export async function removeRow(table: "kpr" | "retensi", id: string) {
   const { error } = await supabase.from(table).delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function applyWrites(writes: { table: "kpr" | "retensi"; id: string | null; rec: Kpr | Retensi }[], onProgress: (done: number, total: number) => void) {
+  const q = [...writes];
+  let done = 0, fail = 0;
+  const worker = async () => {
+    while (q.length) {
+      const w = q.shift()!;
+      try { await (w.table === "kpr" ? saveKpr({ ...(w.rec as Kpr), id: w.id ?? "" }) : saveRetensi({ ...(w.rec as Retensi), id: w.id ?? "" })); }
+      catch { fail++; }
+      onProgress(++done, writes.length);
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  return fail;
+}

@@ -4,6 +4,7 @@ import type { Kpr, Retensi, Role } from "./lib/types";
 import { KprView } from "./components/KprView";
 import { RetView } from "./components/RetView";
 import { KprForm, RetForm } from "./components/Forms";
+import { ImportDrawer } from "./components/ImportDrawer";
 
 export function App() {
   const [session, setSession] = useState<boolean | null>(null);
@@ -37,7 +38,7 @@ function Login() {
   );
 }
 
-type Editing = { type: "kpr"; rec: Kpr; isNew: boolean } | { type: "ret"; rec: Retensi; isNew: boolean; addCair?: boolean } | null;
+type Editing = { type: "import"; kind: "kpr" | "ret" } | { type: "kpr"; rec: Kpr; isNew: boolean } | { type: "ret"; rec: Retensi; isNew: boolean; addCair?: boolean } | null;
 
 function Dashboard() {
   const [tab, setTab] = useState<"kpr" | "ret">("kpr");
@@ -73,8 +74,8 @@ function Dashboard() {
       <main className="wrap">
         {err && <p className="none">{err}</p>}
         {tab === "kpr"
-          ? <KprView all={kpr} canAdd={admin} onOpen={r => setEdit({ type: "kpr", rec: r, isNew: false })} onAdd={() => setEdit({ type: "kpr", isNew: true, rec: { id: "", ord: nextOrd(kpr), unit: "", nama: "", caraBayar: "KPR", berkas: {}, legal: {}, bankProses: [], pencairan: [] } })} />
-          : <RetView all={ret} canEdit={admin} onOpen={r => setEdit({ type: "ret", rec: r, isNew: false })} onCair={r => setEdit({ type: "ret", rec: r, isNew: false, addCair: true })} onAdd={() => setEdit({ type: "ret", isNew: true, rec: { id: "", ord: nextOrd(ret), blok: "", nama: "", pembayaran: "KPR", ret: {}, cair: [], status: "Progress Bangun" } })} />}
+          ? <KprView all={kpr} canAdd={admin} onImport={() => setEdit({ type: "import", kind: "kpr" })} onOpen={r => setEdit({ type: "kpr", rec: r, isNew: false })} onAdd={() => setEdit({ type: "kpr", isNew: true, rec: { id: "", ord: nextOrd(kpr), unit: "", nama: "", caraBayar: "KPR", berkas: {}, legal: {}, bankProses: [], pencairan: [] } })} />
+          : <RetView all={ret} canEdit={admin} onImport={() => setEdit({ type: "import", kind: "ret" })} onOpen={r => setEdit({ type: "ret", rec: r, isNew: false })} onCair={r => setEdit({ type: "ret", rec: r, isNew: false, addCair: true })} onAdd={() => setEdit({ type: "ret", isNew: true, rec: { id: "", ord: nextOrd(ret), blok: "", nama: "", pembayaran: "KPR", ret: {}, cair: [], status: "Progress Bangun" } })} />}
       </main>
 
       {edit?.type === "kpr" && <KprForm key={edit.rec.id || "new"} initial={edit.rec} isNew={edit.isNew} all={kpr} canEdit={canKpr && (!edit.isNew || admin)} canDelete={admin} onClose={() => setEdit(null)}
@@ -83,6 +84,7 @@ function Dashboard() {
       {edit?.type === "ret" && <RetForm key={(edit.rec.id || "new") + (edit.addCair ? "c" : "")} initial={edit.rec} isNew={edit.isNew} all={ret} addCair={edit.addCair} canEdit={admin} canDelete={admin} onClose={() => setEdit(null)}
         onSave={async r => { await saveRetensi({ ...r, updatedAt: undefined, cair: (r.cair ?? []).filter(c => c.tgl || c.nominal).sort((a, b) => String(a.tgl).localeCompare(String(b.tgl))) }); await done(edit.isNew ? "Data baru tersimpan" : "Perubahan tersimpan"); }}
         onDelete={async () => { await removeRow("retensi", edit.rec.id); await done("Data dihapus"); }} />}
+      {edit?.type === "import" && <ImportDrawer kind={edit.kind} kpr={kpr} ret={ret} onClose={() => setEdit(null)} onDone={n => void done(`${n} data berhasil diperbarui`)} />}
       {toast && <div className="toast">{toast}</div>}
     </>
   );

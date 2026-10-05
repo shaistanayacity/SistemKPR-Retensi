@@ -2,9 +2,11 @@ import { useState } from "react";
 import { cairSorted, compSisa, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retRows, retSisa, retStatus, retTerima } from "../lib/logic";
 import { juta, kompShort, num, RET_LABEL, RET_PILL, RET_SHORT, RET_STATUS, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Retensi } from "../lib/types";
+import { retPDF, retXLS } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 
-export function RetView({ all, canEdit, onOpen, onAdd, onCair }: { all: Retensi[]; canEdit: boolean; onOpen: (r: Retensi) => void; onAdd: () => void; onCair: (r: Retensi) => void }) {
+export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all: Retensi[]; canEdit: boolean; onOpen: (r: Retensi) => void; onAdd: () => void; onCair: (r: Retensi) => void; onImport: () => void }) {
+  const [dl, setDl] = useState("");
   const [f, setF] = useState<RetFilter>(emptyRetFilter);
   const set = (p: Partial<RetFilter>) => setF(x => ({ ...x, ...p }));
 
@@ -19,6 +21,12 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair }: { all: Retensi[
   all.forEach(r => { const s = retStatus(r) || "Tanpa status"; by[s] = (by[s] ?? 0) + 1; });
   const sts = [...new Set([...RET_STATUS, ...all.map(r => r.status).filter(Boolean) as string[], "Lunas"])].filter(s => by[s] || f.status === s);
   const rows = retRows(all, f);
+  const run = async (k: "pdf" | "xls") => {
+    if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
+    setDl(k);
+    try { await (k === "pdf" ? retPDF(rows, f) : retXLS(rows)); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
+    setDl("");
+  };
   const tSisa = rows.reduce((a, r) => a + retSisa(r), 0), tNilai = rows.reduce((a, r) => a + retNilai(r), 0), tCair = rows.reduce((a, r) => a + retCair(r), 0);
   const banks = [...new Set(all.map(r => r.bank).filter(Boolean) as string[])].sort();
   const notaris = [...new Set(all.map(r => r.notaris).filter(Boolean) as string[])].sort();
@@ -65,6 +73,10 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair }: { all: Retensi[
           <select className="sel" aria-label="Bank" value={f.bank} onChange={e => set({ bank: e.target.value })}><option value="">Semua bank</option>{banks.map(b => <option key={b}>{b}</option>)}</select>
           <select className="sel" aria-label="Notaris" value={f.notaris} onChange={e => set({ notaris: e.target.value })}><option value="">Semua notaris</option>{notaris.map(b => <option key={b}>{b}</option>)}</select>
           <select className="sel" aria-label="Urutan" value={f.sort} onChange={e => set({ sort: e.target.value })}><option value="blok">Blok A–Z</option><option value="sisa">Sisa retensi terbesar</option><option value="diubah">Terakhir diubah / cair</option></select>
+          <span className="sp" />
+          {canEdit && <button className="btn pri" onClick={onImport}>Unggah Excel</button>}
+          <button className="btn" disabled={!!dl} onClick={() => void run("pdf")}>{dl === "pdf" ? "Menyiapkan…" : "Unduh PDF"}</button>
+          <button className="btn" disabled={!!dl} onClick={() => void run("xls")}>{dl === "xls" ? "Menyiapkan…" : "Unduh Excel"}</button>
         </div>
         <div className="tools dt"><span className="dtl">Tanggal</span><span className="dtl" style={{ fontWeight: 600, color: "var(--fg)" }}>Tanggal pencairan</span>
           <DateTools d1={f.d1} d2={f.d2} onChange={(d1, d2) => set({ d1, d2 })} /></div>
