@@ -39,7 +39,7 @@ export function save(filename: string, blob: Blob) {
 let logoCache: Promise<string | null> | null = null;
 /** Logo sebagai data URL untuk disematkan di PDF; null bila gagal dimuat (PDF tetap dibuat tanpa logo). */
 function loadLogo(): Promise<string | null> {
-  return (logoCache ??= fetch("/logo.png")
+  return (logoCache ??= fetch("/logo.png?v=2")
     .then(r => (r.ok ? r.blob() : Promise.reject()))
     .then(b => new Promise<string>((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result)); fr.onerror = no; fr.readAsDataURL(b); }))
     .catch(() => null));

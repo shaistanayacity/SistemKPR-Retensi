@@ -73,7 +73,7 @@ export function Login() {
         </svg>
         <div className="auth-shade" />
 
-        <div className="auth-brand"><img src="/logo.png" alt="" width="40" height="40" /><span>Shaistanaya City</span></div>
+        <div className="auth-brand"><img src="/logo.png?v=2" alt="" width="40" height="40" /><span>Shaistanaya City</span></div>
 
         <div className="auth-copy" aria-live="polite">
           {SLIDES.map((s, i) => (
@@ -88,7 +88,7 @@ export function Login() {
       </div>
 
       <form className="auth-card" onSubmit={submit}>
-        <img className="auth-mini" src="/logo.png" alt="Shaistanaya City" width="48" height="48" />
+        <img className="auth-mini" src="/logo.png?v=2" alt="Shaistanaya City" width="48" height="48" />
         <h1>Selamat Datang</h1>
         <p className="sub-lead">Masuk untuk memantau berkas KPR dan retensi.</p>
 
