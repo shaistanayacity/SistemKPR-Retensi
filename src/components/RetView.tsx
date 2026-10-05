@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { cairSorted, compSisa, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retRows, retSisa, retStatus, retTerima } from "../lib/logic";
+import { useMemo, useState } from "react";
+import { cairSorted, compSisa, lastMonths, perMonth, windowEnd, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retRows, retSisa, retStatus, retTerima } from "../lib/logic";
 import { juta, kompShort, num, RET_LABEL, RET_PILL, RET_SHORT, RET_STATUS, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Retensi } from "../lib/types";
 import { retPDF, retXLS } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
+import { Icon } from "./Icon";
+import { TrendChart } from "./TrendChart";
 
 export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all: Retensi[]; canEdit: boolean; onOpen: (r: Retensi) => void; onAdd: () => void; onCair: (r: Retensi) => void; onImport: () => void }) {
   const [dl, setDl] = useState("");
+  const months = useMemo(() => lastMonths(12, windowEnd(all.flatMap(r => (r.cair ?? []).map(c => c.tgl)))), [all]);
   const [f, setF] = useState<RetFilter>(emptyRetFilter);
   const set = (p: Partial<RetFilter>) => setF(x => ({ ...x, ...p }));
 
@@ -39,14 +42,18 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
         {canEdit && <button className="btn pri" onClick={onAdd}>+ Tambah Retensi</button>}
       </div>
 
-      <div className="card money">
-        <div><span className="lbl">Retensi awal</span><span className="v num">{rpShort(gAwal)}</span><span className="s">ditahan bank saat akad</span></div>
-        <div><span className="lbl">Sudah cair</span><span className="v num">{rpShort(gCair)}</span><span className="s num">{nCair} kali pencairan</span></div>
-        <div className="hero"><span className="lbl">Sisa retensi</span><span className="v num">{rpShort(gSisa)}</span><span className="t"><i style={{ width: (pctCair * 100).toFixed(1) + "%" }} /></span><span className="s num">{Math.round(pctCair * 100)}% sudah cair</span></div>
-        <div><span className="lbl">Unit lunas</span><span className="v num">{nLunas}<span style={{ fontSize: 15, color: "var(--faint)", fontWeight: 700 }}> / {all.length}</span></span><span className="s">retensi habis dicairkan</span></div>
+      <div className="stats four">
+        <div className="card stat"><span className="st-l"><span className="lbl">Retensi awal</span><span className="v num">{rpShort(gAwal)}</span><span className="s">ditahan bank saat akad</span></span><span className="st-r"><span className="tile"><Icon name="layers" size={22} /></span></span></div>
+        <div className="card stat"><span className="st-l"><span className="lbl">Sudah cair</span><span className="v num">{rpShort(gCair)}</span><span className="s num">{nCair} kali pencairan</span></span><span className="st-r"><span className="tile"><Icon name="down" size={22} /></span></span></div>
+        <div className="card stat dark"><span className="st-l"><span className="lbl">Sisa retensi</span><span className="v num">{rpShort(gSisa)}</span><span className="t"><i style={{ width: (pctCair * 100).toFixed(1) + "%" }} /></span><span className="s num">{Math.round(pctCair * 100)}% sudah cair</span></span><span className="st-r"><span className="tile"><Icon name="wallet" size={22} /></span></span></div>
+        <div className="card stat"><span className="st-l"><span className="lbl">Unit lunas</span><span className="v num">{nLunas}<span className="of"> / {all.length}</span></span><span className="s">retensi habis dicairkan</span></span><span className="st-r"><span className="tile"><Icon name="check" size={22} /></span></span></div>
       </div>
 
       <div className="row2">
+        <div className="card">
+          <div className="card-h"><h2>Pencairan per bulan</h2><span className="sub">12 bulan hingga {months[11].label} {months[11].key.slice(0, 4)}, juta rupiah</span></div>
+          <div className="card-b"><TrendChart labels={months.map(m => m.label)} format={n => String(n)} series={[{ name: "Pencairan (juta)", values: perMonth(all.flatMap(r => (r.cair ?? []).map(c => ({ tgl: c.tgl, v: Math.round(num(c.nominal) / 1e6) }))), months), area: true, dashed: true }]} empty="Belum ada pencairan pada rentang ini." /></div>
+        </div>
         <div className="card"><div className="card-h"><h2>Pencairan terbaru</h2><span className="sub">{recent.length ? `${recent.length} pencairan tercatat` : ""}</span></div>
           <div className="card-b"><div className="fu">
             {recent.length ? recent.slice(0, 5).map(({ r, c }, i) => (
@@ -56,11 +63,12 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
                 <b className="num">+ {rpShort(c.nominal)}</b>
               </button>)) : <p className="none">Belum ada pencairan tercatat. Klik <b>+ Cair</b> pada baris unit di tabel untuk mencatat tanggal dan nominal yang cair.</p>}
           </div></div></div>
-        <div className="card"><div className="card-h"><h2>Sisa per komponen</h2><span className="sub">belum cair</span></div>
-          <div className="card-b"><div className="bars">
-            {comp.length ? comp.map(([k, v]) => <div className="bar" key={k}><span className="bn">{kompShort(k)}</span><span className="bt"><i style={{ width: Math.max(1.5, v / maxComp * 100).toFixed(1) + "%" }} /></span><span className="bc num">{juta(v)}</span></div>) : <p className="none">Tidak ada retensi tertahan.</p>}
-          </div></div></div>
       </div>
+
+      <div className="card"><div className="card-h"><h2>Sisa per komponen</h2><span className="sub">belum cair</span></div>
+        <div className="card-b"><div className="bars two">
+          {comp.length ? comp.map(([k, v]) => <div className="bar" key={k}><span className="bn">{kompShort(k)}</span><span className="bt"><i style={{ width: Math.max(1.5, v / maxComp * 100).toFixed(1) + "%" }} /></span><span className="bc num">{juta(v)}</span></div>) : <p className="none">Tidak ada retensi tertahan.</p>}
+        </div></div></div>
 
       <div className="card panel">
         <div className="seg" aria-label="Filter status">

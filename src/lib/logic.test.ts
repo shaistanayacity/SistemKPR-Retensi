@@ -56,3 +56,23 @@ describe("filter", () => {
     expect(retRows(ret, { ...emptyRetFilter, d1: "2024-05-01", d2: "2024-05-31" }).map(r => r.blok)).toEqual(["A-10"]);
   });
 });
+
+import { lastMonths, perMonth } from "./logic";
+describe("deret bulanan", () => {
+  const months = lastMonths(3, new Date(2026, 9, 5));
+  it("tiga bulan terakhir berurutan", () => expect(months.map(m => m.key)).toEqual(["2026-08", "2026-09", "2026-10"]));
+  it("menghitung dan menjumlah per bulan", () => {
+    expect(perMonth([{ tgl: "2026-09-02" }, { tgl: "2026-09-20" }, { tgl: "2025-01-01" }], months)).toEqual([0, 2, 0]);
+    expect(perMonth([{ tgl: "2026-10-01", v: 5 }, { tgl: "2026-10-09", v: 7 }], months)).toEqual([0, 0, 12]);
+  });
+  it("lintas tahun", () => expect(lastMonths(3, new Date(2026, 0, 15)).map(m => m.key)).toEqual(["2025-11", "2025-12", "2026-01"]));
+});
+
+import { windowEnd } from "./logic";
+describe("jendela grafik", () => {
+  const now = new Date(2026, 9, 5);
+  it("berakhir pada data terbaru yang tidak melewati hari ini", () => {
+    expect(lastMonths(2, windowEnd(["2026-02-10", "2025-05-01", "2027-01-01"], now)).map(m => m.key)).toEqual(["2026-01", "2026-02"]);
+  });
+  it("tanpa data memakai bulan ini", () => expect(lastMonths(1, windowEnd([], now))[0].key).toBe("2026-10"));
+});

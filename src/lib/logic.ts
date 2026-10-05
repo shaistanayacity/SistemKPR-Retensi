@@ -127,3 +127,24 @@ export function retRows(all: Retensi[], f: RetFilter): Retensi[] {
   });
 }
 export { kompShort };
+
+// ---- Deret bulanan untuk grafik ----
+export function lastMonths(n: number, now = new Date()): { key: string; label: string }[] {
+  const BLN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (n - 1 - i), 1);
+    return { key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, label: BLN[d.getMonth()] };
+  });
+}
+/** Tanggal data terbaru yang tidak melewati hari ini; dipakai sebagai akhir jendela grafik. */
+export function windowEnd(dates: (string | undefined)[], now = new Date()): Date {
+  const iso = now.toISOString().slice(0, 10);
+  const latest = dates.filter((d): d is string => !!d && d <= iso).sort().pop();
+  return latest ? new Date(+latest.slice(0, 4), +latest.slice(5, 7) - 1, 1) : now;
+}
+/** Jumlah (atau total nominal) per bulan untuk daftar {tgl, nilai}. */
+export function perMonth(items: { tgl?: string; v?: number }[], months: { key: string }[]): number[] {
+  const m = new Map(months.map(x => [x.key, 0]));
+  items.forEach(i => { const k = String(i.tgl ?? "").slice(0, 7); if (m.has(k)) m.set(k, (m.get(k) ?? 0) + (i.v ?? 1)); });
+  return months.map(x => m.get(x.key) ?? 0);
+}

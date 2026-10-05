@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
-import { berkasScore, emptyKprFilter, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
+import { berkasScore, emptyKprFilter, lastMonths, perMonth, windowEnd, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
 import { brand, juta, KPR_PILL, KPR_STAT, num, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Kpr } from "../lib/types";
 import { kprPDF, kprXLS } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
+import { Icon } from "./Icon";
+import { TrendChart } from "./TrendChart";
 
 const STEP_C: Record<string, string> = { Pemberkasan: "var(--s1)", "Proses Bank": "var(--s2)", "ACC Bank": "var(--s3)", "Sudah Akad": "var(--s4)", "Non KPR": "var(--s5)" };
+const STEP_ICON = ["file", "clip", "check", "key", "slash"];
 const DESC: Record<string, string> = { Pemberkasan: "belum diajukan ke bank", "Proses Bank": "menunggu hasil bank", "ACC Bank": "siap dijadwalkan akad", "Non KPR": "tunai / hardcash" };
 
 export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; canAdd: boolean; onOpen: (r: Kpr) => void; onAdd: () => void; onImport: () => void }) {
@@ -31,6 +34,7 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
   const topBanks = Object.entries(bankCnt).sort((a, b) => b[1] - a[1]).slice(0, 7);
   const maxBank = topBanks[0]?.[1] ?? 1;
 
+  const months = useMemo(() => lastMonths(12, windowEnd(all.flatMap(r => [r.tglUTJ, r.tglAkad]))), [all]);
   const rows = kprRows(all, f);
   const run = async (k: "pdf" | "xls") => {
     if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
@@ -55,22 +59,28 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
         {canAdd && <button className="btn pri" onClick={onAdd}>+ Tambah Unit</button>}
       </div>
 
-      <div className="card pipe">
+      <div className="stats">
         {KPR_STAT.map((s, i) => {
           const share = s === "Non KPR" ? (all.length ? by[s].n / all.length : 0) : (kprAll.length ? by[s].n / kprAll.length : 0);
           return (
-            <button key={s} className="step" style={{ ["--c" as string]: STEP_C[s] }} aria-pressed={f.status === s} onClick={() => set({ status: f.status === s ? "" : s })}>
-              <span className="lbl">{i < 4 ? <span className="n">{i + 1}</span> : <span className="n o">-</span>}{s}</span>
-              <span className="v num">{by[s].n}</span>
-              <span className="s">{s === "Sudah Akad" ? "plafond " + rpShort(by[s].v) : DESC[s]}</span>
-              <span className="t"><i style={{ width: (share * 100).toFixed(1) + "%" }} /></span>
-              {i < 3 && <span className="arr"><Chev /></span>}
+            <button key={s} className="card stat" aria-pressed={f.status === s} onClick={() => set({ status: f.status === s ? "" : s })}>
+              <span className="st-l">
+                <span className="lbl">{s}</span>
+                <span className="v num">{by[s].n}</span>
+                <span className="s">{s === "Sudah Akad" ? "plafond " + rpShort(by[s].v) : DESC[s]}</span>
+                <span className="t"><i style={{ width: (share * 100).toFixed(1) + "%" }} /></span>
+              </span>
+              <span className="st-r"><span className="tile"><Icon name={STEP_ICON[i]} size={22} /></span></span>
             </button>
           );
         })}
       </div>
 
       <div className="row2">
+        <div className="card">
+          <div className="card-h"><h2>Tren bulanan</h2><span className="sub">12 bulan hingga {months[11].label} {months[11].key.slice(0, 4)}</span></div>
+          <div className="card-b"><TrendChart labels={months.map(m => m.label)} format={n => String(n)} series={[{ name: "Akad", values: perMonth(all.map(r => ({ tgl: r.tglAkad })), months), area: true }, { name: "UTJ masuk", values: perMonth(all.map(r => ({ tgl: r.tglUTJ })), months), dashed: true }]} empty="Belum ada tanggal UTJ atau akad pada rentang ini." /></div>
+        </div>
         <div className="card">
           <div className="card-h"><h2>Perlu ditindaklanjuti</h2><span className="sub">{fu.length ? `${fu.length} unit belum akad` : ""}</span></div>
           <div className="card-b"><div className="fu">
@@ -83,14 +93,15 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
             {fu.length > 5 && <div style={{ paddingTop: 10, borderTop: "1px solid var(--line-2)" }}><button className="link" onClick={() => set({ status: "belum" })}>Lihat semua {fu.length} unit belum akad <Chev /></button></div>}
           </div></div>
         </div>
-        <div className="card">
-          <div className="card-h"><h2>Bank KPR</h2><span className="sub">unit ACC &amp; akad</span></div>
-          <div className="card-b"><div className="bars">
-            {topBanks.length ? topBanks.map(([b, n]) => (
-              <div className="bar" key={b}><span className="bn">{b}</span><span className="bt"><i style={{ width: (n / maxBank * 100).toFixed(1) + "%" }} /></span><span className="bc num"><b>{n}</b> unit</span></div>
-            )) : <p className="none">Belum ada unit yang ACC atau akad.</p>}
-          </div></div>
-        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-h"><h2>Bank KPR</h2><span className="sub">unit ACC &amp; akad</span></div>
+        <div className="card-b"><div className="bars two">
+          {topBanks.length ? topBanks.map(([b, n]) => (
+            <div className="bar" key={b}><span className="bn">{b}</span><span className="bt"><i style={{ width: (n / maxBank * 100).toFixed(1) + "%" }} /></span><span className="bc num"><b>{n}</b> unit</span></div>
+          )) : <p className="none">Belum ada unit yang ACC atau akad.</p>}
+        </div></div>
       </div>
 
       <div className="card panel">

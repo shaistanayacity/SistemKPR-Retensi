@@ -5,6 +5,11 @@ import { KprView } from "./components/KprView";
 import { RetView } from "./components/RetView";
 import { KprForm, RetForm } from "./components/Forms";
 import { ImportDrawer } from "./components/ImportDrawer";
+import { Icon } from "./components/Icon";
+import { tgl } from "./lib/format";
+
+const ROLE_LABEL: Record<Role, string> = { admin: "Admin", sales: "Sales", pembaca: "Pembaca", none: "Tanpa akses" };
+const tglHariIni = () => tgl(new Date().toISOString().slice(0, 10));
 
 export function App() {
   const [session, setSession] = useState<boolean | null>(null);
@@ -63,21 +68,32 @@ function Dashboard() {
 
   return (
     <>
-      <header className="top"><div className="top-in">
-        <div className="brand"><span className="mark">SC</span><div>Berkas KPR &amp; Retensi<small>Shaistanaya City</small></div></div>
-        <nav className="nav" role="tablist">
-          <button role="tab" aria-selected={tab === "kpr"} onClick={() => setTab("kpr")}>Berkas KPR <span className="cnt num">{kpr.length}</span></button>
-          <button role="tab" aria-selected={tab === "ret"} onClick={() => setTab("ret")}>Retensi / Escrow <span className="cnt num">{ret.length}</span></button>
-        </nav>
-        <div className="sync"><span className={"dot" + (ready ? " on" : "")} /><span>{role ?? "Menghubungkan…"}</span> · <button className="link" style={{ color: "inherit" }} onClick={() => supabase.auth.signOut()}>Keluar</button></div>
-      </div></header>
-      <main className="wrap">
-        {role === "none" && <div className="card" style={{ padding: 24, maxWidth: 520, margin: "10vh auto" }}><b>Akun ini belum punya akses</b><p className="lead">Hubungi admin untuk diberi peran (admin, sales, atau pembaca), lalu masuk kembali.</p></div>}
-        {role !== "none" && err && <p className="none">{err}</p>}
-        {role !== "none" && (tab === "kpr"
-          ? <KprView all={kpr} canAdd={admin} onImport={() => setEdit({ type: "import", kind: "kpr" })} onOpen={r => setEdit({ type: "kpr", rec: r, isNew: false })} onAdd={() => setEdit({ type: "kpr", isNew: true, rec: { id: "", ord: nextOrd(kpr), unit: "", nama: "", caraBayar: "KPR", berkas: {}, legal: {}, bankProses: [], pencairan: [] } })} />
-          : <RetView all={ret} canEdit={admin} onImport={() => setEdit({ type: "import", kind: "ret" })} onOpen={r => setEdit({ type: "ret", rec: r, isNew: false })} onCair={r => setEdit({ type: "ret", rec: r, isNew: false, addCair: true })} onAdd={() => setEdit({ type: "ret", isNew: true, rec: { id: "", ord: nextOrd(ret), blok: "", nama: "", pembayaran: "KPR", ret: {}, cair: [], status: "Progress Bangun" } })} />)}
-      </main>
+      <div className="shell">
+        <aside className="side">
+          <div className="brandbox"><span className="mark">SC</span><div><b>Shaistanaya City</b><small>Berkas KPR &amp; Retensi</small></div></div>
+          <nav className="snav" role="tablist" aria-label="Menu">
+            <button role="tab" aria-selected={tab === "kpr"} onClick={() => setTab("kpr")}><Icon name="file" size={17} />Berkas KPR <span className="cnt num">{kpr.length}</span></button>
+            <button role="tab" aria-selected={tab === "ret"} onClick={() => setTab("ret")}><Icon name="wallet" size={17} />Retensi / Escrow <span className="cnt num">{ret.length}</span></button>
+          </nav>
+          <div className="sidefoot">
+            <div className="usercard">
+              <span className="dot on" /><div><b>{role ? ROLE_LABEL[role] : "Menghubungkan…"}</b><small>{ready ? "Data tersambung" : "Memuat data…"}</small></div>
+              <button className="icon-btn" aria-label="Keluar" title="Keluar" onClick={() => supabase.auth.signOut()}><Icon name="out" size={15} /></button>
+            </div>
+          </div>
+        </aside>
+        <div className="main">
+          <header className="topbar"><span className="crumb"><Icon name="grid" size={17} />Dashboard</span><span className="sep">/</span><span className="here">{tab === "kpr" ? "Berkas KPR" : "Retensi / Escrow"}</span>
+            <span className="upd">Diperbarui {tglHariIni()}</span></header>
+          <main className="wrap">
+            {role === "none" && <div className="card" style={{ padding: 24, maxWidth: 520, margin: "10vh auto" }}><b>Akun ini belum punya akses</b><p className="lead">Hubungi admin untuk diberi peran (admin, sales, atau pembaca), lalu masuk kembali.</p></div>}
+            {role !== "none" && err && <p className="none">{err}</p>}
+            {role !== "none" && (tab === "kpr"
+              ? <KprView all={kpr} canAdd={admin} onImport={() => setEdit({ type: "import", kind: "kpr" })} onOpen={r => setEdit({ type: "kpr", rec: r, isNew: false })} onAdd={() => setEdit({ type: "kpr", isNew: true, rec: { id: "", ord: nextOrd(kpr), unit: "", nama: "", caraBayar: "KPR", berkas: {}, legal: {}, bankProses: [], pencairan: [] } })} />
+              : <RetView all={ret} canEdit={admin} onImport={() => setEdit({ type: "import", kind: "ret" })} onOpen={r => setEdit({ type: "ret", rec: r, isNew: false })} onCair={r => setEdit({ type: "ret", rec: r, isNew: false, addCair: true })} onAdd={() => setEdit({ type: "ret", isNew: true, rec: { id: "", ord: nextOrd(ret), blok: "", nama: "", pembayaran: "KPR", ret: {}, cair: [], status: "Progress Bangun" } })} />)}
+          </main>
+        </div>
+      </div>
 
       {edit?.type === "kpr" && <KprForm key={edit.rec.id || "new"} initial={edit.rec} isNew={edit.isNew} all={kpr} canEdit={canKpr && (!edit.isNew || admin)} canDelete={admin} onClose={() => setEdit(null)}
         onSave={async r => { await saveKpr(r); await done(edit.isNew ? "Data baru tersimpan" : "Perubahan tersimpan"); }}
