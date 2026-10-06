@@ -8,6 +8,7 @@ export interface Kpr {
   ord: number;
   unit: string;
   nama: string;
+  sales?: string;
   tglUTJ?: string;
   tglSPR?: string;
   caraBayar?: string;
