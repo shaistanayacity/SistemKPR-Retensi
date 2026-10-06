@@ -235,13 +235,11 @@ legend + *{clear:both}
 .bankgrp{display:grid;gap:8px;padding:10px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--surface-2)}
 .bankgrp .rowf{background:var(--surface)}
 .rowf.pc{grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 70px 30px}
-.rowf.cr{grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.5fr) 30px}
+.rowf.cr{grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.1fr) 30px}
 .rowf label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}
 .rowf .ix{font-weight:800;color:var(--muted);padding-bottom:9px}
 .rm{border:0;background:none;color:var(--bad-fg);cursor:pointer;font-size:18px;padding-bottom:7px}
 .add{margin-top:10px}
-.sumrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
-.sumrow .calc.neg{color:var(--bad-fg)}
 .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--top);color:var(--top-fg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:40;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -260,7 +258,7 @@ legend + *{clear:both}
   .pipe{grid-template-columns:repeat(2,minmax(0,1fr))} .step{border-right:1px solid var(--line-2)!important} .step:nth-child(2n){border-right:0!important} .step:nth-child(n+3){border-top:1px solid var(--line-2)}
   .money .v{font-size:20px}
   .search{flex:1 1 100%} .tools .sp{display:none} .sel{flex:1 1 40%;max-width:none}
-  .rowf.bp,.rowf.pc,.rowf.cr,.rowf.pg{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .rowf .ix{display:none} .sumrow{grid-template-columns:minmax(0,1fr)}
+  .rowf.bp,.rowf.pc,.rowf.cr,.rowf.pg{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .rowf .ix{display:none}
   .fld.w2{grid-column:auto} .bar{grid-template-columns:80px minmax(0,1fr) 60px}
 }
 @media (prefers-reduced-motion:no-preference){.drawer{animation:slide .22s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
@@ -295,7 +293,7 @@ body{background:#ececec}
 
 /* Kartu angka dengan petak ikon */
 .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-.stats.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stats.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .stat{display:grid;grid-template-columns:minmax(0,1fr) auto;text-align:left;padding:0;overflow:hidden;cursor:default;font:inherit;color:inherit}
 button.stat{cursor:pointer}
 button.stat:hover{border-color:#cfcfcf}
@@ -303,7 +301,7 @@ button.stat[aria-pressed="true"]{border-color:#111;box-shadow:0 0 0 1px #111}
 .stat .st-l{display:flex;flex-direction:column;gap:2px;padding:14px 16px;min-width:0}
 .stat .lbl{font-size:12px;font-weight:600;color:var(--muted)}
 .stat .v{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-top:4px;white-space:nowrap}
-.stats.four .v{font-size:24px}
+.stats.two .v{font-size:24px}
 .stat .v .of{font-size:15px;color:var(--faint);font-weight:700}
 .stat .s{font-size:11.5px;color:var(--faint);min-height:17px}
 .stat .t{height:4px;border-radius:3px;background:var(--track);margin-top:6px;overflow:hidden}
@@ -332,7 +330,7 @@ button.stat[aria-pressed="true"]{border-color:#111;box-shadow:0 0 0 1px #111}
 .card-h{padding:16px 18px 0}
 .card{border-radius:14px}
 
-@media (max-width:1100px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stats.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1100px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:900px){
   .shell{grid-template-columns:minmax(0,1fr)}
   .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 14px;border-right:0;border-bottom:1px solid var(--line)}
@@ -345,7 +343,7 @@ button.stat[aria-pressed="true"]{border-color:#111;box-shadow:0 0 0 1px #111}
   .bars.two{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:640px){
-  .stats,.stats.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats,.stats.two{grid-template-columns:repeat(2,minmax(0,1fr))}
   .stat .st-r{display:none}
   .stat .v{font-size:26px}
 }

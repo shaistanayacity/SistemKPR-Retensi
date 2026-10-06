@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, tgl, titleCase } from "../lib/format";
 import type { BankProses, BankRiwayat, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
@@ -40,7 +40,7 @@ const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 // ---------------- KPR ----------------
 export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
   const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x), plafond: plafondOtomatis(x) });
-  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: rapikanBank(initial.bankProses) }, x => onSave({ ...hitung(x), bankProses: rapikanBank((x.bankProses ?? []).filter(b => b.bank.trim())) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
+  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: rapikanBank(initial.bankProses) }, x => onSave({ ...hitung(x), bankProses: rapikanBank((x.bankProses ?? []).filter(b => b.bank.trim())) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Blok dan nama pembeli wajib diisi." : ""));
   const bp = r.bankProses ?? [];
   const setBp = (i: number, p: Partial<BankProses>) => patch({ bankProses: bp.map((b, j) => (j === i ? { ...b, ...p } : b)) });
   const setPg = (i: number, k: number, p: Partial<BankRiwayat>) => setBp(i, { progres: (bp[i].progres ?? []).map((x, m) => (m === k ? { ...x, ...p } : x)) });
@@ -52,12 +52,16 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
   return (
     <Drawer title={isNew ? "Tambah unit" : `${r.unit} · ${titleCase(r.nama)}`} subtitle={isNew ? "Isi data pembeli dan berkas KPR" : `${status(r)} · diperbarui ${r.updatedAt ? tgl(r.updatedAt.slice(0, 10)) : "dari rekap Excel"}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
+      <Datalist id="dl-cluster" values={all.map(x => x.cluster)} />
+      <Datalist id="dl-tipe" values={all.map(x => x.tipe)} />
       <Datalist id="dl-bank" values={all.flatMap(x => (x.bankProses ?? []).map(b => b.bank))} />
       <Datalist id="dl-tempat" values={all.map(x => x.tempatAkad)} />
       <Datalist id="dl-notaris" values={all.map(x => x.notaris)} />
       <fieldset disabled={!canEdit} style={{ display: "contents" }}>
-        <fieldset><legend>Unit &amp; pembeli</legend><div className="grid">
-          <Field label="Unit *" value={r.unit} onChange={sf("unit")} />
+        <fieldset><legend>Blok &amp; pembeli</legend><div className="grid">
+          <Field label="Cluster" value={r.cluster} onChange={sf("cluster")} list="dl-cluster" />
+          <Field label="Tipe" value={r.tipe} onChange={sf("tipe")} list="dl-tipe" />
+          <Field label="Blok *" value={r.unit} onChange={sf("unit")} />
           <Field label="Nama pembeli *" value={r.nama} onChange={sf("nama")} w2 />
           <Field label="Sales" value={r.sales} onChange={sf("sales")} />
           <Field label="Kantor agent" value={r.kantor} onChange={sf("kantor")} />
@@ -122,26 +126,30 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
 
 // ---------------- Retensi ----------------
 export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all, addCair, kpr }: Common<Retensi> & { all: Retensi[]; addCair?: boolean; kpr: Kpr[] }) {
-  const start = addCair ? { ...initial, cair: [...(initial.cair ?? []), { tgl: isoToday(), nominal: 0, komponen: (Object.keys(RET_LABEL) as string[]).find(k => compSisa(initial, k) > 0) ?? "bangunan", ket: "" }] } : initial;
+  const start = addCair ? { ...initial, cair: [...(initial.cair ?? []), { tgl: isoToday(), nominal: 0, komponen: (Object.keys(RET_LABEL) as string[]).find(k => compSisa(initial, k) > 0) ?? "bangunan" }] } : initial;
   const { rec: r, patch, busy, msg, save, del } = useForm(start, onSave, onDelete, x => (!x.blok?.trim() || !x.nama?.trim() ? "Blok dan nama wajib diisi." : ""));
   const cair = r.cair ?? [];
   const setCair = (i: number, p: Partial<RetCair>) => patch({ cair: cair.map((c, j) => (j === i ? { ...c, ...p } : c)) });
   const kk = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
   const withKomp = kk.filter(k => num(r.ret?.[k]) > 0);
   const keys = withKomp.length ? withKomp : kk;
-  const awal = retAwal(r), sudah = retCair(r), sisa = retSisa(r);
+  const awal = retAwal(r), sisa = retSisa(r);
   const sf = (k: keyof Retensi) => (v: string) => patch({ [k]: v } as Partial<Retensi>);
   const nf = (k: keyof Retensi) => (v: string) => patch({ [k]: num(v) } as Partial<Retensi>);
 
   return (
     <Drawer title={isNew ? "Tambah retensi" : `${r.blok} · ${titleCase(r.nama)}`} subtitle={isNew ? "Data escrow / retensi bank per unit" : `${retStatus(r) || "Belum ada retensi"} · sisa retensi Rp ${rp(sisa)}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
+      <Datalist id="dl-rcluster" values={all.map(x => x.cluster)} />
+      <Datalist id="dl-rtipe" values={all.map(x => x.tipe)} />
       <Datalist id="dl-rbank" values={all.map(x => x.bank)} />
       <Datalist id="dl-rnot" values={all.map(x => x.notaris)} />
       <fieldset disabled={!canEdit} style={{ display: "contents" }}>
         {isNew && canEdit && <KprPicker kpr={kpr} linkedId={r.kprId} sudahAda={new Set(all.map(x => normUnit(x.blok)))}
           onPick={isi => patch(isi)} onClear={() => patch({ kprId: undefined })} />}
-        <fieldset><legend>Unit &amp; pemilik</legend><div className="grid">
+        <fieldset><legend>Blok &amp; pemilik</legend><div className="grid">
+          <Field label="Cluster" value={r.cluster} onChange={sf("cluster")} list="dl-rcluster" />
+          <Field label="Tipe" value={r.tipe} onChange={sf("tipe")} list="dl-rtipe" />
           <Field label="Blok *" value={r.blok} onChange={sf("blok")} />
           <Field label="Nama *" value={r.nama} onChange={v => patch({ nama: v.toUpperCase() })} w2 />
           <Select label="Pembayaran" value={r.pembayaran || "KPR"} options={[...new Set(["KPR", "Tunai", r.pembayaran].filter(Boolean) as string[])]} onChange={sf("pembayaran")} />
@@ -165,16 +173,10 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
               <div><label>Tanggal cair</label><input type="date" value={c.tgl} onChange={e => setCair(i, { tgl: e.target.value })} /></div>
               <div><label>Nominal (Rp)</label><input type="number" step="any" value={c.nominal || ""} onChange={e => setCair(i, { nominal: num(e.target.value) })} /></div>
               <div><label>Komponen</label><select value={c.komponen} onChange={e => setCair(i, { komponen: e.target.value })}>{[...new Set([...keys as string[], c.komponen].filter(Boolean) as string[])].map(k => <option key={k} value={k}>{kompShort(k)}</option>)}</select></div>
-              <div><label>Keterangan</label><input value={c.ket ?? ""} placeholder="mis. cair setelah BAST" onChange={e => setCair(i, { ket: e.target.value })} /></div>
               <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ cair: cair.filter((_, j) => j !== i) })}>×</button>
             </div>))}
         </div>
-        <button type="button" className="btn sm add" onClick={() => patch({ cair: [...cair, { tgl: isoToday(), nominal: 0, komponen: keys.find(k => compSisa(r, k) > 0) ?? keys[0], ket: "" }] })}>+ Catat pencairan</button>
-        <div className="sumrow">
-          <Fld label="Retensi awal"><div className="calc num">Rp {rp(awal)}</div></Fld>
-          <Fld label="Sudah cair"><div className="calc num">{sudah ? "− Rp " + rp(sudah) : "Rp 0"}</div></Fld>
-          <Fld label="Sisa retensi"><div className={"calc num" + (sisa < 0 ? " neg" : "")}>{sisa < 0 ? "Lebih Rp " + rp(-sisa) : sisa ? "Rp " + rp(sisa) : "Lunas"}</div></Fld>
-        </div></fieldset>
+        <button type="button" className="btn sm add" onClick={() => patch({ cair: [...cair, { tgl: isoToday(), nominal: 0, komponen: keys.find(k => compSisa(r, k) > 0) ?? keys[0] }] })}>+ Catat pencairan</button></fieldset>
         <fieldset><legend>Keterangan</legend><div className="grid">
           <Fld label="Keterangan" w2><textarea value={r.keterangan ?? ""} onChange={e => patch({ keterangan: e.target.value })} /></Fld>
         </div></fieldset>

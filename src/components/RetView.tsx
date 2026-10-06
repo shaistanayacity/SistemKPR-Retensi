@@ -16,9 +16,9 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
   const set = (p: Partial<RetFilter>) => setF(x => ({ ...x, ...p }));
 
   const gAwal = all.reduce((a, r) => a + retAwal(r), 0), gCair = all.reduce((a, r) => a + retCair(r), 0), gSisa = gAwal - gCair;
-  const nCair = all.reduce((a, r) => a + (r.cair ?? []).length, 0), nLunas = all.filter(r => retStatus(r) === "Lunas").length;
   const pctCair = gAwal ? Math.min(1, gCair / gAwal) : 0;
-  const gNilai = all.reduce((a, r) => a + retNilai(r), 0), pctTerima = gNilai ? Math.max(0, Math.min(1, all.reduce((a, r) => a + retTerima(r) + retCair(r), 0) / gNilai)) : 0;
+  const gTerimaAwal = all.reduce((a, r) => a + retTerima(r), 0), gPencairan = gTerimaAwal + gCair;
+  const gNilai = all.reduce((a, r) => a + retNilai(r), 0), pctTerima = gNilai ? Math.max(0, Math.min(1, gPencairan / gNilai)) : 0;
   const recent = all.flatMap(r => (r.cair ?? []).map(c => ({ r, c }))).sort((a, b) => String(b.c.tgl).localeCompare(String(a.c.tgl)));
   const comp = (Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[]).map(k => [k, all.reduce((a, r) => a + Math.max(0, compSisa(r, k)), 0)] as const).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]);
   const maxComp = comp[0]?.[1] ?? 1;
@@ -52,11 +52,9 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
         {canEdit && <button className="btn pri" onClick={onAdd}>+ Tambah Retensi</button>}
       </div>
 
-      <div className="stats four">
-        <div className="card stat"><span className="st-l"><span className="lbl">Retensi awal</span><span className="v num">{rpShort(gAwal)}</span><span className="s">ditahan bank saat akad</span></span><span className="st-r"><span className="tile"><Icon name="layers" size={22} /></span></span></div>
-        <div className="card stat"><span className="st-l"><span className="lbl">Sudah cair</span><span className="v num">{rpShort(gCair)}</span><span className="s num">{nCair} kali pencairan</span></span><span className="st-r"><span className="tile"><Icon name="down" size={22} /></span></span></div>
+      <div className="stats two">
+        <div className="card stat"><span className="st-l"><span className="lbl">Total pencairan</span><span className="v num">{rpShort(gPencairan)}</span><span className="s num">pencairan awal {rpShort(gTerimaAwal)} + retensi cair {rpShort(gCair)}</span></span><span className="st-r"><span className="tile"><Icon name="down" size={22} /></span></span></div>
         <div className="card stat dark"><span className="st-l"><span className="lbl">Sisa retensi</span><span className="v num">{rpShort(gSisa)}</span><span className="t"><i style={{ width: (pctTerima * 100).toFixed(1) + "%" }} /></span><span className="s num">{gNilai ? (pctTerima * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% sudah diterima dari nilai KPR ACC bank" : "nilai KPR ACC bank belum diisi"}</span></span><span className="st-r"><span className="tile"><Icon name="wallet" size={22} /></span></span></div>
-        <div className="card stat"><span className="st-l"><span className="lbl">Unit lunas</span><span className="v num">{nLunas}<span className="of"> / {all.length}</span></span><span className="s">retensi habis dicairkan</span></span><span className="st-r"><span className="tile"><Icon name="check" size={22} /></span></span></div>
       </div>
 
       <div className="row2">
@@ -69,7 +67,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
             {recent.length ? recent.slice(0, 5).map(({ r, c }, i) => (
               <button key={r.id + i} className="fu-i" onClick={() => onOpen(r)}>
                 <Avatar name={r.nama} />
-                <span style={{ minWidth: 0 }}><b><em>{r.blok}</em>{titleCase(r.nama)}</b><span className="why">{[tgl(c.tgl) || "tanpa tanggal", kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")}</span></span>
+                <span style={{ minWidth: 0 }}><b><em>{r.blok}</em>{titleCase(r.nama)}</b><span className="why">{[tgl(c.tgl) || "tanpa tanggal", kompShort(c.komponen)].filter(Boolean).join(" · ")}</span></span>
                 <b className="num">+ {rpShort(c.nominal)}</b>
               </button>)) : <p className="none">Belum ada pencairan tercatat. Klik <b>+ Cair</b> pada baris unit di tabel untuk mencatat tanggal dan nominal yang cair.</p>}
           </div></div></div>
@@ -101,11 +99,11 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
           <DateTools d1={f.d1} d2={f.d2} onChange={(d1, d2) => set({ d1, d2 })} /></div>
         <p className="meta">Menampilkan <b className="num">{rows.length}</b> dari {all.length} unit · sudah cair <b className="num">{rpShort(tCair)}</b> · sisa <b className="num">{rpShort(tSisa)}</b></p>
         <div className="tbl"><table>
-          <thead><tr><th>Blok</th><th>Pemilik</th><th className="r">Nilai KPR ACC Bank</th><th className="r">Sisa Retensi</th><th>Per Komponen</th><th>Riwayat Pencairan</th><th>Status</th><th>Keterangan</th><th></th></tr></thead>
+          <thead><tr><th>Cluster</th><th>Tipe</th><th>Blok</th><th>Pemilik</th><th className="r">Nilai KPR ACC Bank</th><th className="r">Sisa Retensi</th><th>Per Komponen</th><th>Riwayat Pencairan</th><th>Status</th><th>Keterangan</th><th></th></tr></thead>
           <tbody>
-            {rows.length ? rows.map(r => <RetRow key={r.id} r={r} canEdit={canEdit} onOpen={onOpen} onCair={onCair} />) : <tr><td colSpan={9}><div className="empty"><b>Tidak ada data yang cocok</b>Ubah filter, atau klik Tambah untuk mengisi data baru.</div></td></tr>}
+            {rows.length ? rows.map(r => <RetRow key={r.id} r={r} canEdit={canEdit} onOpen={onOpen} onCair={onCair} />) : <tr><td colSpan={11}><div className="empty"><b>Tidak ada data yang cocok</b>Ubah filter, atau klik Tambah untuk mengisi data baru.</div></td></tr>}
           </tbody>
-          {rows.length > 0 && <tfoot><tr><td colSpan={2}>Total {rows.length} unit</td><td className="r num">{rp(tNilai)}</td><td className="r num">{rp(tSisa)}</td><td></td><td className="num">cair {rp(tCair)}</td><td colSpan={2}></td><td></td></tr></tfoot>}
+          {rows.length > 0 && <tfoot><tr><td colSpan={4}>Total {rows.length} unit</td><td className="r num">{rp(tNilai)}</td><td className="r num">{rp(tSisa)}</td><td></td><td className="num">cair {rp(tCair)}</td><td colSpan={2}></td><td></td></tr></tfoot>}
         </table></div>
       </div>
       {reportBuilding && <ReportBuilder type="ret" onClose={() => setReportBuilding(false)} onGenerate={genReport} />}
@@ -120,6 +118,8 @@ function RetRow({ r, canEdit, onOpen, onCair }: { r: Retensi; canEdit: boolean; 
   const komp = (Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[]).filter(k => num(r.ret?.[k]) > 0);
   return (
     <tr className="click" onClick={() => onOpen(r)}>
+      <td>{r.cluster || <Dash />}</td>
+      <td>{r.tipe || <Dash />}</td>
       <td className="unit">{r.blok}</td>
       <td><Who name={r.nama} sub={[r.bank, r.notaris && titleCase(r.notaris)].filter(Boolean).join(" · ")} /></td>
       <td className="r"><div className="money-c"><b className="num">{rp(retNilai(r))}</b><span className="sub num">ditahan {(p * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%</span></div></td>
