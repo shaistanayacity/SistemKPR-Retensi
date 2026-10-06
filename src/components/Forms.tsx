@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
-import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, rpShort, tgl, titleCase } from "../lib/format";
+import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, tgl, titleCase } from "../lib/format";
 import type { BankProses, BankRiwayat, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
 import { KprPicker } from "./KprPicker";
@@ -174,8 +174,7 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Fld label="Retensi awal"><div className="calc num">Rp {rp(awal)}</div></Fld>
           <Fld label="Sudah cair"><div className="calc num">{sudah ? "− Rp " + rp(sudah) : "Rp 0"}</div></Fld>
           <Fld label="Sisa retensi"><div className={"calc num" + (sisa < 0 ? " neg" : "")}>{sisa < 0 ? "Lebih Rp " + rp(-sisa) : sisa ? "Rp " + rp(sisa) : "Lunas"}</div></Fld>
-        </div>
-        <div className="compline">{kk.filter(k => num(r.ret?.[k]) > 0 || cair.some(c => c.komponen === k && c.nominal)).map(k => { const cs = compSisa(r, k); return <span key={k} className={"chip " + (cs < 0 ? "no" : cs === 0 ? "acc" : "")}>{kompShort(k)}: {cs === 0 ? "lunas" : cs < 0 ? "lebih " + rpShort(-cs) : "sisa " + rpShort(cs)}</span>; })}</div></fieldset>
+        </div></fieldset>
         <fieldset><legend>Keterangan</legend><div className="grid">
           <Fld label="Keterangan" w2><textarea value={r.keterangan ?? ""} onChange={e => patch({ keterangan: e.target.value })} /></Fld>
         </div></fieldset>

@@ -242,7 +242,6 @@ legend + *{clear:both}
 .add{margin-top:10px}
 .sumrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
 .sumrow .calc.neg{color:var(--bad-fg)}
-.compline{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--top);color:var(--top-fg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:40;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
