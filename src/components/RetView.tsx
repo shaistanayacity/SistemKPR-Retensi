@@ -2,13 +2,15 @@ import { useMemo, useState } from "react";
 import { cairSorted, compSisa, lastMonths, perMonth, windowEnd, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retRows, retSisa, retStatus, retTerima } from "../lib/logic";
 import { juta, kompShort, num, RET_LABEL, RET_PILL, RET_SHORT, RET_STATUS, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Retensi } from "../lib/types";
-import { retPDF, retXLS } from "../lib/exportFiles";
+import { retPDF, retXLS, retReportXLS } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 import { Icon } from "./Icon";
 import { TrendChart } from "./TrendChart";
+import { ReportBuilder } from "./ReportBuilder";
 
 export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all: Retensi[]; canEdit: boolean; onOpen: (r: Retensi) => void; onAdd: () => void; onCair: (r: Retensi) => void; onImport: () => void }) {
   const [dl, setDl] = useState("");
+  const [reportBuilding, setReportBuilding] = useState(false);
   const months = useMemo(() => lastMonths(12, windowEnd(all.flatMap(r => (r.cair ?? []).map(c => c.tgl)))), [all]);
   const [f, setF] = useState<RetFilter>(emptyRetFilter);
   const set = (p: Partial<RetFilter>) => setF(x => ({ ...x, ...p }));
@@ -29,6 +31,13 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
     setDl(k);
     try { await (k === "pdf" ? retPDF(rows, f) : retXLS(rows)); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
     setDl("");
+  };
+  const genReport = async (cols: Record<string, boolean>) => {
+    if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
+    setDl("xls");
+    try { await retReportXLS(rows, f, cols); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
+    setDl("");
+    setReportBuilding(false);
   };
   const tSisa = rows.reduce((a, r) => a + retSisa(r), 0), tNilai = rows.reduce((a, r) => a + retNilai(r), 0), tCair = rows.reduce((a, r) => a + retCair(r), 0);
   const banks = [...new Set(all.map(r => r.bank).filter(Boolean) as string[])].sort();
@@ -85,6 +94,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
           {canEdit && <button className="btn pri" onClick={onImport}>Unggah Excel</button>}
           <button className="btn" disabled={!!dl} onClick={() => void run("pdf")}>{dl === "pdf" ? "Menyiapkan…" : "Unduh PDF"}</button>
           <button className="btn" disabled={!!dl} onClick={() => void run("xls")}>{dl === "xls" ? "Menyiapkan…" : "Unduh Excel"}</button>
+          <button className="btn" onClick={() => setReportBuilding(true)}>Buat Report Custom</button>
         </div>
         <div className="tools dt"><span className="dtl">Tanggal</span><span className="dtl" style={{ fontWeight: 600, color: "var(--fg)" }}>Tanggal pencairan</span>
           <DateTools d1={f.d1} d2={f.d2} onChange={(d1, d2) => set({ d1, d2 })} /></div>
@@ -97,6 +107,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
           {rows.length > 0 && <tfoot><tr><td colSpan={2}>Total {rows.length} unit</td><td className="r num">{rp(tNilai)}</td><td className="r num">{rp(tSisa)}</td><td></td><td className="num">cair {rp(tCair)}</td><td colSpan={2}></td><td></td></tr></tfoot>}
         </table></div>
       </div>
+      {reportBuilding && <ReportBuilder type="ret" onClose={() => setReportBuilding(false)} onGenerate={genReport} />}
     </section>
   );
 }

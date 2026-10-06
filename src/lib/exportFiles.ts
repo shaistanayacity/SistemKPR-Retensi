@@ -140,3 +140,53 @@ export async function retXLS(rows: Retensi[]) {
   const hist = rows.flatMap(r => cairSorted(r).map(c => ({ Blok: r.blok, Nama: r.nama, "Bank KPR": r.bank ?? "", "Tanggal Cair": c.tgl ?? "", Komponen: RET_LABEL[c.komponen as keyof typeof RET_LABEL] ?? c.komponen ?? "", Nominal: num(c.nominal), Keterangan: c.ket ?? "" })));
   save(`Retensi_${stamp()}.xlsx`, await xlsxBlob([["Retensi", data, [5, 9, 30, 10, 16, 10]], ["Riwayat Pencairan", hist, [9, 30, 16, 12, 22, 14, 30], ["Blok", "Nama", "Bank KPR", "Tanggal Cair", "Komponen", "Nominal", "Keterangan"]]]));
 }
+
+// Custom report generators dengan column selection
+export async function kprReportXLS(rows: Kpr[], f: KprFilter, columns: Record<string, boolean>) {
+  const data = rows.map((r, i) => {
+    const o: Record<string, unknown> = { No: i + 1 };
+    if (columns.unit) o.Unit = r.unit;
+    if (columns.nama) o.Nama = r.nama;
+    if (columns.sales) o.Sales = r.sales ?? "";
+    if (columns.caraBayar) o["Cara Bayar"] = r.caraBayar ?? "";
+    if (columns.hargaTransaksi) o["Harga Transaksi"] = num(r.hargaTransaksi);
+    if (columns.totalUM) o["Uang Muka"] = num(r.totalUM);
+    if (columns.plafond) o["Plafond KPR"] = num(r.plafond);
+    if (columns.tglUTJ) o["Tgl UTJ"] = r.tglUTJ ?? "";
+    if (columns.tglSPR) o["Tgl SPR & PPJB"] = r.tglSPR ?? "";
+    if (columns.tglACC) o["Tgl ACC"] = r.tglACC ?? "";
+    if (columns.tglAkad) o["Tgl Akad"] = r.tglAkad ?? "";
+    if (columns.tempatAkad) o["Tempat Akad"] = r.tempatAkad ?? "";
+    if (columns.notaris) o.Notaris = r.notaris ?? "";
+    if (columns.status) o.Status = status(r);
+    if (columns.bankProses) o["Proses Bank"] = (r.bankProses ?? []).map(b => `${b.bank}: ${b.hasil || "Diajukan"}`).join("; ") || "–";
+    if (columns.berkas) { const s = berkasScore(r); o["Berkas"] = `${s.have}/${s.need}`; }
+    if (columns.jenisPekerjaan) o.Pekerjaan = jenis(r);
+    if (columns.keterangan) o.Keterangan = r.keterangan ?? "";
+    return o;
+  });
+  save(`Report_KPR${slug(f)}_${stamp()}.xlsx`, await xlsxBlob([["Berkas KPR", data, [5, 12, 30, 12, 14, 12, 12, 11, 13, 11, 11, 12, 14, 20, 30]]]));
+}
+
+export async function retReportXLS(rows: Retensi[], f: RetFilter, columns: Record<string, boolean>) {
+  const K = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
+  const data = rows.map((r, i) => {
+    const o: Record<string, unknown> = { No: i + 1 };
+    if (columns.blok) o.Blok = r.blok;
+    if (columns.nama) o.Nama = r.nama;
+    if (columns.pembayaran) o.Pembayaran = r.pembayaran ?? "";
+    if (columns.bank) o["Bank KPR"] = r.bank ?? "";
+    if (columns.notaris) o.Notaris = r.notaris ?? "";
+    if (columns.nilaiKPR) o["Nilai KPR"] = num(r.nilaiKPR);
+    if (columns.nilaiUM) o["Nilai UM"] = num(r.nilaiUM);
+    if (columns.persenCair) o["% Pencairan"] = num(r.persenCair) * 100 + "%";
+    if (columns.retAwal) o["Retensi Awal"] = rp(retAwal(r));
+    if (columns.retCair) o["Sudah Cair"] = rp(retCair(r));
+    if (columns.retSisa) o["Sisa Retensi"] = rp(retSisa(r));
+    if (columns.status) o.Status = retStatus(r) ?? "";
+    if (columns.riwayatCair) o["Riwayat Pencairan"] = cairSorted(r).map(c => `${tgl(c.tgl)}: ${rp(num(c.nominal))}`).join("; ") || "–";
+    if (columns.catatan) o.Catatan = r.catatan ?? "";
+    return o;
+  });
+  save(`Report_Retensi_${stamp()}.xlsx`, await xlsxBlob([["Retensi", data, [5, 10, 30, 12, 14, 12, 12, 12, 12, 12, 12, 14, 40, 30]]]));
+}
