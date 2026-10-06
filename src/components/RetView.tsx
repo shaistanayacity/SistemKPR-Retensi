@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { cairSorted, compSisa, lastMonths, perMonth, windowEnd, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retPersen, retRows, retSisa, retSisaPersen, retStatus, retTerima } from "../lib/logic";
+import { cairSorted, compSisa, lastMonths, perMonth, windowEnd, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retPersen, retRows, retSisa, retDiterimaPersen, retStatus, retTerima } from "../lib/logic";
 import { juta, kompShort, num, RET_LABEL, RET_PILL, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Retensi } from "../lib/types";
 import { retPDF, retXLS, retReportPDF } from "../lib/exportFiles";
@@ -18,7 +18,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
   const gAwal = all.reduce((a, r) => a + retAwal(r), 0), gCair = all.reduce((a, r) => a + retCair(r), 0), gSisa = gAwal - gCair;
   const nCair = all.reduce((a, r) => a + (r.cair ?? []).length, 0), nLunas = all.filter(r => retStatus(r) === "Lunas").length;
   const pctCair = gAwal ? Math.min(1, gCair / gAwal) : 0;
-  const gNilai = all.reduce((a, r) => a + retNilai(r), 0), pctSisa = gNilai ? Math.max(0, Math.min(1, gSisa / gNilai)) : 0;
+  const gNilai = all.reduce((a, r) => a + retNilai(r), 0), pctTerima = gNilai ? Math.max(0, Math.min(1, all.reduce((a, r) => a + retTerima(r) + retCair(r), 0) / gNilai)) : 0;
   const recent = all.flatMap(r => (r.cair ?? []).map(c => ({ r, c }))).sort((a, b) => String(b.c.tgl).localeCompare(String(a.c.tgl)));
   const comp = (Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[]).map(k => [k, all.reduce((a, r) => a + Math.max(0, compSisa(r, k)), 0)] as const).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]);
   const maxComp = comp[0]?.[1] ?? 1;
@@ -55,7 +55,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
       <div className="stats four">
         <div className="card stat"><span className="st-l"><span className="lbl">Retensi awal</span><span className="v num">{rpShort(gAwal)}</span><span className="s">ditahan bank saat akad</span></span><span className="st-r"><span className="tile"><Icon name="layers" size={22} /></span></span></div>
         <div className="card stat"><span className="st-l"><span className="lbl">Sudah cair</span><span className="v num">{rpShort(gCair)}</span><span className="s num">{nCair} kali pencairan</span></span><span className="st-r"><span className="tile"><Icon name="down" size={22} /></span></span></div>
-        <div className="card stat dark"><span className="st-l"><span className="lbl">Sisa retensi</span><span className="v num">{rpShort(gSisa)}</span><span className="t"><i style={{ width: (pctSisa * 100).toFixed(1) + "%" }} /></span><span className="s num">{gNilai ? (pctSisa * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% dari nilai KPR ACC bank" : "nilai KPR ACC bank belum diisi"}</span></span><span className="st-r"><span className="tile"><Icon name="wallet" size={22} /></span></span></div>
+        <div className="card stat dark"><span className="st-l"><span className="lbl">Sisa retensi</span><span className="v num">{rpShort(gSisa)}</span><span className="t"><i style={{ width: (pctTerima * 100).toFixed(1) + "%" }} /></span><span className="s num">{gNilai ? (pctTerima * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% sudah diterima dari nilai KPR ACC bank" : "nilai KPR ACC bank belum diisi"}</span></span><span className="st-r"><span className="tile"><Icon name="wallet" size={22} /></span></span></div>
         <div className="card stat"><span className="st-l"><span className="lbl">Unit lunas</span><span className="v num">{nLunas}<span className="of"> / {all.length}</span></span><span className="s">retensi habis dicairkan</span></span><span className="st-r"><span className="tile"><Icon name="check" size={22} /></span></span></div>
       </div>
 
@@ -115,7 +115,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
 
 function RetRow({ r, canEdit, onOpen, onCair }: { r: Retensi; canEdit: boolean; onOpen: (r: Retensi) => void; onCair: (r: Retensi) => void }) {
   const awal = retAwal(r), cair = retCair(r), sisa = awal - cair, st = retStatus(r), p = retPersen(r);
-  const pct = Math.min(1, Math.max(0, retSisaPersen(r))), nilai = retNilai(r);
+  const pct = retDiterimaPersen(r), nilai = retNilai(r);
   const hist = cairSorted(r), shown = hist.slice(-3);
   const komp = (Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[]).filter(k => num(r.ret?.[k]) > 0);
   return (
@@ -124,7 +124,7 @@ function RetRow({ r, canEdit, onOpen, onCair }: { r: Retensi; canEdit: boolean; 
       <td><Who name={r.nama} sub={[r.bank, r.notaris && titleCase(r.notaris)].filter(Boolean).join(" · ")} /></td>
       <td className="r"><div className="money-c"><b className="num">{rp(retNilai(r))}</b><span className="sub num">ditahan {(p * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%</span></div></td>
       <td className="r"><div className="money-c"><b className="num">{sisa ? rp(sisa) : "0"}</b>
-        <span className="prog" style={{ justifyContent: "flex-end", marginTop: 4 }} title={nilai ? `Sisa retensi ${(pct * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}% dari nilai KPR ACC bank Rp ${rp(nilai)}` : "Nilai KPR ACC bank belum diisi"}><span className="t"><i style={{ width: (pct * 100).toFixed(0) + "%" }} /></span><span className="sub num" style={{ display: "inline" }}>{nilai ? (pct * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% dari " + juta(nilai) : "KPR ACC kosong"}</span></span></div></td>
+        <span className="prog" style={{ justifyContent: "flex-end", marginTop: 4 }} title={nilai ? `Sudah diterima ${(pct * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}% dari nilai KPR ACC bank Rp ${rp(nilai)} (total diterima awal + pencairan)` : "Nilai KPR ACC bank belum diisi"}><span className="t"><i style={{ width: (pct * 100).toFixed(0) + "%" }} /></span><span className="sub num" style={{ display: "inline" }}>{nilai ? (pct * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% diterima dari " + juta(nilai) : "KPR ACC kosong"}</span></span></div></td>
       <td>{komp.length ? <div className="chips">{komp.map(k => { const cs = compSisa(r, k); return <span key={k} className={"chip " + (cs <= 0 ? "acc" : "")} title={`${RET_LABEL[k]}: awal Rp ${rp(num(r.ret?.[k]))}, sisa Rp ${rp(Math.max(0, cs))}`}>{kompShort(k)} {cs <= 0 ? "lunas" : juta(cs)}</span>; })}</div> : <Dash />}</td>
       <td>{hist.length ? <div className="hist">{hist.length > 3 && <span>+{hist.length - 3} pencairan sebelumnya</span>}{shown.map((c, i) => <div key={i}><span className="num">{tgl(c.tgl) || "tanpa tanggal"}</span> · <b className="num">{juta(c.nominal)}</b> <span>{kompShort(c.komponen)}</span></div>)}</div> : <span className="sub">Belum ada</span>}</td>
       <td>{st ? <span className={"pill " + (RET_PILL[st] ?? "p-neu")} title={st}>{st}</span> : <Dash />}</td>
