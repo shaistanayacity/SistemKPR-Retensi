@@ -46,7 +46,7 @@ export interface Kpr {
 export const RET_KOMP = ["bangunan", "ajb", "sertifikat", "pbg", "pdam", "listrik", "pajak"] as const;
 export type RetKomp = (typeof RET_KOMP)[number];
 
-export interface RetCair { tgl: string; nominal: number; komponen?: string; ket?: string }
+export interface RetCair { tgl: string; nominal: number; komponen?: string }
 export interface Retensi {
   id: string;
   ord: number;

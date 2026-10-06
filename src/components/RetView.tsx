@@ -69,7 +69,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
             {recent.length ? recent.slice(0, 5).map(({ r, c }, i) => (
               <button key={r.id + i} className="fu-i" onClick={() => onOpen(r)}>
                 <Avatar name={r.nama} />
-                <span style={{ minWidth: 0 }}><b><em>{r.blok}</em>{titleCase(r.nama)}</b><span className="why">{[tgl(c.tgl) || "tanpa tanggal", kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")}</span></span>
+                <span style={{ minWidth: 0 }}><b><em>{r.blok}</em>{titleCase(r.nama)}</b><span className="why">{[tgl(c.tgl) || "tanpa tanggal", kompShort(c.komponen)].filter(Boolean).join(" · ")}</span></span>
                 <b className="num">+ {rpShort(c.nominal)}</b>
               </button>)) : <p className="none">Belum ada pencairan tercatat. Klik <b>+ Cair</b> pada baris unit di tabel untuk mencatat tanggal dan nominal yang cair.</p>}
           </div></div></div>

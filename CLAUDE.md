@@ -42,7 +42,7 @@ Kelengkapan berkas: jumlah dokumen terpenuhi dari yang dibutuhkan (karyawan: KTP
 
 ## Model data
 KPR: ord, unit (ditampilkan sebagai "Blok"), nama, cluster, tipe, sales, kantor, tglUTJ, tglSPR, caraBayar, jenisPekerjaan, hargaJual, diskonPPN, diskonTusukSate, diskonKhusus, totalDiskon, hargaTransaksi, utj, totalUM (uang muka), plafond, accBank, tglACC, tum, berkas{ktp,npwp,kk,akta,rk3,suket,slip3,rk6,nibSkdu,lapkeu}, bankProses[{bank,tgl,ket,hasil,progres[{tgl,hasil,ket}]}] (satu entri per bank; progres = seluruh riwayat berurutan, tgl/hasil/ket mengikuti progres terakhir), legal{potongPokok,roya,ambilSertifikat,verifikasi,validasi}, tglAkad, tempatAkad, notaris, progressBangun, ajb, tglAJB, stu, tglSTU, updatedAt.
-Retensi: ord, blok, nama, cluster, tipe, pembayaran, tglAkad, kprId, nilaiKPRAccBank, totalDiterimAwal, ret{bangunan,ajb,sertifikat,pbg,pdam,listrik,pajak}, cair[{tgl,nominal,komponen,ket}], bank, notaris, keterangan, updatedAt.
+Retensi: ord, blok, nama, cluster, tipe, pembayaran, tglAkad, kprId, nilaiKPRAccBank, totalDiterimAwal, ret{bangunan,ajb,sertifikat,pbg,pdam,listrik,pajak}, cair[{tgl,nominal,komponen}], bank, notaris, keterangan, updatedAt.
 Tanggal disimpan ISO (YYYY-MM-DD). Nominal dalam rupiah (angka bulat).
 
 ## Aturan impor Excel

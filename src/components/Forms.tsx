@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, tgl, titleCase } from "../lib/format";
 import type { BankProses, BankRiwayat, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
@@ -126,14 +126,14 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
 
 // ---------------- Retensi ----------------
 export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all, addCair, kpr }: Common<Retensi> & { all: Retensi[]; addCair?: boolean; kpr: Kpr[] }) {
-  const start = addCair ? { ...initial, cair: [...(initial.cair ?? []), { tgl: isoToday(), nominal: 0, komponen: (Object.keys(RET_LABEL) as string[]).find(k => compSisa(initial, k) > 0) ?? "bangunan", ket: "" }] } : initial;
+  const start = addCair ? { ...initial, cair: [...(initial.cair ?? []), { tgl: isoToday(), nominal: 0, komponen: (Object.keys(RET_LABEL) as string[]).find(k => compSisa(initial, k) > 0) ?? "bangunan" }] } : initial;
   const { rec: r, patch, busy, msg, save, del } = useForm(start, onSave, onDelete, x => (!x.blok?.trim() || !x.nama?.trim() ? "Blok dan nama wajib diisi." : ""));
   const cair = r.cair ?? [];
   const setCair = (i: number, p: Partial<RetCair>) => patch({ cair: cair.map((c, j) => (j === i ? { ...c, ...p } : c)) });
   const kk = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
   const withKomp = kk.filter(k => num(r.ret?.[k]) > 0);
   const keys = withKomp.length ? withKomp : kk;
-  const awal = retAwal(r), sudah = retCair(r), sisa = retSisa(r);
+  const awal = retAwal(r), sisa = retSisa(r);
   const sf = (k: keyof Retensi) => (v: string) => patch({ [k]: v } as Partial<Retensi>);
   const nf = (k: keyof Retensi) => (v: string) => patch({ [k]: num(v) } as Partial<Retensi>);
 
@@ -173,16 +173,10 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
               <div><label>Tanggal cair</label><input type="date" value={c.tgl} onChange={e => setCair(i, { tgl: e.target.value })} /></div>
               <div><label>Nominal (Rp)</label><input type="number" step="any" value={c.nominal || ""} onChange={e => setCair(i, { nominal: num(e.target.value) })} /></div>
               <div><label>Komponen</label><select value={c.komponen} onChange={e => setCair(i, { komponen: e.target.value })}>{[...new Set([...keys as string[], c.komponen].filter(Boolean) as string[])].map(k => <option key={k} value={k}>{kompShort(k)}</option>)}</select></div>
-              <div><label>Keterangan</label><input value={c.ket ?? ""} placeholder="mis. cair setelah BAST" onChange={e => setCair(i, { ket: e.target.value })} /></div>
               <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ cair: cair.filter((_, j) => j !== i) })}>×</button>
             </div>))}
         </div>
-        <button type="button" className="btn sm add" onClick={() => patch({ cair: [...cair, { tgl: isoToday(), nominal: 0, komponen: keys.find(k => compSisa(r, k) > 0) ?? keys[0], ket: "" }] })}>+ Catat pencairan</button>
-        <div className="sumrow">
-          <Fld label="Retensi awal"><div className="calc num">Rp {rp(awal)}</div></Fld>
-          <Fld label="Sudah cair"><div className="calc num">{sudah ? "− Rp " + rp(sudah) : "Rp 0"}</div></Fld>
-          <Fld label="Sisa retensi"><div className={"calc num" + (sisa < 0 ? " neg" : "")}>{sisa < 0 ? "Lebih Rp " + rp(-sisa) : sisa ? "Rp " + rp(sisa) : "Lunas"}</div></Fld>
-        </div></fieldset>
+        <button type="button" className="btn sm add" onClick={() => patch({ cair: [...cair, { tgl: isoToday(), nominal: 0, komponen: keys.find(k => compSisa(r, k) > 0) ?? keys[0] }] })}>+ Catat pencairan</button></fieldset>
         <fieldset><legend>Keterangan</legend><div className="grid">
           <Fld label="Keterangan" w2><textarea value={r.keterangan ?? ""} onChange={e => patch({ keterangan: e.target.value })} /></Fld>
         </div></fieldset>

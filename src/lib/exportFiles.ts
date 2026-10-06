@@ -85,7 +85,7 @@ export async function retPDF(rows: Retensi[], f: RetFilter) {
   const K = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
   const body = rows.map((r, i) => [i + 1, r.cluster ?? "", r.tipe ?? "", r.blok, r.nama, r.bank ?? "", r.notaris ?? "", rp(retNilai(r)), rp(retTerima(r)),
     K.filter(k => num(r.ret?.[k]) > 0).map(k => `${kompShort(k)}: ${rp(num(r.ret?.[k]))}`).join("\n") || "–", rp(retAwal(r)),
-    cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")).join("\n") || "Belum ada",
+    cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen)].filter(Boolean).join(" · ")).join("\n") || "Belum ada",
     rp(retCair(r)), rp(retSisa(r)) === "–" ? "0" : rp(retSisa(r)), retStatus(r), r.keterangan ?? ""]);
   const sum = (fn: (r: Retensi) => number) => rp(rows.reduce((a, r) => a + fn(r), 0));
   const blob = await pdfDoc("Rekap Retensi / Escrow", `${retFilterLabel(f)} · ${rows.length} unit · dicetak ${today()}`,
@@ -136,8 +136,8 @@ export async function retXLS(rows: Retensi[]) {
     Object.assign(o, { "Total Retensi (Sisa)": retSisa(r), Status: retStatus(r), Keterangan: r.keterangan ?? "" });
     return o;
   });
-  const hist = rows.flatMap(r => cairSorted(r).map(c => ({ Blok: r.blok, Nama: r.nama, "Bank KPR": r.bank ?? "", "Tanggal Cair": c.tgl ?? "", Komponen: RET_LABEL[c.komponen as keyof typeof RET_LABEL] ?? c.komponen ?? "", Nominal: num(c.nominal), Keterangan: c.ket ?? "" })));
-  save(`Retensi_${stamp()}.xlsx`, await xlsxBlob([["Retensi", data, [5, 9, 30, 10, 16, 10]], ["Riwayat Pencairan", hist, [9, 30, 16, 12, 22, 14, 30], ["Blok", "Nama", "Bank KPR", "Tanggal Cair", "Komponen", "Nominal", "Keterangan"]]]));
+  const hist = rows.flatMap(r => cairSorted(r).map(c => ({ Blok: r.blok, Nama: r.nama, "Bank KPR": r.bank ?? "", "Tanggal Cair": c.tgl ?? "", Komponen: RET_LABEL[c.komponen as keyof typeof RET_LABEL] ?? c.komponen ?? "", Nominal: num(c.nominal) })));
+  save(`Retensi_${stamp()}.xlsx`, await xlsxBlob([["Retensi", data, [5, 9, 30, 10, 16, 10]], ["Riwayat Pencairan", hist, [9, 30, 16, 12, 22, 14], ["Blok", "Nama", "Bank KPR", "Tanggal Cair", "Komponen", "Nominal"]]]));
 }
 
 // Report custom: hanya PDF, kolom sesuai pilihan.
@@ -186,7 +186,7 @@ export async function retReportPDF(rows: Retensi[], f: RetFilter, columns: Recor
     ["retCair", { head: "Sudah Cair", val: r => rp(retCair(r)), right: true, sum: retCair }],
     ["retSisa", { head: "Total Retensi (Sisa)", val: r => (retSisa(r) ? rp(retSisa(r)) : "0"), right: true, sum: retSisa }],
     ["status", { head: "Status", val: r => retStatus(r) || "–" }],
-    ["riwayatCair", { head: "Riwayat Pencairan", val: r => cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")).join("\n") || "Belum ada", w: 44 }],
+    ["riwayatCair", { head: "Riwayat Pencairan", val: r => cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen)].filter(Boolean).join(" · ")).join("\n") || "Belum ada", w: 44 }],
     ["keterangan", { head: "Keterangan", val: r => r.keterangan ?? "–", w: 40 }],
   ];
   const cols = all.filter(([k]) => columns[k]).map(([, c]) => c);
