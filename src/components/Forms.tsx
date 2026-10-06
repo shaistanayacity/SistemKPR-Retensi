@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { berkasNeed, catatRiwayat, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { berkasNeed, catatRiwayat, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { BankProses, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
@@ -39,7 +39,7 @@ const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 
 // ---------------- KPR ----------------
 export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
-  const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x) });
+  const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x), plafond: plafondOtomatis(x) });
   const awalBank = rapikanBank(initial.bankProses);
   const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: awalBank }, x => onSave({ ...hitung(x), bankProses: catatRiwayat(awalBank, rapikanBank(x.bankProses)) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
   const bp = r.bankProses ?? [];
@@ -75,7 +75,7 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Fld label="Harga transaksi (harga jual − total diskon)"><div className="calc num">Rp {rp(hargaTransaksiOtomatis(r))}</div></Fld>
           <Field label="UTJ (Rp)" type="number" value={r.utj} onChange={nf("utj")} />
           <Field label="Uang muka (Rp)" type="number" value={r.totalUM} onChange={nf("totalUM")} />
-          <Field label="Plafond KPR (Rp)" type="number" value={r.plafond} onChange={nf("plafond")} />
+          <Fld label="Plafond KPR (harga transaksi − UTJ − uang muka)"><div className="calc num">Rp {rp(plafondOtomatis(r))}</div></Fld>
         </div></fieldset>
         <fieldset><legend>Kelengkapan berkas</legend><div className="checks">
           {DOC_GROUPS.map(([g, keys]) => ({ g, keys: keys.filter(k => need.includes(k)) })).filter(x => x.keys.length).map(({ g, keys }) => <span key={g} style={{ display: "contents" }}><span className="grp">{g}</span>
@@ -151,9 +151,9 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Fld label="% pencairan KPR dari bank (otomatis)"><div className="calc num">{(retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</div></Fld>
         </div></fieldset>
         <fieldset><legend>Retensi</legend><div className="grid">
-          {kk.map(k => <Field key={k} label={RET_LABEL[k] + " (Rp)"} type="number" value={r.ret?.[k] || ""} onChange={v => patch({ ret: { ...r.ret, [k]: num(v) } })} />)}
+          {kk.map(k => <Field key={k} label={RET_LABEL[k] + " (Rp)"} type="number" value={compSisa(r, k) || ""} onChange={v => patch({ ret: { ...r.ret, [k]: num(v) + cair.filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0) } })} />)}
           <Fld label="Total retensi (berkurang otomatis saat pencairan)"><div className="calc num">Rp {rp(sisa)}</div></Fld>
-        </div><p className="sub" style={{ marginTop: 8 }}>Jumlah per kategori adalah retensi awal Rp {rp(awal)}. Setiap pencairan mengurangi sisa kategori yang dipilih dan total retensi.</p></fieldset>
+        </div><p className="sub" style={{ marginTop: 8 }}>Angka per kategori adalah sisa retensi (retensi awal Rp {rp(awal)} dikurangi pencairan kategori itu), dan ikut berkurang setiap kali pencairan dicatat.</p></fieldset>
         <fieldset><legend>Pencairan retensi</legend><div className="rows">
           {cair.map((c, i) => (
             <div className="rowf cr" key={i}>
