@@ -122,7 +122,7 @@ function RetRow({ r, canEdit, onOpen, onCair }: { r: Retensi; canEdit: boolean; 
     <tr className="click" onClick={() => onOpen(r)}>
       <td className="unit">{r.blok}</td>
       <td><Who name={r.nama} sub={[r.bank, r.notaris && titleCase(r.notaris)].filter(Boolean).join(" · ")} /></td>
-      <td className="r"><div className="money-c"><b className="num">{rp(retNilai(r))}</b><span className="sub num">KPR cair {(p * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%</span></div></td>
+      <td className="r"><div className="money-c"><b className="num">{rp(retNilai(r))}</b><span className="sub num">ditahan {(p * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%</span></div></td>
       <td className="r"><div className="money-c"><b className="num">{sisa ? rp(sisa) : "0"}</b>
         <span className="prog" style={{ justifyContent: "flex-end", marginTop: 4 }} title={nilai ? `Sisa retensi ${(pct * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}% dari nilai KPR ACC bank Rp ${rp(nilai)}` : "Nilai KPR ACC bank belum diisi"}><span className="t"><i style={{ width: (pct * 100).toFixed(0) + "%" }} /></span><span className="sub num" style={{ display: "inline" }}>{nilai ? (pct * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% dari " + juta(nilai) : "KPR ACC kosong"}</span></span></div></td>
       <td>{komp.length ? <div className="chips">{komp.map(k => { const cs = compSisa(r, k); return <span key={k} className={"chip " + (cs <= 0 ? "acc" : "")} title={`${RET_LABEL[k]}: awal Rp ${rp(num(r.ret?.[k]))}, sisa Rp ${rp(Math.max(0, cs))}`}>{kompShort(k)} {cs <= 0 ? "lunas" : juta(cs)}</span>; })}</div> : <Dash />}</td>
