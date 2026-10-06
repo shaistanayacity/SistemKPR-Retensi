@@ -168,7 +168,7 @@ export async function kprReportXLS(rows: Kpr[], f: KprFilter, columns: Record<st
   save(`Report_KPR${slug(f)}_${stamp()}.xlsx`, await xlsxBlob([["Berkas KPR", data, [5, 12, 30, 12, 14, 12, 12, 11, 13, 11, 11, 12, 14, 20, 30]]]));
 }
 
-export async function retReportXLS(rows: Retensi[], columns: Record<string, boolean>) {
+export async function retReportXLS(rows: Retensi[], f: RetFilter, columns: Record<string, boolean>) {
   const K = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
   const data = rows.map((r, i) => {
     const o: Record<string, unknown> = { No: i + 1 };
