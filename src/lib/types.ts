@@ -49,6 +49,8 @@ export interface Retensi {
   blok: string;
   nama: string;
   pembayaran?: string;
+  tglAkad?: string;
+  kprId?: string; // unit KPR asal data ini diambil (opsional)
   persenCair?: number;
   nilaiUM?: number;
   nilaiKPR?: number;

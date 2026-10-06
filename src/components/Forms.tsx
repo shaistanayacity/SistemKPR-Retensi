@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { berkasNeed, compSisa, jenis, retAwal, retCair, retSisa, retStatus, status } from "../lib/logic";
+import { berkasNeed, normUnit, compSisa, jenis, retAwal, retCair, retSisa, retStatus, status } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, RET_STATUS, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { BankProses, Kpr, Pencairan, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
+import { KprPicker } from "./KprPicker";
 
 type Common<T> = { initial: T; isNew: boolean; canEdit: boolean; canDelete: boolean; onClose: () => void; onSave: (r: T) => Promise<void>; onDelete: () => Promise<void> };
 
@@ -122,7 +123,7 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
 }
 
 // ---------------- Retensi ----------------
-export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all, addCair }: Common<Retensi> & { all: Retensi[]; addCair?: boolean }) {
+export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all, addCair, kpr }: Common<Retensi> & { all: Retensi[]; addCair?: boolean; kpr: Kpr[] }) {
   const start = addCair ? { ...initial, cair: [...(initial.cair ?? []), { tgl: isoToday(), nominal: 0, komponen: (Object.keys(RET_LABEL) as string[]).find(k => compSisa(initial, k) > 0) ?? "bangunan", ket: "" }] } : initial;
   const { rec: r, patch, busy, msg, save, del } = useForm(start, onSave, onDelete, x => (!x.blok?.trim() || !x.nama?.trim() ? "Blok dan nama wajib diisi." : ""));
   const cair = r.cair ?? [];
@@ -141,12 +142,15 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
       <Datalist id="dl-rbank" values={all.map(x => x.bank)} />
       <Datalist id="dl-rnot" values={all.map(x => x.notaris)} />
       <fieldset disabled={!canEdit} style={{ display: "contents" }}>
+        {isNew && canEdit && <KprPicker kpr={kpr} linkedId={r.kprId} sudahAda={new Set(all.map(x => normUnit(x.blok)))}
+          onPick={isi => patch(isi)} onClear={() => patch({ kprId: undefined })} />}
         <fieldset><legend>Unit &amp; pemilik</legend><div className="grid">
           <Field label="Blok *" value={r.blok} onChange={sf("blok")} />
           <Field label="Nama *" value={r.nama} onChange={v => patch({ nama: v.toUpperCase() })} w2 />
           <Select label="Pembayaran" value={r.pembayaran || "KPR"} options={[...new Set(["KPR", "Tunai", r.pembayaran].filter(Boolean) as string[])]} onChange={sf("pembayaran")} />
           <Field label="Bank KPR" value={r.bank} onChange={sf("bank")} list="dl-rbank" />
           <Field label="Notaris" value={r.notaris} onChange={sf("notaris")} list="dl-rnot" />
+          <Field label="Tanggal akad" type="date" value={r.tglAkad} onChange={sf("tglAkad")} />
         </div></fieldset>
         <fieldset><legend>Nilai transaksi &amp; diterima</legend><div className="grid">
           <Field label="Nilai UTJ / UM (Rp)" type="number" value={r.nilaiUM} onChange={nf("nilaiUM")} />

@@ -40,7 +40,7 @@ export const retSisa = (r: Retensi) => retAwal(r) - retCair(r);
 export const retStatus = (r: Retensi) => (retAwal(r) > 0 && retSisa(r) <= 0 ? "Lunas" : r.status ?? "");
 
 // ---- Turunan tambahan (dari purwarupa) ----
-import { brand, DOCS, kompShort, natural, tgl } from "./format";
+import { brand, DOCS, isBankName, kompShort, natural, tgl } from "./format";
 
 export const retNilai = (r: Retensi) => num(r.nilaiUM) + num(r.nilaiKPR);
 export const retTerima = (r: Retensi) => num(r.terimaUM) + num(r.terimaKPR) + retCair(r);
@@ -147,4 +147,24 @@ export function perMonth(items: { tgl?: string; v?: number }[], months: { key: s
   const m = new Map(months.map(x => [x.key, 0]));
   items.forEach(i => { const k = String(i.tgl ?? "").slice(0, 7); if (m.has(k)) m.set(k, (m.get(k) ?? 0) + (i.v ?? 1)); });
   return months.map(x => m.get(x.key) ?? 0);
+}
+
+// ---- Hubungan KPR -> Retensi ----
+/** Kunci pencocokan unit/blok: huruf besar, spasi di sekitar "-" diabaikan. */
+export const normUnit = (s?: string) => String(s ?? "").replace(/\s*-\s*/g, "-").replace(/\s+/g, " ").trim().toUpperCase();
+
+/** Bank untuk retensi: bank yang ACC, atau tempat akad bila itu memang bank. */
+export const bankDariKpr = (r: Kpr) => accBankName(r) || (isBankName(r.tempatAkad) ? r.tempatAkad ?? "" : "");
+
+/** Isian Retensi yang bisa diambil dari unit KPR. Hanya kolom yang ada nilainya; semuanya tetap bisa diubah manual. */
+export function kprKeRetensi(r: Kpr): Partial<Retensi> & { kosong: string[] } {
+  const out: Partial<Retensi> = { kprId: r.id, blok: r.unit, nama: String(r.nama ?? "").toUpperCase() };
+  const kosong: string[] = [];
+  const set = <K extends keyof Retensi>(k: K, v: Retensi[K] | undefined, label: string) => { if (v === undefined || v === "" || v === 0) kosong.push(label); else out[k] = v; };
+  set("pembayaran", r.caraBayar, "cara bayar");
+  set("bank", bankDariKpr(r), "bank");
+  set("notaris", r.notaris, "notaris");
+  set("nilaiKPR", num(r.plafond), "nilai KPR");
+  set("tglAkad", r.tglAkad, "tanggal akad");
+  return { ...out, kosong };
 }
