@@ -58,6 +58,7 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
         <fieldset><legend>Unit &amp; pembeli</legend><div className="grid">
           <Field label="Unit *" value={r.unit} onChange={sf("unit")} />
           <Field label="Nama pembeli *" value={r.nama} onChange={sf("nama")} w2 />
+          <Field label="Sales" value={r.sales} onChange={sf("sales")} />
           <Select label="Cara bayar" value={r.caraBayar || "KPR"} options={bayarOpts} onChange={sf("caraBayar")} />
           <Select label="Pekerjaan" value={jenis(r)} options={["Karyawan", "Wiraswasta"]} onChange={sf("jenisPekerjaan")} />
           <Field label="Tanggal UTJ" type="date" value={r.tglUTJ} onChange={sf("tglUTJ")} />

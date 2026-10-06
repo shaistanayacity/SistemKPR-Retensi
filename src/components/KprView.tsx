@@ -146,7 +146,7 @@ function KprRow({ r, onOpen }: { r: Kpr; onOpen: (r: Kpr) => void }) {
   return (
     <tr className="click" onClick={() => onOpen(r)}>
       <td className="unit">{r.unit}</td>
-      <td><Who name={r.nama} sub={<>{[kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")}<span className="sub num" style={{ display: "block" }}>SPR &amp; PPJB {r.tglSPR ? tgl(r.tglSPR) : "belum"}</span></>} /></td>
+      <td><Who name={r.nama} sub={<>{[r.sales ? "Sales: " + r.sales : "", kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")}<span className="sub num" style={{ display: "block" }}>SPR &amp; PPJB {r.tglSPR ? tgl(r.tglSPR) : "belum"}</span></>} /></td>
       <td className="r"><div className="money-c"><b className="num">{rp(num(r.hargaTransaksi))}</b>
         {kpr ? <span className="sub num">UM {num(r.totalUM) > 0 ? juta(r.totalUM) : "–"} · KPR {num(r.plafond) ? juta(r.plafond) : "–"}</span> : <span className="sub">{titleCase(r.caraBayar)}</span>}</div></td>
       <td>{(r.bankProses ?? []).length ? <div className="bpl">{(r.bankProses ?? []).map((b, i) => { const h = b.hasil || "Diajukan", cls = h === "ACC" ? "acc" : h === "Ditolak" || h === "Batal" ? "no" : ""; return (
