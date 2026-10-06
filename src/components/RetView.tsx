@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { cairSorted, compSisa, lastMonths, perMonth, windowEnd, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retRows, retSisa, retStatus, retTerima } from "../lib/logic";
-import { juta, kompShort, num, RET_LABEL, RET_PILL, RET_SHORT, RET_STATUS, rp, rpShort, tgl, titleCase } from "../lib/format";
+import { cairSorted, compSisa, lastMonths, perMonth, windowEnd, emptyRetFilter, RetFilter, retAwal, retCair, retNilai, retPersen, retRows, retSisa, retStatus, retTerima } from "../lib/logic";
+import { juta, kompShort, num, RET_LABEL, RET_PILL, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Retensi } from "../lib/types";
-import { retPDF, retXLS, retReportXLS } from "../lib/exportFiles";
+import { retPDF, retXLS, retReportPDF } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 import { Icon } from "./Icon";
 import { TrendChart } from "./TrendChart";
@@ -23,8 +23,8 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
   const maxComp = comp[0]?.[1] ?? 1;
 
   const by: Record<string, number> = {};
-  all.forEach(r => { const s = retStatus(r) || "Tanpa status"; by[s] = (by[s] ?? 0) + 1; });
-  const sts = [...new Set([...RET_STATUS, ...all.map(r => r.status).filter(Boolean) as string[], "Lunas"])].filter(s => by[s] || f.status === s);
+  all.forEach(r => { const s = retStatus(r) || "Tanpa retensi"; by[s] = (by[s] ?? 0) + 1; });
+  const sts = ["Ada sisa", "Lunas"].filter(s => by[s] || f.status === s);
   const rows = retRows(all, f);
   const run = async (k: "pdf" | "xls") => {
     if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
@@ -34,8 +34,8 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
   };
   const genReport = async (cols: Record<string, boolean>) => {
     if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
-    setDl("xls");
-    try { await retReportXLS(rows, f, cols); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
+    setDl("report");
+    try { await retReportPDF(rows, f, cols); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
     setDl("");
     setReportBuilding(false);
   };
@@ -81,7 +81,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
 
       <div className="card panel">
         <div className="seg" aria-label="Filter status">
-          {[["", "Semua", all.length] as [string, string, number], ...sts.map(s => [s, RET_SHORT[s] ?? s, by[s] ?? 0] as [string, string, number])].map(([v, l, n]) =>
+          {[["", "Semua", all.length] as [string, string, number], ...sts.map(s => [s, s, by[s] ?? 0] as [string, string, number])].map(([v, l, n]) =>
             <button key={v} aria-pressed={f.status === v} onClick={() => set({ status: v })}>{l} <span className="k num">{n}</span></button>)}
         </div>
         <div className="tools">
@@ -100,7 +100,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
           <DateTools d1={f.d1} d2={f.d2} onChange={(d1, d2) => set({ d1, d2 })} /></div>
         <p className="meta">Menampilkan <b className="num">{rows.length}</b> dari {all.length} unit · sudah cair <b className="num">{rpShort(tCair)}</b> · sisa <b className="num">{rpShort(tSisa)}</b></p>
         <div className="tbl"><table>
-          <thead><tr><th>Blok</th><th>Pemilik</th><th className="r">Nilai &amp; Diterima</th><th className="r">Sisa Retensi</th><th>Per Komponen</th><th>Riwayat Pencairan</th><th>Status</th><th>Catatan</th><th></th></tr></thead>
+          <thead><tr><th>Blok</th><th>Pemilik</th><th className="r">Nilai &amp; Diterima</th><th className="r">Sisa Retensi</th><th>Per Komponen</th><th>Riwayat Pencairan</th><th>Status</th><th>Keterangan</th><th></th></tr></thead>
           <tbody>
             {rows.length ? rows.map(r => <RetRow key={r.id} r={r} canEdit={canEdit} onOpen={onOpen} onCair={onCair} />) : <tr><td colSpan={9}><div className="empty"><b>Tidak ada data yang cocok</b>Ubah filter, atau klik Tambah untuk mengisi data baru.</div></td></tr>}
           </tbody>
@@ -113,7 +113,7 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
 }
 
 function RetRow({ r, canEdit, onOpen, onCair }: { r: Retensi; canEdit: boolean; onOpen: (r: Retensi) => void; onCair: (r: Retensi) => void }) {
-  const awal = retAwal(r), cair = retCair(r), sisa = awal - cair, st = retStatus(r), p = num(r.persenCair);
+  const awal = retAwal(r), cair = retCair(r), sisa = awal - cair, st = retStatus(r), p = retPersen(r);
   const pct = awal ? Math.min(1, Math.max(0, cair / awal)) : 0;
   const hist = cairSorted(r), shown = hist.slice(-3);
   const komp = (Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[]).filter(k => num(r.ret?.[k]) > 0);
@@ -121,13 +121,13 @@ function RetRow({ r, canEdit, onOpen, onCair }: { r: Retensi; canEdit: boolean; 
     <tr className="click" onClick={() => onOpen(r)}>
       <td className="unit">{r.blok}</td>
       <td><Who name={r.nama} sub={[r.bank, r.notaris && titleCase(r.notaris)].filter(Boolean).join(" · ")} /></td>
-      <td className="r"><div className="money-c"><b className="num">{rp(retNilai(r))}</b><span className="sub num">diterima {juta(retTerima(r))} · KPR cair {(p * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%</span></div></td>
+      <td className="r"><div className="money-c"><b className="num">{rp(retNilai(r))}</b><span className="sub num">diterima awal {juta(retTerima(r))} · KPR cair {(p * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%</span></div></td>
       <td className="r"><div className="money-c"><b className="num">{sisa ? rp(sisa) : "0"}</b>
         <span className="prog" style={{ justifyContent: "flex-end", marginTop: 4 }} title={`Sudah cair ${Math.round(pct * 100)}% dari retensi awal Rp ${rp(awal)}`}><span className="t"><i style={{ width: (pct * 100).toFixed(0) + "%" }} /></span><span className="sub num" style={{ display: "inline" }}>dari {juta(awal)}</span></span></div></td>
       <td>{komp.length ? <div className="chips">{komp.map(k => { const cs = compSisa(r, k); return <span key={k} className={"chip " + (cs <= 0 ? "acc" : "")} title={`${RET_LABEL[k]}: awal Rp ${rp(num(r.ret?.[k]))}, sisa Rp ${rp(Math.max(0, cs))}`}>{kompShort(k)} {cs <= 0 ? "lunas" : juta(cs)}</span>; })}</div> : <Dash />}</td>
       <td>{hist.length ? <div className="hist">{hist.length > 3 && <span>+{hist.length - 3} pencairan sebelumnya</span>}{shown.map((c, i) => <div key={i}><span className="num">{tgl(c.tgl) || "tanpa tanggal"}</span> · <b className="num">{juta(c.nominal)}</b> <span>{kompShort(c.komponen)}</span></div>)}</div> : <span className="sub">Belum ada</span>}</td>
-      <td>{st ? <span className={"pill " + (RET_PILL[st] ?? "p-neu")} title={st}>{RET_SHORT[st] ?? st}</span> : <Dash />}</td>
-      <td><span className="trunc" title={r.catatan}>{r.catatan || <Dash />}</span></td>
+      <td>{st ? <span className={"pill " + (RET_PILL[st] ?? "p-neu")} title={st}>{st}</span> : <Dash />}</td>
+      <td><span className="trunc" title={r.keterangan}>{r.keterangan || <Dash />}</span></td>
       <td><div className="acts">{canEdit && <button className="btn sm pri" disabled={sisa <= 0} title="Catat pencairan retensi" onClick={e => { e.stopPropagation(); onCair(r); }}>+ Cair</button>}
         <button className="icon-btn" aria-label={"Detail " + r.blok} onClick={e => { e.stopPropagation(); onOpen(r); }}><Chev /></button></div></td>
     </tr>

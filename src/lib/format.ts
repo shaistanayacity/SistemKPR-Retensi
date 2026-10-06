@@ -35,15 +35,13 @@ export const brand = (s?: string) => {
 /** Apakah teks menyebut nama bank (bukan, misalnya, "Kantor Notaris"). */
 export const isBankName = (s?: string) => { const u = String(s ?? "").toUpperCase(); return BANKS.some(b => u.includes(b)); };
 
-export const DOCS = { ktp: "KTP", npwp: "NPWP", kk: "KK", akta: "Akta nikah / belum nikah", rk3: "RK 3 bln", suket: "Suket kerja", slip: "Slip gaji", rk6: "RK 6 bln", nib: "NIB", lapkeu: "Lapkeu" } as const;
-export const DOC_GROUPS: [string, (keyof typeof DOCS)[]][] = [["Data diri", ["ktp", "npwp", "kk", "akta"]], ["Data pekerjaan (karyawan)", ["rk3", "suket", "slip"]], ["Data usaha (wiraswasta)", ["rk6", "nib", "lapkeu"]]];
-export const LEGAL = { potongPokok: "Potong pokok", roya: "Roya", ambilSertifikat: "Ambil sertifikat", verifikasi: "Verifikasi", validasi: "Validasi", lunasDP: "S. lunas DP", siLPP: "SI LPP", feeKPR: "S. fee KPR", pbg: "PBG" } as const;
-export const LEGAL_GROUPS: [string, (keyof typeof LEGAL)[]][] = [["SHGB", ["potongPokok", "roya", "ambilSertifikat"]], ["Pajak", ["verifikasi", "validasi"]], ["Berkas akad", ["lunasDP", "siLPP", "feeKPR", "pbg"]]];
+export const DOCS = { ktp: "KTP", npwp: "NPWP", kk: "KK", akta: "Akta nikah / belum nikah", rk3: "RK 3 bln", suket: "Suket kerja", slip3: "Slip gaji 3 bulan", rk6: "RK 6 bln", nibSkdu: "NIB/SKDU", lapkeu: "Lapkeu" } as const;
+export const DOC_GROUPS: [string, (keyof typeof DOCS)[]][] = [["Data diri", ["ktp", "npwp", "kk", "akta"]], ["Data pekerjaan (karyawan)", ["rk3", "suket", "slip3"]], ["Data usaha (wiraswasta)", ["rk6", "nibSkdu", "lapkeu"]]];
+export const LEGAL = { potongPokok: "Potong pokok", roya: "Roya", ambilSertifikat: "Ambil sertifikat", verifikasi: "Verifikasi", validasi: "Validasi" } as const;
+export const LEGAL_GROUPS: [string, (keyof typeof LEGAL)[]][] = [["SHGB", ["potongPokok", "roya", "ambilSertifikat"]], ["Pajak", ["verifikasi", "validasi"]]];
 export const HASIL = ["Diajukan", "Proses", "ACC", "Ditolak", "Batal"];
 export const RET_LABEL = { bangunan: "Bangunan", ajb: "AJB", sertifikat: "Sertifikat balik nama", pbg: "PBG", pdam: "PDAM", listrik: "Listrik", pajak: "Pajak" } as const;
 export const kompShort = (k?: string) => (RET_LABEL[k as keyof typeof RET_LABEL] ?? k ?? "").replace(" balik nama", "");
-export const RET_STATUS = ["Progress Bangun", "Menunggu AJB dan Balik Nama dari Notaris", "Disiapkan", "Sudah diajukan", "Bisa dicairkan", "Belum bisa dicairkan"];
-export const RET_PILL: Record<string, string> = { "Progress Bangun": "p-neu", "Menunggu AJB dan Balik Nama dari Notaris": "p-warn", Disiapkan: "p-vio", "Sudah diajukan": "p-info", "Bisa dicairkan": "p-ok", "Belum bisa dicairkan": "p-bad", Lunas: "p-acc" };
-export const RET_SHORT: Record<string, string> = { "Menunggu AJB dan Balik Nama dari Notaris": "Menunggu AJB & BN" };
+export const RET_PILL: Record<string, string> = { "Ada sisa": "p-warn", Lunas: "p-acc" };
 export const KPR_STAT = ["Pemberkasan", "Proses Bank", "ACC Bank", "Sudah Akad", "Non KPR"] as const;
 export const KPR_PILL: Record<string, string> = { Pemberkasan: "p-neu", "Proses Bank": "p-warn", "ACC Bank": "p-info", "Sudah Akad": "p-ok", "Non KPR": "p-vio" };

@@ -11,8 +11,8 @@ describe("tanggal Excel", () => {
   it("kosong atau tidak dikenal", () => { expect(xd("")).toBe(""); expect(xd("abc")).toBe(""); });
 });
 
-const ex = (id: string, unit: string, nama: string, extra: Partial<Kpr> = {}): Kpr => ({ id, ord: 1, unit, nama, caraBayar: "KPR", berkas: { ktp: true }, legal: {}, bankProses: [], pencairan: [], ...extra });
-const item = (unit: string, nama: string, extra: Partial<KprImport> = {}): KprImport => ({ ord: 1, unit, nama, caraBayar: "KPR", berkas: { ktp: true }, legal: {}, bankProses: [], pencairan: [], ...extra });
+const ex = (id: string, unit: string, nama: string, extra: Partial<Kpr> = {}): Kpr => ({ id, ord: 1, unit, nama, caraBayar: "KPR", berkas: { ktp: true }, legal: {}, bankProses: [], ...extra });
+const item = (unit: string, nama: string, extra: Partial<KprImport> = {}): KprImport => ({ ord: 1, unit, nama, caraBayar: "KPR", berkas: { ktp: true }, legal: {}, bankProses: [], ...extra });
 
 describe("rencana impor KPR", () => {
   it("unit baru ditambahkan", () => {
@@ -37,9 +37,9 @@ describe("rencana impor KPR", () => {
     expect(p.writes).toHaveLength(0);
   });
   it("kolom kosong di Excel tidak menghapus isian, kecuali opsi timpa", () => {
-    const existing = [ex("1", "A-01", "Budi", { plafond: 500, keterangan: "catatan manual" })];
-    expect(planKpr(existing, [item("A-01", "Budi", { plafond: 0, keterangan: "" })], false).writes).toHaveLength(0);
-    expect(planKpr(existing, [item("A-01", "Budi", { plafond: 0, keterangan: "" })], true).writes).toHaveLength(1);
+    const existing = [ex("1", "A-01", "Budi", { plafond: 500, tum: 99 })];
+    expect(planKpr(existing, [item("A-01", "Budi", { plafond: 0, tum: 0 })], false).writes).toHaveLength(0);
+    expect(planKpr(existing, [item("A-01", "Budi", { plafond: 0, tum: 0 })], true).writes).toHaveLength(1);
   });
   it("tidak ada yang dihapus", () => {
     const existing = [ex("1", "Z-99", "Lama")];

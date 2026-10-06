@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { berkasNeed, normUnit, compSisa, jenis, retAwal, retCair, retSisa, retStatus, status } from "../lib/logic";
-import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, RET_STATUS, rp, rpShort, tgl, titleCase } from "../lib/format";
-import type { BankProses, Kpr, Pencairan, RetCair, Retensi } from "../lib/types";
+import { berkasNeed, catatRiwayat, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, rpShort, tgl, titleCase } from "../lib/format";
+import type { BankProses, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
 import { KprPicker } from "./KprPicker";
 
@@ -39,10 +39,11 @@ const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 
 // ---------------- KPR ----------------
 export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
-  const { rec: r, patch, busy, msg, save, del } = useForm(initial, onSave, onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
-  const bp = r.bankProses ?? [], pc = r.pencairan ?? [];
+  const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x) });
+  const awalBank = rapikanBank(initial.bankProses);
+  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: awalBank }, x => onSave({ ...hitung(x), bankProses: catatRiwayat(awalBank, rapikanBank(x.bankProses)) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
+  const bp = r.bankProses ?? [];
   const setBp = (i: number, p: Partial<BankProses>) => patch({ bankProses: bp.map((b, j) => (j === i ? { ...b, ...p } : b)) });
-  const setPc = (i: number, p: Partial<Pencairan>) => patch({ pencairan: pc.map((b, j) => (j === i ? { ...b, ...p } : b)) });
   const need = berkasNeed(r);
   const nf = (k: keyof Kpr) => (v: string) => patch({ [k]: numOrUndef(v) } as Partial<Kpr>);
   const sf = (k: keyof Kpr) => (v: string) => patch({ [k]: v } as Partial<Kpr>);
@@ -59,64 +60,56 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Field label="Unit *" value={r.unit} onChange={sf("unit")} />
           <Field label="Nama pembeli *" value={r.nama} onChange={sf("nama")} w2 />
           <Field label="Sales" value={r.sales} onChange={sf("sales")} />
+          <Field label="Kantor agent" value={r.kantor} onChange={sf("kantor")} />
           <Select label="Cara bayar" value={r.caraBayar || "KPR"} options={bayarOpts} onChange={sf("caraBayar")} />
           <Select label="Pekerjaan" value={jenis(r)} options={["Karyawan", "Wiraswasta"]} onChange={sf("jenisPekerjaan")} />
           <Field label="Tanggal UTJ" type="date" value={r.tglUTJ} onChange={sf("tglUTJ")} />
           <Field label="Tanggal SPR & PPJB" type="date" value={r.tglSPR} onChange={sf("tglSPR")} />
         </div></fieldset>
         <fieldset><legend>Harga &amp; uang muka</legend><div className="grid">
-          <Field label="Harga bank (Rp)" type="number" value={r.hargaBank} onChange={nf("hargaBank")} />
-          <Field label="Harga transaksi (Rp)" type="number" value={r.hargaTransaksi} onChange={nf("hargaTransaksi")} />
+          <Field label="Harga jual (Rp)" type="number" value={r.hargaJual} onChange={nf("hargaJual")} />
+          <Field label="Diskon PPN (Rp)" type="number" value={r.diskonPPN} onChange={nf("diskonPPN")} />
+          <Field label="Diskon Tusuk Sate (Rp)" type="number" value={r.diskonTusukSate} onChange={nf("diskonTusukSate")} />
+          <Field label="Diskon Khusus (Rp)" type="number" value={r.diskonKhusus} onChange={nf("diskonKhusus")} />
+          <Fld label="Total diskon"><div className="calc num">Rp {rp(totalDiskon(r))}</div></Fld>
+          <Fld label="Harga transaksi (harga jual − total diskon)"><div className="calc num">Rp {rp(hargaTransaksiOtomatis(r))}</div></Fld>
           <Field label="UTJ (Rp)" type="number" value={r.utj} onChange={nf("utj")} />
-          <Field label="Angsuran UM (Rp)" type="number" value={r.angsuranUM} onChange={nf("angsuranUM")} />
-          <Field label="Cashback UM (Rp)" type="number" value={r.cashbackUM} onChange={nf("cashbackUM")} />
-          <Field label="Total uang muka (Rp)" type="number" value={r.totalUM} onChange={nf("totalUM")} />
+          <Field label="Uang muka (Rp)" type="number" value={r.totalUM} onChange={nf("totalUM")} />
           <Field label="Plafond KPR (Rp)" type="number" value={r.plafond} onChange={nf("plafond")} />
-          <Field label="TUM (Rp)" type="number" value={r.tum} onChange={nf("tum")} />
         </div></fieldset>
         <fieldset><legend>Kelengkapan berkas</legend><div className="checks">
-          {DOC_GROUPS.map(([g, keys]) => <span key={g} style={{ display: "contents" }}><span className="grp">{g}</span>
-            {keys.map(k => <label className="ck" key={k}><input type="checkbox" checked={!!r.berkas?.[k]} onChange={e => patch({ berkas: { ...r.berkas, [k]: e.target.checked } })} />{DOCS[k]}{need.includes(k) ? "" : " (opsional)"}</label>)}</span>)}
+          {DOC_GROUPS.map(([g, keys]) => ({ g, keys: keys.filter(k => need.includes(k)) })).filter(x => x.keys.length).map(({ g, keys }) => <span key={g} style={{ display: "contents" }}><span className="grp">{g}</span>
+            {keys.map(k => <label className="ck" key={k}><input type="checkbox" checked={!!r.berkas?.[k]} onChange={e => patch({ berkas: { ...r.berkas, [k]: e.target.checked } })} />{DOCS[k]}</label>)}</span>)}
         </div></fieldset>
         <fieldset><legend>Proses bank</legend><div className="rows">
           {bp.map((b, i) => (
-            <div className="rowf bp" key={i}>
+            <div key={i} style={{ display: "contents" }}>
+            <div className="rowf bp">
               <div><label>Bank</label><input list="dl-bank" value={b.bank} onChange={e => setBp(i, { bank: e.target.value })} /></div>
               <div><label>Tanggal</label><input type="date" value={b.tgl} onChange={e => setBp(i, { tgl: e.target.value })} /></div>
               <div><label>Hasil</label><select value={b.hasil} onChange={e => setBp(i, { hasil: e.target.value })}><option value="">–</option>{HASIL.map(h => <option key={h}>{h}</option>)}</select></div>
               <div><label>Keterangan</label><input value={b.ket} onChange={e => setBp(i, { ket: e.target.value })} /></div>
               <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ bankProses: bp.filter((_, j) => j !== i) })}>×</button>
+            </div>
+            {(b.riwayat ?? []).length > 0 && <p className="sub" style={{ margin: "-4px 0 8px 4px" }}>Riwayat {b.bank}: {(b.riwayat ?? []).map(h => [h.tgl ? tgl(h.tgl) : "tanpa tanggal", h.hasil || "–", h.ket].filter(Boolean).join(" · ")).join("  |  ")}</p>}
             </div>))}
         </div><button type="button" className="btn sm add" onClick={() => patch({ bankProses: [...bp, { bank: "", tgl: "", ket: "", hasil: "Diajukan" }] })}>+ Tambah bank</button></fieldset>
         <fieldset><legend>ACC &amp; akad</legend><div className="grid">
           <Field label="Nominal ACC bank (Rp)" type="number" value={r.accBank} onChange={nf("accBank")} />
+          <Field label="TUM (Rp)" type="number" value={r.tum} onChange={nf("tum")} />
           <Field label="Tanggal ACC / SP3K" type="date" value={r.tglACC} onChange={sf("tglACC")} />
           <Field label="Tanggal akad" type="date" value={r.tglAkad} onChange={sf("tglAkad")} />
           <Field label="Tempat akad" value={r.tempatAkad} onChange={sf("tempatAkad")} list="dl-tempat" />
           <Field label="Notaris" value={r.notaris} onChange={sf("notaris")} list="dl-notaris" w2 />
         </div></fieldset>
-        <fieldset><legend>Legal, pajak &amp; berkas akad</legend><div className="checks">
+        <fieldset><legend>Legal &amp; pajak</legend><div className="checks">
           {LEGAL_GROUPS.map(([g, keys]) => <span key={g} style={{ display: "contents" }}><span className="grp">{g}</span>
             {keys.map(k => <label className="ck" key={k}><input type="checkbox" checked={!!r.legal?.[k]} onChange={e => patch({ legal: { ...r.legal, [k]: e.target.checked } })} />{LEGAL[k]}</label>)}</span>)}
         </div></fieldset>
-        <fieldset><legend>Pencairan KPR</legend><div className="rows">
-          {pc.map((p, i) => (
-            <div className="rowf pc" key={i}>
-              <span className="ix">{i + 1}</span>
-              <div><label>Tanggal</label><input type="date" value={p.tgl} onChange={e => setPc(i, { tgl: e.target.value })} /></div>
-              <div><label>Nominal (Rp)</label><input type="number" step="any" value={p.nominal || ""} onChange={e => setPc(i, { nominal: num(e.target.value) })} /></div>
-              <span />
-              <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ pencairan: pc.filter((_, j) => j !== i) })}>×</button>
-            </div>))}
-        </div><button type="button" className="btn sm add" onClick={() => patch({ pencairan: [...pc, { tgl: "", nominal: 0 }] })}>+ Tambah pencairan</button></fieldset>
         <fieldset><legend>Serah terima</legend><div className="grid">
           <Field label="Progres bangun (%)" type="number" value={r.progressBangun === undefined || r.progressBangun === "" ? "" : Math.round(num(r.progressBangun) * 100)} onChange={v => patch({ progressBangun: v === "" ? "" : num(v) / 100 })} />
           <Fld label="AJB"><div style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="checkbox" style={{ width: "auto" }} checked={!!r.ajb} onChange={e => patch({ ajb: e.target.checked })} /><input type="date" value={r.tglAJB ?? ""} onChange={e => patch({ tglAJB: e.target.value })} /></div></Fld>
           <Fld label="STU (serah terima unit)"><div style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="checkbox" style={{ width: "auto" }} checked={!!r.stu} onChange={e => patch({ stu: e.target.checked })} /><input type="date" value={r.tglSTU ?? ""} onChange={e => patch({ tglSTU: e.target.value })} /></div></Fld>
-        </div></fieldset>
-        <fieldset><legend>Catatan</legend><div className="grid">
-          <Fld label="Keterangan" w2><textarea value={r.keterangan ?? ""} onChange={e => patch({ keterangan: e.target.value })} /></Fld>
-          <Fld label="Promo & souvenir" w2><textarea value={r.promo ?? ""} onChange={e => patch({ promo: e.target.value })} /></Fld>
         </div></fieldset>
       </fieldset>
     </Drawer>
@@ -133,12 +126,11 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
   const withKomp = kk.filter(k => num(r.ret?.[k]) > 0);
   const keys = withKomp.length ? withKomp : kk;
   const awal = retAwal(r), sudah = retCair(r), sisa = retSisa(r);
-  const stOpts = [...new Set([...RET_STATUS, r.status].filter(Boolean) as string[])];
   const sf = (k: keyof Retensi) => (v: string) => patch({ [k]: v } as Partial<Retensi>);
   const nf = (k: keyof Retensi) => (v: string) => patch({ [k]: num(v) } as Partial<Retensi>);
 
   return (
-    <Drawer title={isNew ? "Tambah retensi" : `${r.blok} · ${titleCase(r.nama)}`} subtitle={isNew ? "Data escrow / retensi bank per unit" : `${retStatus(r) || "Tanpa status"} · sisa retensi Rp ${rp(sisa)}`} onClose={onClose}
+    <Drawer title={isNew ? "Tambah retensi" : `${r.blok} · ${titleCase(r.nama)}`} subtitle={isNew ? "Data escrow / retensi bank per unit" : `${retStatus(r) || "Belum ada retensi"} · sisa retensi Rp ${rp(sisa)}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
       <Datalist id="dl-rbank" values={all.map(x => x.bank)} />
       <Datalist id="dl-rnot" values={all.map(x => x.notaris)} />
@@ -154,18 +146,14 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Field label="Tanggal akad" type="date" value={r.tglAkad} onChange={sf("tglAkad")} />
         </div></fieldset>
         <fieldset><legend>Nilai transaksi &amp; diterima</legend><div className="grid">
-          <Field label="Nilai UTJ / UM (Rp)" type="number" value={r.nilaiUM} onChange={nf("nilaiUM")} />
-          <Field label="Nilai KPR (Rp)" type="number" value={r.nilaiKPR} onChange={nf("nilaiKPR")} />
-          <Fld label="Total nilai"><div className="calc num">Rp {rp(num(r.nilaiUM) + num(r.nilaiKPR))}</div></Fld>
-          <Field label="Diterima UTJ / UM (Rp)" type="number" value={r.terimaUM} onChange={nf("terimaUM")} />
-          <Field label="Diterima KPR (Rp)" type="number" value={r.terimaKPR} onChange={nf("terimaKPR")} />
-          <Fld label="Total diterima + retensi cair"><div className="calc num">Rp {rp(num(r.terimaUM) + num(r.terimaKPR) + sudah)}</div></Fld>
-          <Field label="% pencairan KPR dari bank" type="number" value={r.persenCair == null ? "" : +(num(r.persenCair) * 100).toFixed(2)} onChange={v => patch({ persenCair: v === "" ? 0 : num(v) / 100 })} />
+          <Field label="Nilai KPR ACC bank (Rp)" type="number" value={r.nilaiKPRAccBank} onChange={nf("nilaiKPRAccBank")} />
+          <Field label="Total diterima awal (Rp)" type="number" value={r.totalDiterimAwal} onChange={nf("totalDiterimAwal")} />
+          <Fld label="% pencairan KPR dari bank (otomatis)"><div className="calc num">{(retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</div></Fld>
         </div></fieldset>
-        <fieldset><legend>Retensi awal (ditahan bank)</legend><div className="grid">
+        <fieldset><legend>Retensi</legend><div className="grid">
           {kk.map(k => <Field key={k} label={RET_LABEL[k] + " (Rp)"} type="number" value={r.ret?.[k] || ""} onChange={v => patch({ ret: { ...r.ret, [k]: num(v) } })} />)}
-          <Fld label="Total retensi awal"><div className="calc num">Rp {rp(awal)}</div></Fld>
-        </div></fieldset>
+          <Fld label="Total retensi (berkurang otomatis saat pencairan)"><div className="calc num">Rp {rp(sisa)}</div></Fld>
+        </div><p className="sub" style={{ marginTop: 8 }}>Jumlah per kategori adalah retensi awal Rp {rp(awal)}. Setiap pencairan mengurangi sisa kategori yang dipilih dan total retensi.</p></fieldset>
         <fieldset><legend>Pencairan retensi</legend><div className="rows">
           {cair.map((c, i) => (
             <div className="rowf cr" key={i}>
@@ -183,9 +171,8 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Fld label="Sisa retensi"><div className={"calc num" + (sisa < 0 ? " neg" : "")}>{sisa < 0 ? "Lebih Rp " + rp(-sisa) : sisa ? "Rp " + rp(sisa) : "Lunas"}</div></Fld>
         </div>
         <div className="compline">{kk.filter(k => num(r.ret?.[k]) > 0 || cair.some(c => c.komponen === k && c.nominal)).map(k => { const cs = compSisa(r, k); return <span key={k} className={"chip " + (cs < 0 ? "no" : cs === 0 ? "acc" : "")}>{kompShort(k)}: {cs === 0 ? "lunas" : cs < 0 ? "lebih " + rpShort(-cs) : "sisa " + rpShort(cs)}</span>; })}</div></fieldset>
-        <fieldset><legend>Status &amp; catatan</legend><div className="grid">
-          <Select label="Status" value={r.status || "Progress Bangun"} options={stOpts} onChange={sf("status")} />
-          <Fld label="Catatan" w2><textarea value={r.catatan ?? ""} onChange={e => patch({ catatan: e.target.value })} /></Fld>
+        <fieldset><legend>Keterangan</legend><div className="grid">
+          <Fld label="Keterangan" w2><textarea value={r.keterangan ?? ""} onChange={e => patch({ keterangan: e.target.value })} /></Fld>
         </div></fieldset>
       </fieldset>
     </Drawer>

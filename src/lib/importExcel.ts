@@ -38,18 +38,17 @@ export function parseKPRRows(rows: Row[]): KprImport[] | null {
     n++;
     const bankProses = [25, 26, 27, 28].map(c => xt(r[c])).filter(Boolean).map(b => ({ bank: b, tgl: "", ket: "", hasil: "" }));
     if (bankProses.length && xt(r[29])) bankProses[bankProses.length - 1].ket = xt(r[29]);
-    const promo = ([["Subsidi asuransi: ", 68], ["Bonus: ", 69], ["Subsidi angsuran: ", 70], ["Diskon PPN: ", 71]] as [string, number][]).filter(([, c]) => xt(r[c])).map(([l, c]) => l + xt(r[c]));
+    // Excel lama belum punya kategori diskon: selisih harga jual dan harga transaksi dicatat sebagai Diskon Khusus.
+    const hargaJual = xn(r[6]), hargaTransaksi = xn(r[7]), selisih = hargaJual > hargaTransaksi && hargaTransaksi > 0 ? hargaJual - hargaTransaksi : 0;
     out.push({
       ord: typeof r[0] === "number" ? r[0] : n, unit, nama, tglUTJ: xd(r[3]), tglSPR: xd(r[4]), caraBayar: xt(r[5]),
-      hargaBank: xn(r[6]), hargaTransaksi: xn(r[7]), utj: xn(r[8]), angsuranUM: xn(r[9]), cashbackUM: xn(r[10]), totalUM: xn(r[11]),
+      hargaJual, diskonKhusus: selisih, totalDiskon: selisih, hargaTransaksi: hargaJual ? hargaJual - selisih : hargaTransaksi, utj: xn(r[8]), totalUM: xn(r[11]),
       plafond: xn(r[12]), accBank: xn(r[13]), tum: xn(r[14]),
-      berkas: Object.fromEntries(["ktp", "npwp", "kk", "akta", "rk3", "suket", "slip", "rk6", "nib", "lapkeu"].map((k, i) => [k, xc(r[15 + i])])),
+      berkas: Object.fromEntries(["ktp", "npwp", "kk", "akta", "rk3", "suket", "slip3", "rk6", "nibSkdu", "lapkeu"].map((k, i) => [k, xc(r[15 + i])])),
       bankProses,
-      legal: Object.fromEntries(["potongPokok", "roya", "ambilSertifikat", "verifikasi", "validasi", "lunasDP", "siLPP", "feeKPR", "pbg"].map((k, i) => [k, xc(r[30 + i])])),
+      legal: Object.fromEntries(["potongPokok", "roya", "ambilSertifikat", "verifikasi", "validasi"].map((k, i) => [k, xc(r[30 + i])])),
       tglAkad: xd(r[39]), tempatAkad: xt(r[40]), notaris: xt(r[41]),
-      pencairan: [42, 45, 48, 51, 54].filter(c => xn(r[c + 1]) || xd(r[c])).map(c => ({ tgl: xd(r[c]), nominal: xn(r[c + 1]) })),
       progressBangun: xn(r[62]), ajb: xc(r[63]), tglAJB: xd(r[64]), stu: xc(r[65]), tglSTU: xd(r[66]),
-      keterangan: xt(r[67]), promo: promo.join("; "),
     });
   }
   return out;
@@ -64,9 +63,9 @@ export function parseRetRows(rows: Row[]): RetImport[] | null {
     const blok = xt(r[0]), nama = xt(r[1]);
     if (!blok || !nama) continue;
     out.push({
-      blok, nama, pembayaran: xt(r[2]), nilaiUM: xn(r[3]), nilaiKPR: xn(r[4]), terimaUM: xn(r[6]), terimaKPR: xn(r[7]), persenCair: xn(r[9]),
+      blok, nama, pembayaran: xt(r[2]), nilaiKPRAccBank: xn(r[4]), totalDiterimAwal: xn(r[6]) + xn(r[7]),
       ret: { bangunan: Math.round(xn(r[10])), ajb: xn(r[11]), sertifikat: xn(r[12]), pbg: xn(r[13]), pdam: xn(r[14]), listrik: xn(r[15]), pajak: xn(r[16]) },
-      status: xt(r[18]), bank: xt(r[19]), notaris: xt(r[20]), catatan: [xt(r[21]), xt(r[22])].filter(Boolean).join("; "),
+      bank: xt(r[19]), notaris: xt(r[20]), keterangan: [xt(r[18]), xt(r[21]), xt(r[22])].filter(Boolean).join("; "),
     });
   }
   return out;
@@ -74,8 +73,8 @@ export function parseRetRows(rows: Row[]): RetImport[] | null {
 
 // ---- Penggabungan & rencana ----
 type Rec = Record<string, unknown>;
-const FL_KPR: Record<string, string> = { unit: "Unit", nama: "Nama", tglUTJ: "Tgl UTJ", tglSPR: "Tgl SPR", caraBayar: "Cara bayar", hargaBank: "Harga bank", hargaTransaksi: "Harga transaksi", utj: "UTJ", angsuranUM: "Angsuran UM", cashbackUM: "Cashback UM", totalUM: "Uang muka", plafond: "Plafond", accBank: "Nominal ACC", tum: "TUM", tglAkad: "Tgl akad", tempatAkad: "Tempat akad", notaris: "Notaris", progressBangun: "Progres bangun", ajb: "AJB", tglAJB: "Tgl AJB", stu: "STU", tglSTU: "Tgl STU", keterangan: "Keterangan", promo: "Promo", berkas: "Berkas", legal: "Legal & pajak", pencairan: "Pencairan KPR", bankProses: "Bank" };
-const FL_RET: Record<string, string> = { nama: "Nama", pembayaran: "Pembayaran", nilaiUM: "Nilai UM", nilaiKPR: "Nilai KPR", terimaUM: "Diterima UM", terimaKPR: "Diterima KPR", persenCair: "% cair", ret: "Retensi", status: "Status", bank: "Bank", notaris: "Notaris", catatan: "Catatan" };
+const FL_KPR: Record<string, string> = { unit: "Unit", nama: "Nama", tglUTJ: "Tgl UTJ", tglSPR: "Tgl SPR", caraBayar: "Cara bayar", hargaJual: "Harga jual", diskonPPN: "Diskon PPN", diskonTusukSate: "Diskon Tusuk Sate", diskonKhusus: "Diskon Khusus", hargaTransaksi: "Harga transaksi", utj: "UTJ", totalUM: "Uang muka", plafond: "Plafond", accBank: "Nominal ACC", tum: "TUM", tglAkad: "Tgl akad", tempatAkad: "Tempat akad", notaris: "Notaris", progressBangun: "Progres bangun", ajb: "AJB", tglAJB: "Tgl AJB", stu: "STU", tglSTU: "Tgl STU", berkas: "Berkas", legal: "Legal & pajak", bankProses: "Bank" };
+const FL_RET: Record<string, string> = { nama: "Nama", pembayaran: "Pembayaran", nilaiKPRAccBank: "Nilai KPR ACC bank", totalDiterimAwal: "Total diterima awal", ret: "Retensi", bank: "Bank", notaris: "Notaris", keterangan: "Keterangan" };
 const isEmptyV = (v: unknown) => v === "" || v == null || v === 0 || v === false;
 const clone = <T,>(o: T): T => JSON.parse(JSON.stringify(o));
 
@@ -90,13 +89,13 @@ const diffKeys = (a: Rec, b: Rec, labels: Record<string, string>) => Object.keys
 function fv(k: string, v: unknown): string {
   if (v == null || v === "" || v === 0 || v === false) return "kosong";
   if (v === true) return "ya";
-  if (typeof v === "number") return k === "persenCair" || k === "progressBangun" ? Math.round(v * 100) + "%" : Math.abs(v) >= 1e6 ? juta(v) : String(v);
+  if (typeof v === "number") return k === "progressBangun" ? Math.round(v * 100) + "%" : Math.abs(v) >= 1e6 ? juta(v) : String(v);
   if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return tgl(v);
   if (typeof v === "string") return v.length > 28 ? v.slice(0, 27) + "…" : v;
   return "";
 }
 
-const KPR_SCALAR = ["unit", "nama", "tglUTJ", "tglSPR", "caraBayar", "hargaBank", "hargaTransaksi", "utj", "angsuranUM", "cashbackUM", "totalUM", "plafond", "accBank", "tum", "tglAkad", "tempatAkad", "notaris", "progressBangun", "tglAJB", "tglSTU", "keterangan", "promo"];
+const KPR_SCALAR = ["unit", "nama", "tglUTJ", "tglSPR", "caraBayar", "hargaJual", "diskonPPN", "diskonTusukSate", "diskonKhusus", "totalDiskon", "hargaTransaksi", "utj", "totalUM", "plafond", "accBank", "tum", "tglAkad", "tempatAkad", "notaris", "progressBangun", "tglAJB", "tglSTU"];
 export function mergeKPR(old: Kpr, x: KprImport, ow: boolean): Kpr {
   const m = clone(old) as unknown as Rec, o = old as unknown as Rec, xr = x as unknown as Rec;
   KPR_SCALAR.forEach(k => { if (ow || !isEmptyV(xr[k])) m[k] = xr[k]; });
@@ -106,7 +105,6 @@ export function mergeKPR(old: Kpr, x: KprImport, ow: boolean): Kpr {
     const xg = (xr[g] ?? {}) as Record<string, boolean>, og = (o[g] ?? {}) as Record<string, boolean>;
     m[g] = ow ? { ...xg } : Object.fromEntries(Object.keys(xg).map(k => [k, !!(og[k] || xg[k])]));
   }
-  if (ow || (x.pencairan ?? []).length) m.pencairan = x.pencairan;
   const have = new Set((old.bankProses ?? []).map(b => normBank(b.bank)));
   const bp = [...(old.bankProses ?? [])];
   (x.bankProses ?? []).forEach(b => { if (!have.has(normBank(b.bank))) { bp.push({ ...b }); have.add(normBank(b.bank)); } });
@@ -116,7 +114,7 @@ export function mergeKPR(old: Kpr, x: KprImport, ow: boolean): Kpr {
 }
 export function mergeRet(old: Retensi, x: RetImport, ow: boolean) {
   const m = clone(old) as unknown as Rec, xr = x as unknown as Rec;
-  ["nama", "pembayaran", "nilaiUM", "nilaiKPR", "terimaUM", "terimaKPR", "persenCair", "status", "bank", "notaris", "catatan"].forEach(k => { if (ow || !isEmptyV(xr[k])) m[k] = xr[k]; });
+  ["nama", "pembayaran", "nilaiKPRAccBank", "totalDiterimAwal", "bank", "notaris", "keterangan"].forEach(k => { if (ow || !isEmptyV(xr[k])) m[k] = xr[k]; });
   let skipped = false;
   if (!(old.cair ?? []).length) m.ret = { ...x.ret };
   else if (nz(old.ret) !== nz(x.ret)) skipped = true;
