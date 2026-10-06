@@ -56,7 +56,7 @@ export function KprPicker({ kpr, sudahAda, linkedId, onPick, onClear }: { kpr: K
       )}
       <p className="sub" style={{ marginTop: 8 }}>
         {linked || info
-          ? <>Terisi dari KPR: <b>{["nama", "cara bayar", "bank", "notaris", "nilai KPR", "tanggal akad"].filter(l => !(info ?? []).includes(l)).join(", ")}</b>. Semuanya masih bisa diubah.{info && info.length ? <> Kosong di KPR, isi manual: <b>{info.join(", ")}</b>.</> : null}</>
+          ? <>Terisi dari KPR: <b>{["nama", "cara bayar", "bank", "notaris", "nilai KPR ACC bank", "tanggal akad"].filter(l => !(info ?? []).includes(l)).join(", ")}</b>. Semuanya masih bisa diubah.{info && info.length ? <> Kosong di KPR, isi manual: <b>{info.join(", ")}</b>.</> : null}</>
           : <>Tidak ada di daftar? Langsung isi kolom di bawah secara manual.</>}
       </p>
     </fieldset>

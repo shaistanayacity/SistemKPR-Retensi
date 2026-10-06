@@ -18,14 +18,14 @@ export function status(r: Kpr): KprStatus {
 export const isBelumAkad = (r: Kpr) => ["Pemberkasan", "Proses Bank", "ACC Bank"].includes(status(r));
 
 export const jenis = (r: Kpr) =>
-  r.jenisPekerjaan || ((r.berkas?.nib || r.berkas?.lapkeu) && !r.berkas?.slip ? "Wiraswasta" : "Karyawan");
+  r.jenisPekerjaan || ((r.berkas?.nibSkdu || r.berkas?.lapkeu) && !r.berkas?.slip3 ? "Wiraswasta" : "Karyawan");
 
 type DocKey = keyof NonNullable<Kpr["berkas"]>;
 
 export function berkasNeed(r: Kpr): DocKey[] {
   const core: DocKey[] = ["ktp", "npwp", "kk", "akta"];
   if (!isKPR(r)) return core;
-  return core.concat(jenis(r) === "Wiraswasta" ? ["rk6", "nib", "lapkeu"] : ["rk3", "suket", "slip"]);
+  return core.concat(jenis(r) === "Wiraswasta" ? ["rk6", "nibSkdu", "lapkeu"] : ["rk3", "suket", "slip3"]);
 }
 
 export function berkasScore(r: Kpr) {
@@ -37,13 +37,19 @@ export function berkasScore(r: Kpr) {
 export const retAwal = (r: Retensi) => RET_KOMP.reduce((a, k) => a + num(r.ret?.[k]), 0);
 export const retCair = (r: Retensi) => (r.cair ?? []).reduce((a, c) => a + num(c.nominal), 0);
 export const retSisa = (r: Retensi) => retAwal(r) - retCair(r);
-export const retStatus = (r: Retensi) => (retAwal(r) > 0 && retSisa(r) <= 0 ? "Lunas" : r.status ?? "");
+export const retStatus = (r: Retensi) => (retAwal(r) <= 0 ? "" : retSisa(r) <= 0 ? "Lunas" : "Ada sisa");
 
 // ---- Turunan tambahan (dari purwarupa) ----
 import { brand, DOCS, isBankName, kompShort, natural, tgl } from "./format";
 
-export const retNilai = (r: Retensi) => num(r.nilaiUM) + num(r.nilaiKPR);
-export const retTerima = (r: Retensi) => num(r.terimaUM) + num(r.terimaKPR) + retCair(r);
+export const retNilai = (r: Retensi) => num(r.nilaiKPRAccBank);
+export const retTerima = (r: Retensi) => num(r.totalDiterimAwal);
+/** Persen pencairan KPR dari bank: total diterima awal dibagi nilai KPR ACC bank (otomatis). */
+export const retPersen = (r: Retensi) => (retNilai(r) > 0 ? retTerima(r) / retNilai(r) : 0);
+
+/** Total diskon = jumlah tiga kategori; harga transaksi = harga jual - total diskon (bila harga jual diisi). */
+export const totalDiskon = (r: Kpr) => num(r.diskonPPN) + num(r.diskonTusukSate) + num(r.diskonKhusus);
+export const hargaTransaksiOtomatis = (r: Kpr) => (num(r.hargaJual) > 0 ? num(r.hargaJual) - totalDiskon(r) : num(r.hargaTransaksi));
 export const compSisa = (r: Retensi, k: string) =>
   num(r.ret?.[k as keyof NonNullable<Retensi["ret"]>]) - (r.cair ?? []).filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0);
 export const cairSorted = (r: Retensi) => [...(r.cair ?? [])].sort((a, b) => String(a.tgl).localeCompare(String(b.tgl)));
@@ -85,7 +91,6 @@ function kprDateOK(r: Kpr, f: KprFilter) {
     case "acc": return inRange(g("tglACC"), f.d1, f.d2);
     case "akad": return inRange(g("tglAkad"), f.d1, f.d2);
     case "bank": return anyIn(r.bankProses, f.d1, f.d2);
-    case "cair": return anyIn(r.pencairan, f.d1, f.d2);
     default: return inRange(g("tglUTJ"), f.d1, f.d2);
   }
 }
@@ -164,7 +169,7 @@ export function kprKeRetensi(r: Kpr): Partial<Retensi> & { kosong: string[] } {
   set("pembayaran", r.caraBayar, "cara bayar");
   set("bank", bankDariKpr(r), "bank");
   set("notaris", r.notaris, "notaris");
-  set("nilaiKPR", num(r.plafond), "nilai KPR");
+  set("nilaiKPRAccBank", num(r.accBank), "nilai KPR ACC bank");
   set("tglAkad", r.tglAkad, "tanggal akad");
   return { ...out, kosong };
 }

@@ -1,7 +1,6 @@
 export type Role = "admin" | "sales" | "pembaca" | "none";
 
 export interface BankProses { bank: string; tgl: string; ket: string; hasil: string }
-export interface Pencairan { tgl: string; nominal: number }
 
 export interface Kpr {
   id: string;
@@ -14,7 +13,6 @@ export interface Kpr {
   tglSPR?: string;
   caraBayar?: string;
   jenisPekerjaan?: string;
-  hargaBank?: number;
   hargaJual?: number;
   diskonPPN?: number;
   diskonTusukSate?: number;
@@ -38,7 +36,6 @@ export interface Kpr {
   tglAJB?: string;
   stu?: boolean;
   tglSTU?: string;
-  keterangan?: string;
   updatedAt?: string;
 }
 
@@ -56,9 +53,7 @@ export interface Retensi {
   kprId?: string;
   nilaiKPRAccBank?: number;
   totalDiterimAwal?: number;
-  persenCairKPR?: number;
   ret?: Partial<Record<RetKomp, number>>;
-  totalRetensi?: number;
   cair?: RetCair[];
   bank?: string;
   notaris?: string;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { berkasScore, retSisa, retStatus, status } from "./logic";
+import { berkasScore, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
 import type { Kpr, Retensi } from "./types";
 
 const base: Kpr = { id: "1", ord: 1, unit: "A-01", nama: "Budi", caraBayar: "KPR" };
@@ -19,7 +19,7 @@ describe("status KPR", () => {
 describe("kelengkapan berkas", () => {
   it("karyawan butuh 7 dokumen", () => expect(berkasScore(base).need).toBe(7));
   it("wiraswasta butuh 7 dokumen dengan NIB", () => {
-    const s = berkasScore({ ...base, jenisPekerjaan: "Wiraswasta", berkas: { ktp: true, nib: true } });
+    const s = berkasScore({ ...base, jenisPekerjaan: "Wiraswasta", berkas: { ktp: true, nibSkdu: true } });
     expect(s.need).toBe(7);
     expect(s.have).toBe(2);
   });
@@ -29,6 +29,9 @@ describe("retensi", () => {
   const r: Retensi = { id: "1", ord: 1, blok: "A-01", nama: "Budi", ret: { bangunan: 100, ajb: 50 }, cair: [{ tgl: "2024-01-01", nominal: 150 }] };
   it("sisa = awal - cair", () => expect(retSisa({ ...r, cair: [{ tgl: "", nominal: 40 }] })).toBe(110));
   it("Lunas otomatis saat sisa nol", () => expect(retStatus(r)).toBe("Lunas"));
+  it("Ada sisa bila belum habis dicairkan", () => expect(retStatus({ ...r, cair: [] })).toBe("Ada sisa"));
+  it("persen pencairan KPR otomatis dari total diterima awal", () => expect(retPersen({ ...r, nilaiKPRAccBank: 1000, totalDiterimAwal: 750 })).toBe(0.75));
+  it("persen nol bila nilai KPR ACC kosong", () => expect(retPersen(r)).toBe(0));
 });
 
 import { emptyKprFilter, emptyRetFilter, kprRows, retRows } from "./logic";
@@ -79,18 +82,27 @@ describe("jendela grafik", () => {
 
 import { bankDariKpr, kprKeRetensi, normUnit } from "./logic";
 describe("hubungan KPR ke Retensi", () => {
-  const k: Kpr = { id: "k1", ord: 1, unit: "F1-01", nama: "Dwiki Anggara", caraBayar: "KPR", plafond: 760000000, notaris: "HAIRUR", tglAkad: "2026-03-02", tempatAkad: "BTN SIDOARJO" };
+  const k: Kpr = { id: "k1", ord: 1, unit: "F1-01", nama: "Dwiki Anggara", caraBayar: "KPR", accBank: 760000000, notaris: "HAIRUR", tglAkad: "2026-03-02", tempatAkad: "BTN SIDOARJO" };
   it("mengisi nama (huruf besar), bank, notaris, nilai KPR, cara bayar, tanggal akad", () => {
     const x = kprKeRetensi(k);
-    expect(x).toMatchObject({ kprId: "k1", blok: "F1-01", nama: "DWIKI ANGGARA", pembayaran: "KPR", bank: "BTN SIDOARJO", notaris: "HAIRUR", nilaiKPR: 760000000, tglAkad: "2026-03-02" });
+    expect(x).toMatchObject({ kprId: "k1", blok: "F1-01", nama: "DWIKI ANGGARA", pembayaran: "KPR", bank: "BTN SIDOARJO", notaris: "HAIRUR", nilaiKPRAccBank: 760000000, tglAkad: "2026-03-02" });
     expect(x.kosong).toEqual([]);
   });
   it("tempat akad yang bukan bank tidak dianggap bank", () => expect(bankDariKpr({ ...k, tempatAkad: "Kantor Notaris" })).toBe(""));
   it("bank yang ACC didahulukan", () => expect(bankDariKpr({ ...k, bankProses: [{ bank: "BRI SDA", tgl: "", ket: "", hasil: "ACC" }] })).toBe("BRI SDA"));
   it("kolom yang kosong di KPR dilaporkan dan tidak ditimpa", () => {
     const x = kprKeRetensi({ id: "k2", ord: 2, unit: "A-01", nama: "Budi", caraBayar: "KPR" });
-    expect(x.kosong).toEqual(["bank", "notaris", "nilai KPR", "tanggal akad"]);
+    expect(x.kosong).toEqual(["bank", "notaris", "nilai KPR ACC bank", "tanggal akad"]);
     expect("bank" in x).toBe(false);
   });
   it("kunci unit mengabaikan spasi dan huruf kecil", () => expect(normUnit(" f1 - 01 ")).toBe("F1-01"));
+});
+
+describe("harga & diskon", () => {
+  it("harga transaksi = harga jual - total diskon", () => {
+    const k: Kpr = { ...base, hargaJual: 1000, diskonPPN: 100, diskonTusukSate: 50, diskonKhusus: 25 };
+    expect(totalDiskon(k)).toBe(175);
+    expect(hargaTransaksiOtomatis(k)).toBe(825);
+  });
+  it("tanpa harga jual memakai harga transaksi tersimpan", () => expect(hargaTransaksiOtomatis({ ...base, hargaTransaksi: 500 })).toBe(500));
 });

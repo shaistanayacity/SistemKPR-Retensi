@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { berkasScore, emptyKprFilter, lastMonths, perMonth, windowEnd, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
 import { brand, juta, KPR_PILL, KPR_STAT, num, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Kpr } from "../lib/types";
-import { kprPDF, kprXLS, kprReportXLS } from "../lib/exportFiles";
+import { kprPDF, kprXLS, kprReportPDF } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 import { Icon } from "./Icon";
 import { TrendChart } from "./TrendChart";
@@ -53,7 +53,7 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
   const genReport = async (cols: Record<string, boolean>) => {
     if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
     setDl("report");
-    try { await kprReportXLS(rows, f, cols); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
+    try { await kprReportPDF(rows, f, cols); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
     setDl("");
     setReportBuilding(false);
   };
@@ -136,7 +136,7 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
         <div className="tools dt">
           <span className="dtl">Tanggal</span>
           <select className="sel" aria-label="Jenis tanggal" value={f.dtb} onChange={e => set({ dtb: e.target.value })}>
-            <option value="utj">Tanggal UTJ</option><option value="spr">Tanggal SPR &amp; PPJB</option><option value="bank">Tanggal proses bank</option><option value="acc">Tanggal ACC</option><option value="akad">Tanggal akad</option><option value="cair">Tanggal pencairan KPR</option>
+            <option value="utj">Tanggal UTJ</option><option value="spr">Tanggal SPR &amp; PPJB</option><option value="bank">Tanggal proses bank</option><option value="acc">Tanggal ACC</option><option value="akad">Tanggal akad</option>
           </select>
           <DateTools d1={f.d1} d2={f.d2} onChange={(d1, d2) => set({ d1, d2 })} />
         </div>
@@ -158,11 +158,11 @@ function KprRow({ r, onOpen }: { r: Kpr; onOpen: (r: Kpr) => void }) {
   return (
     <tr className="click" onClick={() => onOpen(r)}>
       <td className="unit">{r.unit}</td>
-      <td><Who name={r.nama} sub={<>{[r.sales ? "Sales: " + r.sales : "", kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")}<span className="sub num" style={{ display: "block" }}>SPR &amp; PPJB {r.tglSPR ? tgl(r.tglSPR) : "belum"}</span></>} /></td>
+      <td><Who name={r.nama} sub={<>{[[r.sales ? "Sales: " + r.sales : "", r.kantor].filter(Boolean).join(" · "), kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")}<span className="sub num" style={{ display: "block" }}>SPR &amp; PPJB {r.tglSPR ? tgl(r.tglSPR) : "belum"}</span></>} /></td>
       <td className="r"><div className="money-c"><b className="num">{rp(num(r.hargaTransaksi))}</b>
         {kpr ? <span className="sub num">UM {num(r.totalUM) > 0 ? juta(r.totalUM) : "–"} · KPR {num(r.plafond) ? juta(r.plafond) : "–"}</span> : <span className="sub">{titleCase(r.caraBayar)}</span>}</div></td>
-      <td>{(r.bankProses ?? []).length ? <div className="bpl">{(r.bankProses ?? []).map((b, i) => { const h = b.hasil || "Diajukan", cls = h === "ACC" ? "acc" : h === "Ditolak" || h === "Batal" ? "no" : ""; return (
-        <div key={i}><div className="bph"><span className={"chip " + cls} title={b.bank}>{brand(b.bank) || b.bank}</span><span className="bpm">{[b.tgl ? tgl(b.tgl) : "", h].filter(Boolean).join(" · ")}</span></div>{b.ket && <div className="bpk" title={b.ket}>{b.ket}</div>}</div>); })}</div> : kpr ? <span className="sub">Belum diajukan</span> : <Dash />}</td>
+      <td>{(r.bankProses ?? []).length ? <div className="bpl">{(r.bankProses ?? []).map((b, i, a) => { const h = b.hasil || "Diajukan", cls = h === "ACC" ? "acc" : h === "Ditolak" || h === "Batal" ? "no" : "", lanjutan = i > 0 && brand(a[i - 1].bank) === brand(b.bank); return (
+        <div key={i}><div className="bph">{lanjutan ? <span className="chip" style={{ visibility: "hidden" }} aria-hidden="true">{brand(b.bank) || b.bank}</span> : <span className={"chip " + cls} title={b.bank}>{brand(b.bank) || b.bank}</span>}<span className="bpm">{[b.tgl ? tgl(b.tgl) : "", h].filter(Boolean).join(" · ")}</span></div>{b.ket && <div className="bpk" title={b.ket}>{b.ket}</div>}</div>); })}</div> : kpr ? <span className="sub">Belum diajukan</span> : <Dash />}</td>
       <td>{r.tglAkad ? <div className="akad"><b className="num">Akad {tgl(r.tglAkad)}</b><span className="sub trunc" title={r.tempatAkad}>{r.tempatAkad}</span><span className="sub trunc">{titleCase(r.notaris)}</span></div>
         : st === "ACC Bank" ? <div className="akad"><b className="num">ACC{num(r.accBank) ? " " + rpShort(r.accBank) : ""}</b><span className="sub">{r.tglACC ? tgl(r.tglACC) : "tanggal ACC belum diisi"}</span><span className="sub">belum akad</span></div> : <Dash />}</td>
       <td><span className="prog" title={sc.missing.length ? "Kurang: " + sc.missing.join(", ") : "Lengkap"}><span className="t"><i className={pct < 1 ? "part" : ""} style={{ width: (pct * 100).toFixed(0) + "%" }} /></span><span className="num">{sc.have}/{sc.need}</span></span>{sc.missing.length > 0 && <span className="sub trunc" style={{ maxWidth: 120 }}>kurang {sc.missing.length} dok</span>}</td>

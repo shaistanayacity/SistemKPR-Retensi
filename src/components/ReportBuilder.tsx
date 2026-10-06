@@ -1,15 +1,20 @@
 import { useState } from "react";
 import { Drawer } from "./ui";
-import type { Kpr, Retensi } from "../lib/types";
 
 export const KPR_COLUMNS = [
   { id: "unit", label: "Unit", default: true },
   { id: "nama", label: "Nama Pembeli", default: true },
   { id: "sales", label: "Sales", default: true },
+  { id: "kantor", label: "Kantor Agent", default: false },
   { id: "caraBayar", label: "Cara Bayar", default: true },
+  { id: "hargaJual", label: "Harga Jual", default: false },
+  { id: "totalDiskon", label: "Total Diskon", default: false },
   { id: "hargaTransaksi", label: "Harga Transaksi", default: true },
+  { id: "utj", label: "UTJ", default: false },
   { id: "totalUM", label: "Uang Muka", default: true },
   { id: "plafond", label: "Plafond KPR", default: false },
+  { id: "accBank", label: "Nominal ACC Bank", default: false },
+  { id: "tum", label: "TUM", default: false },
   { id: "tglUTJ", label: "Tgl UTJ", default: false },
   { id: "tglSPR", label: "Tgl SPR & PPJB", default: false },
   { id: "tglACC", label: "Tgl ACC", default: false },
@@ -20,7 +25,6 @@ export const KPR_COLUMNS = [
   { id: "bankProses", label: "Proses Bank", default: false },
   { id: "berkas", label: "Kelengkapan Berkas", default: false },
   { id: "jenisPekerjaan", label: "Jenis Pekerjaan", default: false },
-  { id: "keterangan", label: "Keterangan", default: false },
 ] as const;
 
 export const RET_COLUMNS = [
@@ -29,15 +33,15 @@ export const RET_COLUMNS = [
   { id: "pembayaran", label: "Pembayaran", default: true },
   { id: "bank", label: "Bank KPR", default: true },
   { id: "notaris", label: "Notaris", default: true },
-  { id: "nilaiKPR", label: "Nilai KPR", default: true },
-  { id: "persenCair", label: "% Cair", default: true },
-  { id: "retAwal", label: "Retensi Awal", default: true },
+  { id: "nilaiKPRAccBank", label: "Nilai KPR ACC Bank", default: true },
+  { id: "totalDiterimAwal", label: "Total Diterima Awal", default: true },
+  { id: "persenCair", label: "% Cair KPR", default: true },
+  { id: "retAwal", label: "Retensi", default: true },
   { id: "retCair", label: "Sudah Cair", default: true },
-  { id: "retSisa", label: "Sisa Retensi", default: true },
+  { id: "retSisa", label: "Total Retensi (Sisa)", default: true },
   { id: "status", label: "Status", default: true },
-  { id: "nilaiUM", label: "Nilai UM", default: false },
   { id: "riwayatCair", label: "Riwayat Pencairan", default: false },
-  { id: "catatan", label: "Catatan", default: false },
+  { id: "keterangan", label: "Keterangan", default: false },
 ] as const;
 
 type ColConfig = Record<string, boolean>;
@@ -72,7 +76,7 @@ export function ReportBuilder({ type, onClose, onGenerate }: { type: "kpr" | "re
           <span className="sp" />
           <button className="btn" onClick={onClose}>Batal</button>
           <button className="btn pri" disabled={selected === 0} onClick={() => onGenerate(cols)}>
-            Buat Report ({selected}/{total})
+            Buat Report PDF ({selected}/{total})
           </button>
         </>
       }>

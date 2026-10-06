@@ -1,5 +1,5 @@
 // Unduhan PDF dan Excel sesuai filter aktif. Pustaka dimuat saat dibutuhkan agar halaman awal tetap ringan.
-import { berkasScore, cairSorted, compSisa, isKPR, jenis, KprFilter, RetFilter, retAwal, retCair, retNilai, retSisa, retStatus, retTerima, status } from "./logic";
+import { berkasScore, cairSorted, compSisa, isKPR, jenis, KprFilter, RetFilter, retAwal, retCair, retNilai, retPersen, retSisa, retStatus, retTerima, status, totalDiskon } from "./logic";
 import { DOCS, kompShort, LEGAL, num, RET_LABEL, rp, tgl } from "./format";
 import type { Kpr, Retensi } from "./types";
 
@@ -86,10 +86,10 @@ export async function retPDF(rows: Retensi[], f: RetFilter) {
   const body = rows.map((r, i) => [i + 1, r.blok, r.nama, r.bank ?? "", r.notaris ?? "", rp(retNilai(r)), rp(retTerima(r)),
     K.filter(k => num(r.ret?.[k]) > 0).map(k => `${kompShort(k)}: ${rp(num(r.ret?.[k]))}`).join("\n") || "–", rp(retAwal(r)),
     cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")).join("\n") || "Belum ada",
-    rp(retCair(r)), rp(retSisa(r)) === "–" ? "0" : rp(retSisa(r)), retStatus(r), r.catatan ?? ""]);
+    rp(retCair(r)), rp(retSisa(r)) === "–" ? "0" : rp(retSisa(r)), retStatus(r), r.keterangan ?? ""]);
   const sum = (fn: (r: Retensi) => number) => rp(rows.reduce((a, r) => a + fn(r), 0));
   const blob = await pdfDoc("Rekap Retensi / Escrow", `${retFilterLabel(f)} · ${rows.length} unit · dicetak ${today()}`,
-    ["No", "Blok", "Nama", "Bank KPR", "Notaris", "Nilai Transaksi", "Diterima", "Rincian Retensi Awal", "Retensi Awal", "Riwayat Pencairan Retensi", "Sudah Cair", "Sisa Retensi", "Status", "Catatan"],
+    ["No", "Blok", "Nama", "Bank KPR", "Notaris", "Nilai KPR ACC Bank", "Total Diterima Awal", "Rincian Retensi", "Retensi", "Riwayat Pencairan Retensi", "Sudah Cair", "Total Retensi (Sisa)", "Status", "Keterangan"],
     body, ["", "", "Total", "", "", sum(retNilai), sum(retTerima), "", sum(retAwal), "", sum(retCair), sum(retSisa), "", ""],
     { 0: { cellWidth: 6, halign: "right" }, 1: { fontStyle: "bold", cellWidth: 12 }, 2: { cellWidth: 28 }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { cellWidth: 32 }, 8: { halign: "right" }, 9: { cellWidth: 44 }, 10: { halign: "right" }, 11: { halign: "right", fontStyle: "bold" }, 12: { cellWidth: 22 } });
   save(`Retensi_${stamp()}.pdf`, blob);
@@ -109,17 +109,16 @@ async function xlsxBlob(sheets: Sheet[]) {
 }
 
 export async function kprXLS(rows: Kpr[], f: KprFilter) {
-  const maxB = Math.max(1, ...rows.map(r => (r.bankProses ?? []).length)), maxP = Math.max(1, ...rows.map(r => (r.pencairan ?? []).length));
+  const maxB = Math.max(1, ...rows.map(r => (r.bankProses ?? []).length));
   const data = rows.map((r, i) => {
-    const o: Record<string, unknown> = { No: i + 1, Unit: r.unit, Nama: r.nama, Status: status(r), "Cara Bayar": r.caraBayar, Pekerjaan: jenis(r), "Tgl UTJ": r.tglUTJ, "Tgl SPR & PPJB": r.tglSPR,
-      "Harga Bank": num(r.hargaBank), "Harga Transaksi": num(r.hargaTransaksi), UTJ: num(r.utj), "Angsuran UM": num(r.angsuranUM), "Cashback UM": num(r.cashbackUM), "Total UM": num(r.totalUM), "Plafond KPR": num(r.plafond), TUM: num(r.tum) };
+    const o: Record<string, unknown> = { No: i + 1, Unit: r.unit, Nama: r.nama, Sales: r.sales ?? "", "Kantor Agent": r.kantor ?? "", Status: status(r), "Cara Bayar": r.caraBayar, Pekerjaan: jenis(r), "Tgl UTJ": r.tglUTJ, "Tgl SPR & PPJB": r.tglSPR,
+      "Harga Jual": num(r.hargaJual), "Diskon PPN": num(r.diskonPPN), "Diskon Tusuk Sate": num(r.diskonTusukSate), "Diskon Khusus": num(r.diskonKhusus), "Total Diskon": totalDiskon(r), "Harga Transaksi": num(r.hargaTransaksi), UTJ: num(r.utj), "Uang Muka": num(r.totalUM), "Plafond KPR": num(r.plafond) };
     (Object.keys(DOCS) as (keyof typeof DOCS)[]).forEach(k => (o[DOCS[k]] = r.berkas?.[k] ? "Ya" : ""));
     const s = berkasScore(r); o["Berkas Lengkap"] = `${s.have}/${s.need}`;
     for (let j = 0; j < maxB; j++) { const b = (r.bankProses ?? [])[j]; o[`Bank ${j + 1}`] = b?.bank ?? ""; o[`Tgl Bank ${j + 1}`] = b?.tgl ?? ""; o[`Hasil Bank ${j + 1}`] = b?.bank ? b.hasil || "Diajukan" : ""; o[`Ket Bank ${j + 1}`] = b?.ket ?? ""; }
-    Object.assign(o, { "Nominal ACC": num(r.accBank), "Tgl ACC": r.tglACC ?? "", "Tgl Akad": r.tglAkad ?? "", "Tempat Akad": r.tempatAkad ?? "", Notaris: r.notaris ?? "" });
+    Object.assign(o, { "Nominal ACC": num(r.accBank), TUM: num(r.tum), "Tgl ACC": r.tglACC ?? "", "Tgl Akad": r.tglAkad ?? "", "Tempat Akad": r.tempatAkad ?? "", Notaris: r.notaris ?? "" });
     (Object.keys(LEGAL) as (keyof typeof LEGAL)[]).forEach(k => (o[LEGAL[k]] = r.legal?.[k] ? "Ya" : ""));
-    for (let j = 0; j < maxP; j++) { const p = (r.pencairan ?? [])[j]; o[`Tgl Cair ${j + 1}`] = p?.tgl ?? ""; o[`Cair ${j + 1}`] = num(p?.nominal) || ""; }
-    Object.assign(o, { "Progres Bangun %": Math.round(num(r.progressBangun) * 100), AJB: r.ajb ? "Ya" : "", "Tgl AJB": r.tglAJB ?? "", STU: r.stu ? "Ya" : "", "Tgl STU": r.tglSTU ?? "", Keterangan: r.keterangan ?? "", Promo: r.promo ?? "" });
+    Object.assign(o, { "Progres Bangun %": Math.round(num(r.progressBangun) * 100), AJB: r.ajb ? "Ya" : "", "Tgl AJB": r.tglAJB ?? "", STU: r.stu ? "Ya" : "", "Tgl STU": r.tglSTU ?? "" });
     return o;
   });
   save(`Berkas_KPR${slug(f)}_${stamp()}.xlsx`, await xlsxBlob([["Berkas KPR", data, [5, 10, 30, 12, 14, 11, 11, 13]]]));
@@ -129,64 +128,65 @@ export async function retXLS(rows: Retensi[]) {
   const K = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
   const data = rows.map((r, i) => {
     const o: Record<string, unknown> = { No: i + 1, Blok: r.blok, Nama: r.nama, Pembayaran: r.pembayaran ?? "", "Bank KPR": r.bank ?? "", Notaris: r.notaris ?? "",
-      "Nilai UTJ/UM": num(r.nilaiUM), "Nilai KPR": num(r.nilaiKPR), "Total Nilai": retNilai(r), "Diterima UTJ/UM": num(r.terimaUM), "Diterima KPR": num(r.terimaKPR), "% Pencairan KPR": num(r.persenCair) };
-    K.forEach(k => (o["Retensi Awal " + RET_LABEL[k]] = num(r.ret?.[k])));
+      "Nilai KPR ACC Bank": retNilai(r), "Total Diterima Awal": retTerima(r), "% Pencairan KPR": Math.round(retPersen(r) * 10000) / 100 };
+    K.forEach(k => (o["Retensi " + RET_LABEL[k]] = num(r.ret?.[k])));
     o["Total Retensi Awal"] = retAwal(r); o["Sudah Cair"] = retCair(r); o["Jumlah Pencairan"] = (r.cair ?? []).length;
     o["Tgl Cair Terakhir"] = cairSorted(r).slice(-1)[0]?.tgl ?? "";
     K.forEach(k => (o["Sisa " + RET_LABEL[k]] = compSisa(r, k)));
-    Object.assign(o, { "Sisa Retensi": retSisa(r), "Total Diterima + Cair": retTerima(r), Status: retStatus(r), Catatan: r.catatan ?? "" });
+    Object.assign(o, { "Total Retensi (Sisa)": retSisa(r), Status: retStatus(r), Keterangan: r.keterangan ?? "" });
     return o;
   });
   const hist = rows.flatMap(r => cairSorted(r).map(c => ({ Blok: r.blok, Nama: r.nama, "Bank KPR": r.bank ?? "", "Tanggal Cair": c.tgl ?? "", Komponen: RET_LABEL[c.komponen as keyof typeof RET_LABEL] ?? c.komponen ?? "", Nominal: num(c.nominal), Keterangan: c.ket ?? "" })));
   save(`Retensi_${stamp()}.xlsx`, await xlsxBlob([["Retensi", data, [5, 9, 30, 10, 16, 10]], ["Riwayat Pencairan", hist, [9, 30, 16, 12, 22, 14, 30], ["Blok", "Nama", "Bank KPR", "Tanggal Cair", "Komponen", "Nominal", "Keterangan"]]]));
 }
 
-// Custom report generators dengan column selection
-export async function kprReportXLS(rows: Kpr[], f: KprFilter, columns: Record<string, boolean>) {
-  const data = rows.map((r, i) => {
-    const o: Record<string, unknown> = { No: i + 1 };
-    if (columns.unit) o.Unit = r.unit;
-    if (columns.nama) o.Nama = r.nama;
-    if (columns.sales) o.Sales = r.sales ?? "";
-    if (columns.caraBayar) o["Cara Bayar"] = r.caraBayar ?? "";
-    if (columns.hargaTransaksi) o["Harga Transaksi"] = num(r.hargaTransaksi);
-    if (columns.totalUM) o["Uang Muka"] = num(r.totalUM);
-    if (columns.plafond) o["Plafond KPR"] = num(r.plafond);
-    if (columns.tglUTJ) o["Tgl UTJ"] = r.tglUTJ ?? "";
-    if (columns.tglSPR) o["Tgl SPR & PPJB"] = r.tglSPR ?? "";
-    if (columns.tglACC) o["Tgl ACC"] = r.tglACC ?? "";
-    if (columns.tglAkad) o["Tgl Akad"] = r.tglAkad ?? "";
-    if (columns.tempatAkad) o["Tempat Akad"] = r.tempatAkad ?? "";
-    if (columns.notaris) o.Notaris = r.notaris ?? "";
-    if (columns.status) o.Status = status(r);
-    if (columns.bankProses) o["Proses Bank"] = (r.bankProses ?? []).map(b => `${b.bank}: ${b.hasil || "Diajukan"}`).join("; ") || "–";
-    if (columns.berkas) { const s = berkasScore(r); o["Berkas"] = `${s.have}/${s.need}`; }
-    if (columns.jenisPekerjaan) o.Pekerjaan = jenis(r);
-    if (columns.keterangan) o.Keterangan = r.keterangan ?? "";
-    return o;
-  });
-  save(`Report_KPR${slug(f)}_${stamp()}.xlsx`, await xlsxBlob([["Berkas KPR", data, [5, 12, 30, 12, 14, 12, 12, 11, 13, 11, 11, 12, 14, 20, 30]]]));
+// Report custom: hanya PDF, kolom sesuai pilihan.
+async function reportPDF<T>(title: string, sub: string, rows: T[], cols: { head: string; val: (r: T, i: number) => string | number; right?: boolean; sum?: (r: T) => number; w?: number }[], file: string) {
+  const body = rows.map((r, i) => cols.map(c => c.val(r, i)));
+  const foot = cols.map((c, i) => (i === 0 ? `Total ${rows.length} data` : c.sum ? rp(rows.reduce((a, r) => a + c.sum!(r), 0)) : ""));
+  const styles: Record<number, object> = {};
+  cols.forEach((c, i) => { styles[i] = { ...(c.right ? { halign: "right" } : {}), ...(c.w ? { cellWidth: c.w } : {}) }; });
+  save(file, await pdfDoc(title, sub, cols.map(c => c.head), body, foot, styles));
 }
 
-export async function retReportXLS(rows: Retensi[], f: RetFilter, columns: Record<string, boolean>) {
-  const K = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
-  const data = rows.map((r, i) => {
-    const o: Record<string, unknown> = { No: i + 1 };
-    if (columns.blok) o.Blok = r.blok;
-    if (columns.nama) o.Nama = r.nama;
-    if (columns.pembayaran) o.Pembayaran = r.pembayaran ?? "";
-    if (columns.bank) o["Bank KPR"] = r.bank ?? "";
-    if (columns.notaris) o.Notaris = r.notaris ?? "";
-    if (columns.nilaiKPR) o["Nilai KPR"] = num(r.nilaiKPR);
-    if (columns.nilaiUM) o["Nilai UM"] = num(r.nilaiUM);
-    if (columns.persenCair) o["% Pencairan"] = num(r.persenCair) * 100 + "%";
-    if (columns.retAwal) o["Retensi Awal"] = rp(retAwal(r));
-    if (columns.retCair) o["Sudah Cair"] = rp(retCair(r));
-    if (columns.retSisa) o["Sisa Retensi"] = rp(retSisa(r));
-    if (columns.status) o.Status = retStatus(r) ?? "";
-    if (columns.riwayatCair) o["Riwayat Pencairan"] = cairSorted(r).map(c => `${tgl(c.tgl)}: ${rp(num(c.nominal))}`).join("; ") || "–";
-    if (columns.catatan) o.Catatan = r.catatan ?? "";
-    return o;
-  });
-  save(`Report_Retensi_${stamp()}.xlsx`, await xlsxBlob([["Retensi", data, [5, 10, 30, 12, 14, 12, 12, 12, 12, 12, 12, 14, 40, 30]]]));
+export async function kprReportPDF(rows: Kpr[], f: KprFilter, columns: Record<string, boolean>) {
+  const bp = (r: Kpr) => (r.bankProses ?? []).map(b => [b.bank, b.tgl && tgl(b.tgl), b.hasil || "Diajukan", b.ket].filter(Boolean).join(" · ")).join("\n") || "–";
+  const all: [string, { head: string; val: (r: Kpr, i: number) => string | number; right?: boolean; sum?: (r: Kpr) => number; w?: number }][] = [
+    ["unit", { head: "Unit", val: r => r.unit, w: 14 }], ["nama", { head: "Nama", val: r => r.nama }], ["sales", { head: "Sales", val: r => r.sales ?? "–" }],
+    ["kantor", { head: "Kantor Agent", val: r => r.kantor ?? "–" }], ["caraBayar", { head: "Cara Bayar", val: r => r.caraBayar ?? "–" }],
+    ["hargaJual", { head: "Harga Jual", val: r => rp(num(r.hargaJual)), right: true, sum: r => num(r.hargaJual) }],
+    ["totalDiskon", { head: "Total Diskon", val: r => rp(totalDiskon(r)), right: true, sum: totalDiskon }],
+    ["hargaTransaksi", { head: "Harga Transaksi", val: r => rp(num(r.hargaTransaksi)), right: true, sum: r => num(r.hargaTransaksi) }],
+    ["utj", { head: "UTJ", val: r => rp(num(r.utj)), right: true, sum: r => num(r.utj) }],
+    ["totalUM", { head: "Uang Muka", val: r => rp(num(r.totalUM)), right: true, sum: r => num(r.totalUM) }],
+    ["plafond", { head: "Plafond KPR", val: r => rp(num(r.plafond)), right: true, sum: r => (isKPR(r) ? num(r.plafond) : 0) }],
+    ["accBank", { head: "Nominal ACC", val: r => rp(num(r.accBank)), right: true, sum: r => num(r.accBank) }],
+    ["tum", { head: "TUM", val: r => rp(num(r.tum)), right: true, sum: r => num(r.tum) }],
+    ["tglUTJ", { head: "Tgl UTJ", val: r => tgl(r.tglUTJ) || "–" }], ["tglSPR", { head: "Tgl SPR & PPJB", val: r => tgl(r.tglSPR) || "–" }],
+    ["tglACC", { head: "Tgl ACC", val: r => tgl(r.tglACC) || "–" }], ["tglAkad", { head: "Tgl Akad", val: r => tgl(r.tglAkad) || "–" }],
+    ["tempatAkad", { head: "Tempat Akad", val: r => r.tempatAkad ?? "–" }], ["notaris", { head: "Notaris", val: r => r.notaris ?? "–" }],
+    ["status", { head: "Status", val: r => status(r) }], ["bankProses", { head: "Proses Bank", val: bp, w: 44 }],
+    ["berkas", { head: "Berkas", val: r => { const s = berkasScore(r); return s.missing.length ? `${s.have}/${s.need} (kurang: ${s.missing.join(", ")})` : `${s.have}/${s.need} lengkap`; }, w: 24 }],
+    ["jenisPekerjaan", { head: "Pekerjaan", val: r => jenis(r) }],
+  ];
+  const cols = all.filter(([k]) => columns[k]).map(([, c]) => c);
+  await reportPDF("Report Berkas KPR", `${kprFilterLabel(f)} · ${rows.length} unit · dicetak ${today()}`, rows, cols, `Report_KPR${slug(f)}_${stamp()}.pdf`);
+}
+
+export async function retReportPDF(rows: Retensi[], f: RetFilter, columns: Record<string, boolean>) {
+  const all: [string, { head: string; val: (r: Retensi, i: number) => string | number; right?: boolean; sum?: (r: Retensi) => number; w?: number }][] = [
+    ["blok", { head: "Blok", val: r => r.blok, w: 14 }], ["nama", { head: "Nama", val: r => r.nama }], ["pembayaran", { head: "Pembayaran", val: r => r.pembayaran ?? "–" }],
+    ["bank", { head: "Bank KPR", val: r => r.bank ?? "–" }], ["notaris", { head: "Notaris", val: r => r.notaris ?? "–" }],
+    ["nilaiKPRAccBank", { head: "Nilai KPR ACC Bank", val: r => rp(retNilai(r)), right: true, sum: retNilai }],
+    ["totalDiterimAwal", { head: "Total Diterima Awal", val: r => rp(retTerima(r)), right: true, sum: retTerima }],
+    ["persenCair", { head: "% Cair KPR", val: r => (retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + "%", right: true }],
+    ["retAwal", { head: "Retensi", val: r => rp(retAwal(r)), right: true, sum: retAwal }],
+    ["retCair", { head: "Sudah Cair", val: r => rp(retCair(r)), right: true, sum: retCair }],
+    ["retSisa", { head: "Total Retensi (Sisa)", val: r => (retSisa(r) ? rp(retSisa(r)) : "0"), right: true, sum: retSisa }],
+    ["status", { head: "Status", val: r => retStatus(r) || "–" }],
+    ["riwayatCair", { head: "Riwayat Pencairan", val: r => cairSorted(r).map(c => [tgl(c.tgl) || "tanpa tgl", rp(num(c.nominal)), kompShort(c.komponen), c.ket].filter(Boolean).join(" · ")).join("\n") || "Belum ada", w: 44 }],
+    ["keterangan", { head: "Keterangan", val: r => r.keterangan ?? "–", w: 40 }],
+  ];
+  const cols = all.filter(([k]) => columns[k]).map(([, c]) => c);
+  await reportPDF("Report Retensi / Escrow", `${retFilterLabel(f)} · ${rows.length} unit · dicetak ${today()}`, rows, cols, `Report_Retensi_${stamp()}.pdf`);
 }
