@@ -24,7 +24,7 @@ Tab Berkas KPR:
 - Panel detail (revisi Oktober 2026): data pembeli (+ sales, kantor agent), harga (harga jual, diskon PPN / Tusuk Sate / Khusus, total diskon, harga transaksi = harga jual - total diskon, UTJ, uang muka, plafond), kelengkapan berkas (semua kelompok tampil, tanpa label opsional; KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji 3 bulan, RK 6 bln, NIB/SKDU, lapkeu), proses bank: satu kotak per bank berisi riwayat progres berurutan (tanggal, hasil, keterangan; tombol + Tambah progres), progres terakhir menjadi kondisi terkini, ACC & akad (nominal ACC, TUM, tanggal, tempat, notaris), legal & pajak, serah terima. Tidak ada lagi: cashback, angsuran UM, total UM, pencairan KPR, berkas akad, catatan, promo.
 - Unduh PDF dan Excel sesuai filter aktif. Report custom (pilih kolom) hanya PDF. Unggah Excel (lihat aturan impor di bawah).
 Tab Retensi/Escrow:
-- Kartu: retensi awal, sudah cair, sisa, unit lunas. Pencairan terbaru. Sisa per komponen.
+- Kartu: total pencairan (semua pencairan awal + retensi yang sudah cair) dan sisa retensi. Pencairan terbaru. Sisa per komponen.
 - Pencairan dicatat per tanggal, nominal, dan kategori (tombol "+ Cair"); retensi kategori tersebut dan total retensi berkurang otomatis. Nilai transaksi hanya Nilai KPR ACC bank dan Total diterima awal; persen ditahan bank dihitung otomatis. Status dan catatan diganti satu kolom Keterangan (isian manual). Tambah Retensi bisa mengambil data dari KPR (nilai KPR = nominal ACC bank).
 - Filter status, bank, notaris, tanggal pencairan. Unduh PDF dan Excel. Unggah Excel.
 

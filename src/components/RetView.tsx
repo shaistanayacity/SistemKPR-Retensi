@@ -16,9 +16,9 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
   const set = (p: Partial<RetFilter>) => setF(x => ({ ...x, ...p }));
 
   const gAwal = all.reduce((a, r) => a + retAwal(r), 0), gCair = all.reduce((a, r) => a + retCair(r), 0), gSisa = gAwal - gCair;
-  const nCair = all.reduce((a, r) => a + (r.cair ?? []).length, 0), nLunas = all.filter(r => retStatus(r) === "Lunas").length;
   const pctCair = gAwal ? Math.min(1, gCair / gAwal) : 0;
-  const gNilai = all.reduce((a, r) => a + retNilai(r), 0), pctTerima = gNilai ? Math.max(0, Math.min(1, all.reduce((a, r) => a + retTerima(r) + retCair(r), 0) / gNilai)) : 0;
+  const gTerimaAwal = all.reduce((a, r) => a + retTerima(r), 0), gPencairan = gTerimaAwal + gCair;
+  const gNilai = all.reduce((a, r) => a + retNilai(r), 0), pctTerima = gNilai ? Math.max(0, Math.min(1, gPencairan / gNilai)) : 0;
   const recent = all.flatMap(r => (r.cair ?? []).map(c => ({ r, c }))).sort((a, b) => String(b.c.tgl).localeCompare(String(a.c.tgl)));
   const comp = (Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[]).map(k => [k, all.reduce((a, r) => a + Math.max(0, compSisa(r, k)), 0)] as const).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]);
   const maxComp = comp[0]?.[1] ?? 1;
@@ -52,11 +52,9 @@ export function RetView({ all, canEdit, onOpen, onAdd, onCair, onImport }: { all
         {canEdit && <button className="btn pri" onClick={onAdd}>+ Tambah Retensi</button>}
       </div>
 
-      <div className="stats four">
-        <div className="card stat"><span className="st-l"><span className="lbl">Retensi awal</span><span className="v num">{rpShort(gAwal)}</span><span className="s">ditahan bank saat akad</span></span><span className="st-r"><span className="tile"><Icon name="layers" size={22} /></span></span></div>
-        <div className="card stat"><span className="st-l"><span className="lbl">Sudah cair</span><span className="v num">{rpShort(gCair)}</span><span className="s num">{nCair} kali pencairan</span></span><span className="st-r"><span className="tile"><Icon name="down" size={22} /></span></span></div>
+      <div className="stats two">
+        <div className="card stat"><span className="st-l"><span className="lbl">Total pencairan</span><span className="v num">{rpShort(gPencairan)}</span><span className="s num">pencairan awal {rpShort(gTerimaAwal)} + retensi cair {rpShort(gCair)}</span></span><span className="st-r"><span className="tile"><Icon name="down" size={22} /></span></span></div>
         <div className="card stat dark"><span className="st-l"><span className="lbl">Sisa retensi</span><span className="v num">{rpShort(gSisa)}</span><span className="t"><i style={{ width: (pctTerima * 100).toFixed(1) + "%" }} /></span><span className="s num">{gNilai ? (pctTerima * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + "% sudah diterima dari nilai KPR ACC bank" : "nilai KPR ACC bank belum diisi"}</span></span><span className="st-r"><span className="tile"><Icon name="wallet" size={22} /></span></span></div>
-        <div className="card stat"><span className="st-l"><span className="lbl">Unit lunas</span><span className="v num">{nLunas}<span className="of"> / {all.length}</span></span><span className="s">retensi habis dicairkan</span></span><span className="st-r"><span className="tile"><Icon name="check" size={22} /></span></span></div>
       </div>
 
       <div className="row2">
