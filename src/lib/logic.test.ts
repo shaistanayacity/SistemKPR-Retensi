@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { berkasScore, retAwal, plafondOtomatis, retSisaPersen, progresBank, rapikanBank, sinkronBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
+import { berkasScore, retAwal, plafondOtomatis, retDiterimaPersen, progresBank, rapikanBank, sinkronBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
 import type { Kpr, Retensi } from "./types";
 
 const base: Kpr = { id: "1", ord: 1, unit: "A-01", nama: "Budi", caraBayar: "KPR" };
@@ -138,11 +138,17 @@ describe("plafond otomatis dan persen sisa retensi", () => {
   it("plafond = harga transaksi - UTJ - uang muka", () => expect(plafondOtomatis({ ...base, hargaJual: 1000, diskonPPN: 100, utj: 50, totalUM: 150 })).toBe(700));
   it("tanpa harga transaksi memakai plafond tersimpan", () => expect(plafondOtomatis({ ...base, plafond: 321 })).toBe(321));
   it("plafond tidak negatif", () => expect(plafondOtomatis({ ...base, hargaTransaksi: 100, totalUM: 500 })).toBe(0));
-  it("persen sisa retensi dari nilai KPR ACC bank, bukan retensi awal", () => {
-    const r: Retensi = { id: "1", ord: 1, blok: "A", nama: "B", nilaiKPRAccBank: 1000, ret: { bangunan: 100 }, cair: [{ tgl: "", nominal: 40 }] };
-    expect(retSisaPersen(r)).toBe(0.06);
+  it("bar sisa retensi = (total diterima awal + pencairan) / nilai KPR ACC bank", () => {
+    const r: Retensi = { id: "1", ord: 1, blok: "A", nama: "B", nilaiKPRAccBank: 930e6, totalDiterimAwal: 500e6, cair: [{ tgl: "", nominal: 120e6 }] };
+    expect(retDiterimaPersen(r)).toBeCloseTo(620 / 930, 6);
   });
-  it("persen sisa nol bila nilai KPR ACC kosong", () => expect(retSisaPersen({ id: "1", ord: 1, blok: "A", nama: "B", ret: { bangunan: 100 } })).toBe(0));
+  it("bar bertambah penuh setiap ada pencairan dan tidak melebihi 100%", () => {
+    const r: Retensi = { id: "1", ord: 1, blok: "A", nama: "B", nilaiKPRAccBank: 1000, totalDiterimAwal: 500, cair: [{ tgl: "", nominal: 100 }] };
+    const sebelum = retDiterimaPersen(r);
+    expect(retDiterimaPersen({ ...r, cair: [...r.cair!, { tgl: "", nominal: 100 }] })).toBeGreaterThan(sebelum);
+    expect(retDiterimaPersen({ ...r, totalDiterimAwal: 5000 })).toBe(1);
+  });
+  it("bar nol bila nilai KPR ACC kosong", () => expect(retDiterimaPersen({ id: "1", ord: 1, blok: "A", nama: "B", ret: { bangunan: 100 } })).toBe(0));
 });
 
 describe("retensi dihitung dari nilai KPR ACC bank", () => {

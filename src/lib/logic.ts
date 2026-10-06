@@ -55,8 +55,8 @@ export const totalDiskon = (r: Kpr) => num(r.diskonPPN) + num(r.diskonTusukSate)
 export const hargaTransaksiOtomatis = (r: Kpr) => (num(r.hargaJual) > 0 ? num(r.hargaJual) - totalDiskon(r) : num(r.hargaTransaksi));
 /** Plafond KPR = harga transaksi - UTJ - uang muka (bila harga transaksi belum ada, memakai plafond tersimpan). */
 export const plafondOtomatis = (r: Kpr) => { const h = hargaTransaksiOtomatis(r); return h > 0 ? Math.max(0, h - num(r.utj) - num(r.totalUM)) : num(r.plafond); };
-/** Sisa retensi terhadap nilai KPR ACC bank (0 bila nilai KPR ACC belum diisi). */
-export const retSisaPersen = (r: Retensi) => (retNilai(r) > 0 ? retSisa(r) / retNilai(r) : 0);
+/** Bagian nilai KPR ACC bank yang sudah diterima: (total diterima awal + pencairan) / nilai KPR ACC bank, 0 sampai 1. */
+export const retDiterimaPersen = (r: Retensi) => (retNilai(r) > 0 ? Math.min(1, Math.max(0, (retTerima(r) + retCair(r)) / retNilai(r))) : 0);
 export const compSisa = (r: Retensi, k: string) =>
   num(r.ret?.[k as keyof NonNullable<Retensi["ret"]>]) - (r.cair ?? []).filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0);
 export const cairSorted = (r: Retensi) => [...(r.cair ?? [])].sort((a, b) => String(a.tgl).localeCompare(String(b.tgl)));
