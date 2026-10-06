@@ -9,34 +9,36 @@ export interface Kpr {
   unit: string;
   nama: string;
   sales?: string;
+  kantor?: string;
   tglUTJ?: string;
   tglSPR?: string;
   caraBayar?: string;
   jenisPekerjaan?: string;
   hargaBank?: number;
+  hargaJual?: number;
+  diskonPPN?: number;
+  diskonTusukSate?: number;
+  diskonKhusus?: number;
+  totalDiskon?: number;
   hargaTransaksi?: number;
   utj?: number;
-  angsuranUM?: number;
-  cashbackUM?: number;
-  tum?: number;
   totalUM?: number;
   plafond?: number;
   accBank?: number;
   tglACC?: string;
-  berkas?: Partial<Record<"ktp" | "npwp" | "kk" | "akta" | "rk3" | "suket" | "slip" | "rk6" | "nib" | "lapkeu", boolean>>;
+  tum?: number;
+  berkas?: Partial<Record<"ktp" | "npwp" | "kk" | "akta" | "rk3" | "suket" | "slip3" | "rk6" | "nibSkdu" | "lapkeu", boolean>>;
   legal?: Record<string, boolean>;
   bankProses?: BankProses[];
   tglAkad?: string;
   tempatAkad?: string;
   notaris?: string;
-  pencairan?: Pencairan[];
   progressBangun?: number | string;
   ajb?: boolean;
   tglAJB?: string;
   stu?: boolean;
   tglSTU?: string;
   keterangan?: string;
-  promo?: string;
   updatedAt?: string;
 }
 
@@ -51,17 +53,15 @@ export interface Retensi {
   nama: string;
   pembayaran?: string;
   tglAkad?: string;
-  kprId?: string; // unit KPR asal data ini diambil (opsional)
-  persenCair?: number;
-  nilaiUM?: number;
-  nilaiKPR?: number;
-  terimaUM?: number;
-  terimaKPR?: number;
+  kprId?: string;
+  nilaiKPRAccBank?: number;
+  totalDiterimAwal?: number;
+  persenCairKPR?: number;
   ret?: Partial<Record<RetKomp, number>>;
+  totalRetensi?: number;
   cair?: RetCair[];
-  status?: string;
   bank?: string;
   notaris?: string;
-  catatan?: string;
+  keterangan?: string;
   updatedAt?: string;
 }
