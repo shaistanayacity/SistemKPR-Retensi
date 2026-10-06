@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { berkasScore, plafondOtomatis, retSisaPersen, progresBank, rapikanBank, sinkronBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
+import { berkasScore, retAwal, plafondOtomatis, retSisaPersen, progresBank, rapikanBank, sinkronBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
 import type { Kpr, Retensi } from "./types";
 
 const base: Kpr = { id: "1", ord: 1, unit: "A-01", nama: "Budi", caraBayar: "KPR" };
@@ -143,4 +143,15 @@ describe("plafond otomatis dan persen sisa retensi", () => {
     expect(retSisaPersen(r)).toBe(0.06);
   });
   it("persen sisa nol bila nilai KPR ACC kosong", () => expect(retSisaPersen({ id: "1", ord: 1, blok: "A", nama: "B", ret: { bangunan: 100 } })).toBe(0));
+});
+
+describe("retensi dihitung dari nilai KPR ACC bank", () => {
+  const r: Retensi = { id: "1", ord: 1, blok: "A", nama: "B", nilaiKPRAccBank: 930e6, totalDiterimAwal: 500e6, ret: { bangunan: 100e6 }, cair: [{ tgl: "", nominal: 10e6, komponen: "bangunan" }] };
+  it("retensi awal = nilai KPR ACC - total diterima awal", () => expect(retAwal(r)).toBe(430e6));
+  it("total retensi = nilai KPR ACC - diterima awal - pencairan", () => expect(retSisa(r)).toBe(420e6));
+  it("belum lengkap isiannya memakai jumlah rincian kategori", () => {
+    expect(retAwal({ ...r, totalDiterimAwal: 0 })).toBe(100e6);
+    expect(retAwal({ ...r, nilaiKPRAccBank: 0 })).toBe(100e6);
+  });
+  it("tidak negatif bila diterima melebihi nilai", () => expect(retAwal({ ...r, totalDiterimAwal: 1000e6 })).toBe(0));
 });

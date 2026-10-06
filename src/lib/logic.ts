@@ -34,7 +34,10 @@ export function berkasScore(r: Kpr) {
   return { have: need.length - missing.length, need: need.length, missing: missing.map(k => DOCS[k]) };
 }
 
-export const retAwal = (r: Retensi) => RET_KOMP.reduce((a, k) => a + num(r.ret?.[k]), 0);
+/** Jumlah rincian per kategori (bangunan, AJB, dst). */
+export const retKomponen = (r: Retensi) => RET_KOMP.reduce((a, k) => a + num(r.ret?.[k]), 0);
+/** Retensi awal = nilai KPR ACC bank - total diterima awal; bila salah satunya belum diisi memakai jumlah rincian kategori. */
+export const retAwal = (r: Retensi) => (num(r.nilaiKPRAccBank) > 0 && num(r.totalDiterimAwal) > 0 ? Math.max(0, num(r.nilaiKPRAccBank) - num(r.totalDiterimAwal)) : retKomponen(r));
 export const retCair = (r: Retensi) => (r.cair ?? []).reduce((a, c) => a + num(c.nominal), 0);
 export const retSisa = (r: Retensi) => retAwal(r) - retCair(r);
 export const retStatus = (r: Retensi) => (retAwal(r) <= 0 ? "" : retSisa(r) <= 0 ? "Lunas" : "Ada sisa");

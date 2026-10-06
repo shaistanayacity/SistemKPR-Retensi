@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { berkasNeed, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { BankProses, BankRiwayat, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
@@ -157,7 +157,8 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
         <fieldset><legend>Retensi</legend><div className="grid">
           {kk.map(k => <Field key={k} label={RET_LABEL[k] + " (Rp)"} type="number" value={compSisa(r, k) || ""} onChange={v => patch({ ret: { ...r.ret, [k]: num(v) + cair.filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0) } })} />)}
           <Fld label="Total retensi (berkurang otomatis saat pencairan)"><div className="calc num">Rp {rp(sisa)}</div></Fld>
-        </div><p className="sub" style={{ marginTop: 8 }}>Angka per kategori adalah sisa retensi (retensi awal Rp {rp(awal)} dikurangi pencairan kategori itu), dan ikut berkurang setiap kali pencairan dicatat.</p></fieldset>
+        </div><p className="sub" style={{ marginTop: 8 }}>Total retensi = nilai KPR ACC bank − total diterima awal − pencairan{num(r.nilaiKPRAccBank) > 0 && num(r.totalDiterimAwal) > 0 ? ` (Rp ${rp(num(r.nilaiKPRAccBank))} − Rp ${rp(num(r.totalDiterimAwal))} = Rp ${rp(awal)} sebelum pencairan)` : ". Isi nilai KPR ACC bank dan total diterima awal agar terhitung otomatis; sebelum itu total memakai jumlah kategori"}. Angka per kategori adalah sisanya setelah pencairan kategori itu.</p>
+        {retKomponen(r) > 0 && retKomponen(r) !== awal && <p className="sub" style={{ marginTop: 4 }}>Jumlah rincian kategori Rp {rp(retKomponen(r))}, berbeda Rp {rp(Math.abs(retKomponen(r) - awal))} dari retensi awal di atas.</p>}</fieldset>
         <fieldset><legend>Pencairan retensi</legend><div className="rows">
           {cair.map((c, i) => (
             <div className="rowf cr" key={i}>

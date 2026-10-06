@@ -36,7 +36,7 @@ Status unit KPR, diperiksa berurutan:
 4. Ada data proses bank → Proses Bank
 5. Selain itu → Pemberkasan
 "Belum akad" = Pemberkasan + Proses Bank + ACC Bank.
-Retensi: awal = jumlah semua komponen (bangunan, ajb, sertifikat, pbg, pdam, listrik, pajak). Cair = jumlah semua pencairan. Total retensi (sisa) = awal − cair. Status otomatis: "Lunas" saat awal > 0 dan sisa ≤ 0, "Ada sisa" bila masih ada sisa. Persen ditahan bank = (nilai KPR ACC bank − total diterima awal) / nilai KPR ACC bank. Persen sisa retensi = total retensi (sisa) / nilai KPR ACC bank. Angka retensi per kategori yang ditampilkan adalah sisanya (awal − pencairan kategori itu).
+Retensi: awal = nilai KPR ACC bank − total diterima awal (bila salah satunya belum diisi, memakai jumlah rincian kategori: bangunan, ajb, sertifikat, pbg, pdam, listrik, pajak). Cair = jumlah semua pencairan. Total retensi (sisa) = awal − cair, jadi = nilai KPR ACC bank − total diterima awal − pencairan. Status otomatis: "Lunas" saat awal > 0 dan sisa ≤ 0, "Ada sisa" bila masih ada sisa. Persen ditahan bank = (nilai KPR ACC bank − total diterima awal) / nilai KPR ACC bank. Persen sisa retensi = total retensi (sisa) / nilai KPR ACC bank. Angka retensi per kategori yang ditampilkan adalah sisanya (awal − pencairan kategori itu).
 Harga: total diskon = diskon PPN + Tusuk Sate + Khusus; harga transaksi = harga jual − total diskon; plafond KPR = harga transaksi − UTJ − uang muka (otomatis).
 Kelengkapan berkas: jumlah dokumen terpenuhi dari yang dibutuhkan (karyawan: KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji; wiraswasta: KTP, NPWP, KK, akta nikah, RK 6 bln, NIB, lapkeu).
 
