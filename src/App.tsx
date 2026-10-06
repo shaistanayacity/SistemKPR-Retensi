@@ -88,7 +88,7 @@ function Dashboard() {
       {edit?.type === "kpr" && <KprForm key={edit.rec.id || "new"} initial={edit.rec} isNew={edit.isNew} all={kpr} canEdit={canKpr && (!edit.isNew || admin)} canDelete={admin} onClose={() => setEdit(null)}
         onSave={async r => { await saveKpr(r); await done(edit.isNew ? "Data baru tersimpan" : "Perubahan tersimpan"); }}
         onDelete={async () => { await removeRow("kpr", edit.rec.id); await done("Data dihapus"); }} />}
-      {edit?.type === "ret" && <RetForm key={(edit.rec.id || "new") + (edit.addCair ? "c" : "")} initial={edit.rec} isNew={edit.isNew} all={ret} addCair={edit.addCair} canEdit={admin} canDelete={admin} onClose={() => setEdit(null)}
+      {edit?.type === "ret" && <RetForm kpr={kpr} key={(edit.rec.id || "new") + (edit.addCair ? "c" : "")} initial={edit.rec} isNew={edit.isNew} all={ret} addCair={edit.addCair} canEdit={admin} canDelete={admin} onClose={() => setEdit(null)}
         onSave={async r => { await saveRetensi({ ...r, updatedAt: undefined, cair: (r.cair ?? []).filter(c => c.tgl || c.nominal).sort((a, b) => String(a.tgl).localeCompare(String(b.tgl))) }); await done(edit.isNew ? "Data baru tersimpan" : "Perubahan tersimpan"); }}
         onDelete={async () => { await removeRow("retensi", edit.rec.id); await done("Data dihapus"); }} />}
       {edit?.type === "import" && <ImportDrawer kind={edit.kind} kpr={kpr} ret={ret} onClose={() => setEdit(null)} onDone={n => void done(`${n} data berhasil diperbarui`)} />}

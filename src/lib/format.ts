@@ -32,6 +32,9 @@ export const brand = (s?: string) => {
   return w[0] === "BANK" && w[1] ? w[1] : w[0];
 };
 
+/** Apakah teks menyebut nama bank (bukan, misalnya, "Kantor Notaris"). */
+export const isBankName = (s?: string) => { const u = String(s ?? "").toUpperCase(); return BANKS.some(b => u.includes(b)); };
+
 export const DOCS = { ktp: "KTP", npwp: "NPWP", kk: "KK", akta: "Akta nikah / belum nikah", rk3: "RK 3 bln", suket: "Suket kerja", slip: "Slip gaji", rk6: "RK 6 bln", nib: "NIB", lapkeu: "Lapkeu" } as const;
 export const DOC_GROUPS: [string, (keyof typeof DOCS)[]][] = [["Data diri", ["ktp", "npwp", "kk", "akta"]], ["Data pekerjaan (karyawan)", ["rk3", "suket", "slip"]], ["Data usaha (wiraswasta)", ["rk6", "nib", "lapkeu"]]];
 export const LEGAL = { potongPokok: "Potong pokok", roya: "Roya", ambilSertifikat: "Ambil sertifikat", verifikasi: "Verifikasi", validasi: "Validasi", lunasDP: "S. lunas DP", siLPP: "SI LPP", feeKPR: "S. fee KPR", pbg: "PBG" } as const;
