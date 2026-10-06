@@ -229,7 +229,7 @@ legend + *{clear:both}
 .ck:has(input:checked){background:var(--accent-soft);border-color:var(--accent-2);color:var(--fg)}
 .rows{display:grid;gap:8px}
 .rowf{display:grid;gap:8px;align-items:end;padding:10px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--surface-2)}
-.rowf.bp{grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,.8fr) minmax(0,1.6fr) auto 30px}
+.rowf.bp{grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,.8fr) minmax(0,1.6fr) 30px}
 .rowf.pc{grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 70px 30px}
 .rowf.cr{grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.5fr) 30px}
 .rowf label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}

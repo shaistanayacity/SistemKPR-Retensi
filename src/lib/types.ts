@@ -1,6 +1,7 @@
 export type Role = "admin" | "sales" | "pembaca" | "none";
 
-export interface BankProses { bank: string; tgl: string; ket: string; hasil: string }
+export interface BankRiwayat { tgl: string; hasil: string; ket: string }
+export interface BankProses { bank: string; tgl: string; ket: string; hasil: string; riwayat?: BankRiwayat[] }
 
 export interface Kpr {
   id: string;

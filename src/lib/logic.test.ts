@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { berkasScore, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
+import { berkasScore, catatRiwayat, rapikanBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
 import type { Kpr, Retensi } from "./types";
 
 const base: Kpr = { id: "1", ord: 1, unit: "A-01", nama: "Budi", caraBayar: "KPR" };
@@ -105,4 +105,19 @@ describe("harga & diskon", () => {
     expect(hargaTransaksiOtomatis(k)).toBe(825);
   });
   it("tanpa harga jual memakai harga transaksi tersimpan", () => expect(hargaTransaksiOtomatis({ ...base, hargaTransaksi: 500 })).toBe(500));
+});
+
+describe("proses bank satu baris per bank", () => {
+  const b = (bank: string, tgl: string, hasil: string, ket = "") => ({ bank, tgl, hasil, ket });
+  it("baris ganda bank yang sama digabung, yang terakhir jadi kondisi terkini", () => {
+    const r = rapikanBank([b("BRI", "2026-09-19", "ACC"), b("BTN", "", ""), b("bri ", "2026-10-06", "Proses")]);
+    expect(r.map(x => x.bank)).toEqual(["BRI", "BTN"]);
+    expect(r[0]).toMatchObject({ tgl: "2026-10-06", hasil: "Proses", riwayat: [{ tgl: "2026-09-19", hasil: "ACC", ket: "" }] });
+  });
+  it("perubahan tanggal atau hasil masuk riwayat, perubahan keterangan saja tidak", () => {
+    const awal = [b("BRI", "2026-09-19", "Diajukan", "a")];
+    expect(catatRiwayat(awal, [b("BRI", "2026-10-01", "ACC", "a")])[0].riwayat).toEqual([{ tgl: "2026-09-19", hasil: "Diajukan", ket: "a" }]);
+    expect(catatRiwayat(awal, [b("BRI", "2026-09-19", "Diajukan", "b")])[0].riwayat).toBeUndefined();
+  });
+  it("bank baru tanpa isian sebelumnya tidak punya riwayat", () => expect(catatRiwayat([], [b("BNI", "2026-10-01", "Diajukan")])[0].riwayat).toBeUndefined());
 });

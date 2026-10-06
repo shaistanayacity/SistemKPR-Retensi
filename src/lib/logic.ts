@@ -1,5 +1,5 @@
 // Logika bisnis dari purwarupa (lihat CLAUDE.md). Jangan diubah tanpa konfirmasi.
-import { Kpr, RET_KOMP, Retensi } from "./types";
+import { BankProses, Kpr, RET_KOMP, Retensi } from "./types";
 
 export type KprStatus = "Pemberkasan" | "Proses Bank" | "ACC Bank" | "Sudah Akad" | "Non KPR";
 
@@ -53,6 +53,29 @@ export const hargaTransaksiOtomatis = (r: Kpr) => (num(r.hargaJual) > 0 ? num(r.
 export const compSisa = (r: Retensi, k: string) =>
   num(r.ret?.[k as keyof NonNullable<Retensi["ret"]>]) - (r.cair ?? []).filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0);
 export const cairSorted = (r: Retensi) => [...(r.cair ?? [])].sort((a, b) => String(a.tgl).localeCompare(String(b.tgl)));
+
+const kunciBank = (s?: string) => String(s ?? "").replace(/\s+/g, " ").trim().toUpperCase();
+/** Satu baris per bank: baris ganda untuk bank yang sama digabung, yang terakhir menjadi kondisi terkini dan sisanya masuk riwayat. */
+export function rapikanBank(list: BankProses[] = []): BankProses[] {
+  const out: BankProses[] = [], idx = new Map<string, number>();
+  for (const b of list) {
+    const k = kunciBank(b.bank);
+    if (!k || !idx.has(k)) { if (k) idx.set(k, out.length); out.push({ ...b }); continue; }
+    const lama = out[idx.get(k)!];
+    const arsip = [...(lama.riwayat ?? []), ...(lama.tgl || lama.hasil ? [{ tgl: lama.tgl, hasil: lama.hasil, ket: lama.ket }] : []), ...(b.riwayat ?? [])];
+    out[idx.get(k)!] = { ...b, bank: lama.bank, riwayat: arsip };
+  }
+  return out;
+}
+/** Bila tanggal atau hasil sebuah bank berubah, kondisi sebelumnya dicatat ke riwayat bank itu. */
+export function catatRiwayat(awal: BankProses[], akhir: BankProses[]): BankProses[] {
+  const lama = new Map(awal.filter(b => kunciBank(b.bank)).map(b => [kunciBank(b.bank), b]));
+  return akhir.map(b => {
+    const o = lama.get(kunciBank(b.bank));
+    if (!o || (!o.tgl && !o.hasil) || (o.tgl === b.tgl && o.hasil === b.hasil)) return b;
+    return { ...b, riwayat: [...(b.riwayat ?? []), { tgl: o.tgl, hasil: o.hasil, ket: o.ket }] };
+  });
+}
 
 export const accBankName = (r: Kpr) => (r.bankProses ?? []).find(b => b.hasil === "ACC")?.bank ?? "";
 export const kprBrand = (r: Kpr) => brand(r.tempatAkad) || brand(accBankName(r));

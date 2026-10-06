@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { berkasNeed, normUnit, compSisa, hargaTransaksiOtomatis, jenis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { berkasNeed, catatRiwayat, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { BankProses, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
@@ -40,7 +40,8 @@ const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 // ---------------- KPR ----------------
 export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
   const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x) });
-  const { rec: r, patch, busy, msg, save, del } = useForm(initial, x => onSave(hitung(x)), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
+  const awalBank = rapikanBank(initial.bankProses);
+  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: awalBank }, x => onSave({ ...hitung(x), bankProses: catatRiwayat(awalBank, rapikanBank(x.bankProses)) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
   const bp = r.bankProses ?? [];
   const setBp = (i: number, p: Partial<BankProses>) => patch({ bankProses: bp.map((b, j) => (j === i ? { ...b, ...p } : b)) });
   const need = berkasNeed(r);
@@ -82,13 +83,15 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
         </div></fieldset>
         <fieldset><legend>Proses bank</legend><div className="rows">
           {bp.map((b, i) => (
-            <div className="rowf bp" key={i}>
+            <div key={i} style={{ display: "contents" }}>
+            <div className="rowf bp">
               <div><label>Bank</label><input list="dl-bank" value={b.bank} onChange={e => setBp(i, { bank: e.target.value })} /></div>
               <div><label>Tanggal</label><input type="date" value={b.tgl} onChange={e => setBp(i, { tgl: e.target.value })} /></div>
               <div><label>Hasil</label><select value={b.hasil} onChange={e => setBp(i, { hasil: e.target.value })}><option value="">–</option>{HASIL.map(h => <option key={h}>{h}</option>)}</select></div>
               <div><label>Keterangan</label><input value={b.ket} onChange={e => setBp(i, { ket: e.target.value })} /></div>
               <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ bankProses: bp.filter((_, j) => j !== i) })}>×</button>
-              <button type="button" className="btn sm" title="Catat progres baru untuk bank ini; riwayat sebelumnya tetap tersimpan" onClick={() => patch({ bankProses: [...bp.slice(0, i + 1), { bank: b.bank, tgl: isoToday(), ket: "", hasil: "Proses" }, ...bp.slice(i + 1)] })}>+ Progres</button>
+            </div>
+            {(b.riwayat ?? []).length > 0 && <p className="sub" style={{ margin: "-4px 0 8px 4px" }}>Riwayat {b.bank}: {(b.riwayat ?? []).map(h => [h.tgl ? tgl(h.tgl) : "tanpa tanggal", h.hasil || "–", h.ket].filter(Boolean).join(" · ")).join("  |  ")}</p>}
             </div>))}
         </div><button type="button" className="btn sm add" onClick={() => patch({ bankProses: [...bp, { bank: "", tgl: "", ket: "", hasil: "Diajukan" }] })}>+ Tambah bank</button></fieldset>
         <fieldset><legend>ACC &amp; akad</legend><div className="grid">
