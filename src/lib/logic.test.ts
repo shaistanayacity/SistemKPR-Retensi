@@ -30,8 +30,11 @@ describe("retensi", () => {
   it("sisa = awal - cair", () => expect(retSisa({ ...r, cair: [{ tgl: "", nominal: 40 }] })).toBe(110));
   it("Lunas otomatis saat sisa nol", () => expect(retStatus(r)).toBe("Lunas"));
   it("Ada sisa bila belum habis dicairkan", () => expect(retStatus({ ...r, cair: [] })).toBe("Ada sisa"));
-  it("persen pencairan KPR otomatis dari total diterima awal", () => expect(retPersen({ ...r, nilaiKPRAccBank: 1000, totalDiterimAwal: 750 })).toBe(0.75));
-  it("persen nol bila nilai KPR ACC kosong", () => expect(retPersen(r)).toBe(0));
+  it("persen ditahan bank = (nilai KPR ACC - total diterima awal) / nilai KPR ACC", () => expect(retPersen({ ...r, nilaiKPRAccBank: 1000, totalDiterimAwal: 750 })).toBe(0.25));
+  it("persen ditahan nol bila nilai KPR ACC kosong atau diterima melebihi nilai", () => {
+    expect(retPersen(r)).toBe(0);
+    expect(retPersen({ ...r, nilaiKPRAccBank: 1000, totalDiterimAwal: 1200 })).toBe(0);
+  });
 });
 
 import { emptyKprFilter, emptyRetFilter, kprRows, retRows } from "./logic";

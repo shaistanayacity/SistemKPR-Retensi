@@ -35,7 +35,7 @@ export const RET_COLUMNS = [
   { id: "notaris", label: "Notaris", default: true },
   { id: "nilaiKPRAccBank", label: "Nilai KPR ACC Bank", default: true },
   { id: "totalDiterimAwal", label: "Total Diterima Awal", default: true },
-  { id: "persenCair", label: "% Cair KPR", default: true },
+  { id: "persenCair", label: "% Ditahan Bank", default: true },
   { id: "retAwal", label: "Retensi", default: true },
   { id: "retCair", label: "Sudah Cair", default: true },
   { id: "retSisa", label: "Total Retensi (Sisa)", default: true },

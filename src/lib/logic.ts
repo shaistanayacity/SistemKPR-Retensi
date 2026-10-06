@@ -44,8 +44,8 @@ import { brand, DOCS, isBankName, kompShort, natural, tgl } from "./format";
 
 export const retNilai = (r: Retensi) => num(r.nilaiKPRAccBank);
 export const retTerima = (r: Retensi) => num(r.totalDiterimAwal);
-/** Persen pencairan KPR dari bank: total diterima awal dibagi nilai KPR ACC bank (otomatis). */
-export const retPersen = (r: Retensi) => (retNilai(r) > 0 ? retTerima(r) / retNilai(r) : 0);
+/** Persen yang ditahan bank: (nilai KPR ACC bank - total diterima awal) dibagi nilai KPR ACC bank (otomatis). */
+export const retPersen = (r: Retensi) => (retNilai(r) > 0 ? Math.max(0, (retNilai(r) - retTerima(r)) / retNilai(r)) : 0);
 
 /** Total diskon = jumlah tiga kategori; harga transaksi = harga jual - total diskon (bila harga jual diisi). */
 export const totalDiskon = (r: Kpr) => num(r.diskonPPN) + num(r.diskonTusukSate) + num(r.diskonKhusus);

@@ -152,7 +152,7 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
         <fieldset><legend>Nilai transaksi &amp; diterima</legend><div className="grid">
           <Field label="Nilai KPR ACC bank (Rp)" type="number" value={r.nilaiKPRAccBank} onChange={nf("nilaiKPRAccBank")} />
           <Field label="Total diterima awal (Rp)" type="number" value={r.totalDiterimAwal} onChange={nf("totalDiterimAwal")} />
-          <Fld label="% pencairan KPR dari bank (otomatis)"><div className="calc num">{(retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</div></Fld>
+          <Fld label="% ditahan bank (otomatis)"><div className="calc num">{(retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</div></Fld>
         </div></fieldset>
         <fieldset><legend>Retensi</legend><div className="grid">
           {kk.map(k => <Field key={k} label={RET_LABEL[k] + " (Rp)"} type="number" value={compSisa(r, k) || ""} onChange={v => patch({ ret: { ...r.ret, [k]: num(v) + cair.filter(c => c.komponen === k).reduce((a, c) => a + num(c.nominal), 0) } })} />)}

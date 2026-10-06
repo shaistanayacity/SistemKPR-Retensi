@@ -128,7 +128,7 @@ export async function retXLS(rows: Retensi[]) {
   const K = Object.keys(RET_LABEL) as (keyof typeof RET_LABEL)[];
   const data = rows.map((r, i) => {
     const o: Record<string, unknown> = { No: i + 1, Blok: r.blok, Nama: r.nama, Pembayaran: r.pembayaran ?? "", "Bank KPR": r.bank ?? "", Notaris: r.notaris ?? "",
-      "Nilai KPR ACC Bank": retNilai(r), "Total Diterima Awal": retTerima(r), "% Pencairan KPR": Math.round(retPersen(r) * 10000) / 100 };
+      "Nilai KPR ACC Bank": retNilai(r), "Total Diterima Awal": retTerima(r), "% Ditahan Bank": Math.round(retPersen(r) * 10000) / 100 };
     K.forEach(k => (o["Retensi " + RET_LABEL[k]] = num(r.ret?.[k])));
     o["Total Retensi Awal"] = retAwal(r); o["Sudah Cair"] = retCair(r); o["Jumlah Pencairan"] = (r.cair ?? []).length;
     o["Tgl Cair Terakhir"] = cairSorted(r).slice(-1)[0]?.tgl ?? "";
@@ -179,7 +179,7 @@ export async function retReportPDF(rows: Retensi[], f: RetFilter, columns: Recor
     ["bank", { head: "Bank KPR", val: r => r.bank ?? "–" }], ["notaris", { head: "Notaris", val: r => r.notaris ?? "–" }],
     ["nilaiKPRAccBank", { head: "Nilai KPR ACC Bank", val: r => rp(retNilai(r)), right: true, sum: retNilai }],
     ["totalDiterimAwal", { head: "Total Diterima Awal", val: r => rp(retTerima(r)), right: true, sum: retTerima }],
-    ["persenCair", { head: "% Cair KPR", val: r => (retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + "%", right: true }],
+    ["persenCair", { head: "% Ditahan Bank", val: r => (retPersen(r) * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + "%", right: true }],
     ["retAwal", { head: "Retensi", val: r => rp(retAwal(r)), right: true, sum: retAwal }],
     ["retCair", { head: "Sudah Cair", val: r => rp(retCair(r)), right: true, sum: retCair }],
     ["retSisa", { head: "Total Retensi (Sisa)", val: r => (retSisa(r) ? rp(retSisa(r)) : "0"), right: true, sum: retSisa }],

@@ -25,7 +25,7 @@ Tab Berkas KPR:
 - Unduh PDF dan Excel sesuai filter aktif. Report custom (pilih kolom) hanya PDF. Unggah Excel (lihat aturan impor di bawah).
 Tab Retensi/Escrow:
 - Kartu: retensi awal, sudah cair, sisa, unit lunas. Pencairan terbaru. Sisa per komponen.
-- Pencairan dicatat per tanggal, nominal, dan kategori (tombol "+ Cair"); retensi kategori tersebut dan total retensi berkurang otomatis. Nilai transaksi hanya Nilai KPR ACC bank dan Total diterima awal; persen pencairan KPR dihitung otomatis. Status dan catatan diganti satu kolom Keterangan (isian manual). Tambah Retensi bisa mengambil data dari KPR (nilai KPR = nominal ACC bank).
+- Pencairan dicatat per tanggal, nominal, dan kategori (tombol "+ Cair"); retensi kategori tersebut dan total retensi berkurang otomatis. Nilai transaksi hanya Nilai KPR ACC bank dan Total diterima awal; persen ditahan bank dihitung otomatis. Status dan catatan diganti satu kolom Keterangan (isian manual). Tambah Retensi bisa mengambil data dari KPR (nilai KPR = nominal ACC bank).
 - Filter status, bank, notaris, tanggal pencairan. Unduh PDF dan Excel. Unggah Excel.
 
 ## Logika bisnis (jangan diubah tanpa konfirmasi)
@@ -36,7 +36,7 @@ Status unit KPR, diperiksa berurutan:
 4. Ada data proses bank → Proses Bank
 5. Selain itu → Pemberkasan
 "Belum akad" = Pemberkasan + Proses Bank + ACC Bank.
-Retensi: awal = jumlah semua komponen (bangunan, ajb, sertifikat, pbg, pdam, listrik, pajak). Cair = jumlah semua pencairan. Total retensi (sisa) = awal − cair. Status otomatis: "Lunas" saat awal > 0 dan sisa ≤ 0, "Ada sisa" bila masih ada sisa. Persen pencairan KPR = total diterima awal / nilai KPR ACC bank. Persen sisa retensi = total retensi (sisa) / nilai KPR ACC bank. Angka retensi per kategori yang ditampilkan adalah sisanya (awal − pencairan kategori itu).
+Retensi: awal = jumlah semua komponen (bangunan, ajb, sertifikat, pbg, pdam, listrik, pajak). Cair = jumlah semua pencairan. Total retensi (sisa) = awal − cair. Status otomatis: "Lunas" saat awal > 0 dan sisa ≤ 0, "Ada sisa" bila masih ada sisa. Persen ditahan bank = (nilai KPR ACC bank − total diterima awal) / nilai KPR ACC bank. Persen sisa retensi = total retensi (sisa) / nilai KPR ACC bank. Angka retensi per kategori yang ditampilkan adalah sisanya (awal − pencairan kategori itu).
 Harga: total diskon = diskon PPN + Tusuk Sate + Khusus; harga transaksi = harga jual − total diskon; plafond KPR = harga transaksi − UTJ − uang muka (otomatis).
 Kelengkapan berkas: jumlah dokumen terpenuhi dari yang dibutuhkan (karyawan: KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji; wiraswasta: KTP, NPWP, KK, akta nikah, RK 6 bln, NIB, lapkeu).
 
