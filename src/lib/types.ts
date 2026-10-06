@@ -1,7 +1,8 @@
 export type Role = "admin" | "sales" | "pembaca" | "none";
 
 export interface BankRiwayat { tgl: string; hasil: string; ket: string }
-export interface BankProses { bank: string; tgl: string; ket: string; hasil: string; riwayat?: BankRiwayat[] }
+/** Satu bank: `progres` = seluruh riwayat berurutan (yang terakhir kondisi terkini); tgl/hasil/ket mengikuti progres terakhir. `riwayat` hanya dibaca dari data lama. */
+export interface BankProses { bank: string; tgl: string; ket: string; hasil: string; progres?: BankRiwayat[]; riwayat?: BankRiwayat[] }
 
 export interface Kpr {
   id: string;

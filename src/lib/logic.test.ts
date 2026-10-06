@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { berkasScore, plafondOtomatis, retSisaPersen, catatRiwayat, rapikanBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
+import { berkasScore, plafondOtomatis, retSisaPersen, progresBank, rapikanBank, sinkronBank, hargaTransaksiOtomatis, retPersen, retSisa, retStatus, status, totalDiskon } from "./logic";
 import type { Kpr, Retensi } from "./types";
 
 const base: Kpr = { id: "1", ord: 1, unit: "A-01", nama: "Budi", caraBayar: "KPR" };
@@ -107,19 +107,28 @@ describe("harga & diskon", () => {
   it("tanpa harga jual memakai harga transaksi tersimpan", () => expect(hargaTransaksiOtomatis({ ...base, hargaTransaksi: 500 })).toBe(500));
 });
 
-describe("proses bank satu baris per bank", () => {
+describe("proses bank dengan riwayat per bank", () => {
   const b = (bank: string, tgl: string, hasil: string, ket = "") => ({ bank, tgl, hasil, ket });
-  it("baris ganda bank yang sama digabung, yang terakhir jadi kondisi terkini", () => {
-    const r = rapikanBank([b("BRI", "2026-09-19", "ACC"), b("BTN", "", ""), b("bri ", "2026-10-06", "Proses")]);
-    expect(r.map(x => x.bank)).toEqual(["BRI", "BTN"]);
-    expect(r[0]).toMatchObject({ tgl: "2026-10-06", hasil: "Proses", riwayat: [{ tgl: "2026-09-19", hasil: "ACC", ket: "" }] });
+  it("data lama (satu kondisi) menjadi satu progres", () => expect(progresBank(b("BNI", "2026-10-05", "Diajukan", "a"))).toEqual([{ tgl: "2026-10-05", hasil: "Diajukan", ket: "a" }]));
+  it("riwayat lama ditambah kondisi terkini menjadi progres berurutan", () => {
+    const x = { ...b("BNI", "2026-10-06", "Proses"), riwayat: [{ tgl: "2026-10-05", hasil: "Diajukan", ket: "" }] };
+    expect(progresBank(x).map(p => p.hasil)).toEqual(["Diajukan", "Proses"]);
   });
-  it("perubahan tanggal atau hasil masuk riwayat, perubahan keterangan saja tidak", () => {
-    const awal = [b("BRI", "2026-09-19", "Diajukan", "a")];
-    expect(catatRiwayat(awal, [b("BRI", "2026-10-01", "ACC", "a")])[0].riwayat).toEqual([{ tgl: "2026-09-19", hasil: "Diajukan", ket: "a" }]);
-    expect(catatRiwayat(awal, [b("BRI", "2026-09-19", "Diajukan", "b")])[0].riwayat).toBeUndefined();
+  it("kondisi terkini mengikuti progres terakhir", () => {
+    const x = sinkronBank({ ...b("BNI", "", ""), progres: [{ tgl: "2026-10-01", hasil: "Diajukan", ket: "masuk" }, { tgl: "2026-10-09", hasil: "ACC", ket: "SP3K" }] });
+    expect(x).toMatchObject({ tgl: "2026-10-09", hasil: "ACC", ket: "SP3K" });
+    expect(x.riwayat).toBeUndefined();
   });
-  it("bank baru tanpa isian sebelumnya tidak punya riwayat", () => expect(catatRiwayat([], [b("BNI", "2026-10-01", "Diajukan")])[0].riwayat).toBeUndefined());
+  it("baris ganda bank yang sama digabung dan progresnya disambung", () => {
+    const r = rapikanBank([b("BNI", "2026-10-05", "Diajukan"), b("BTN", "", ""), b("bni ", "2026-10-06", "Proses")]);
+    expect(r.map(x => x.bank)).toEqual(["BNI", "BTN"]);
+    expect(r[0].progres?.map(p => p.hasil)).toEqual(["Diajukan", "Proses"]);
+    expect(r[0].hasil).toBe("Proses");
+  });
+  it("status ACC Bank mengikuti hasil terakhir bank", () => {
+    const x = rapikanBank([{ ...b("BNI", "", ""), progres: [{ tgl: "1", hasil: "Diajukan", ket: "" }, { tgl: "2", hasil: "ACC", ket: "" }] }]);
+    expect(status({ ...base, bankProses: x })).toBe("ACC Bank");
+  });
 });
 
 describe("plafond otomatis dan persen sisa retensi", () => {

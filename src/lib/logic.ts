@@ -1,5 +1,5 @@
 // Logika bisnis dari purwarupa (lihat CLAUDE.md). Jangan diubah tanpa konfirmasi.
-import { BankProses, Kpr, RET_KOMP, Retensi } from "./types";
+import { BankProses, BankRiwayat, Kpr, RET_KOMP, Retensi } from "./types";
 
 export type KprStatus = "Pemberkasan" | "Proses Bank" | "ACC Bank" | "Sudah Akad" | "Non KPR";
 
@@ -59,26 +59,25 @@ export const compSisa = (r: Retensi, k: string) =>
 export const cairSorted = (r: Retensi) => [...(r.cair ?? [])].sort((a, b) => String(a.tgl).localeCompare(String(b.tgl)));
 
 const kunciBank = (s?: string) => String(s ?? "").replace(/\s+/g, " ").trim().toUpperCase();
-/** Satu baris per bank: baris ganda untuk bank yang sama digabung, yang terakhir menjadi kondisi terkini dan sisanya masuk riwayat. */
+/** Seluruh progres sebuah bank, berurutan. Data lama (tanpa `progres`) dibentuk dari riwayat lama + kondisi terkini. */
+export const progresBank = (b: BankProses): BankRiwayat[] =>
+  b.progres?.length ? b.progres : [...(b.riwayat ?? []), ...(b.tgl || b.hasil || b.ket ? [{ tgl: b.tgl, hasil: b.hasil, ket: b.ket }] : [])];
+/** Samakan tgl/hasil/ket dengan progres terakhir dan buang `riwayat` lama. */
+export function sinkronBank(b: BankProses): BankProses {
+  const progres = progresBank(b), last = progres[progres.length - 1];
+  const { riwayat: _lama, ...rest } = b;
+  return { ...rest, progres, tgl: last?.tgl ?? "", hasil: last?.hasil ?? "", ket: last?.ket ?? "" };
+}
+/** Satu entri per bank: baris ganda bank yang sama digabung (progresnya disambung), lalu disinkronkan. */
 export function rapikanBank(list: BankProses[] = []): BankProses[] {
   const out: BankProses[] = [], idx = new Map<string, number>();
   for (const b of list) {
     const k = kunciBank(b.bank);
-    if (!k || !idx.has(k)) { if (k) idx.set(k, out.length); out.push({ ...b }); continue; }
-    const lama = out[idx.get(k)!];
-    const arsip = [...(lama.riwayat ?? []), ...(lama.tgl || lama.hasil ? [{ tgl: lama.tgl, hasil: lama.hasil, ket: lama.ket }] : []), ...(b.riwayat ?? [])];
-    out[idx.get(k)!] = { ...b, bank: lama.bank, riwayat: arsip };
+    if (k && idx.has(k)) { const i = idx.get(k)!; out[i] = { ...out[i], progres: [...progresBank(out[i]), ...progresBank(b)] }; continue; }
+    if (k) idx.set(k, out.length);
+    out.push({ ...b });
   }
-  return out;
-}
-/** Bila tanggal atau hasil sebuah bank berubah, kondisi sebelumnya dicatat ke riwayat bank itu. */
-export function catatRiwayat(awal: BankProses[], akhir: BankProses[]): BankProses[] {
-  const lama = new Map(awal.filter(b => kunciBank(b.bank)).map(b => [kunciBank(b.bank), b]));
-  return akhir.map(b => {
-    const o = lama.get(kunciBank(b.bank));
-    if (!o || (!o.tgl && !o.hasil) || (o.tgl === b.tgl && o.hasil === b.hasil)) return b;
-    return { ...b, riwayat: [...(b.riwayat ?? []), { tgl: o.tgl, hasil: o.hasil, ket: o.ket }] };
-  });
+  return out.map(sinkronBank);
 }
 
 export const accBankName = (r: Kpr) => (r.bankProses ?? []).find(b => b.hasil === "ACC")?.bank ?? "";
