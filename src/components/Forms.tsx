@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { berkasNeed, catatRiwayat, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
+import { berkasNeed, normUnit, rapikanBank, compSisa, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retCair, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, rpShort, tgl, titleCase } from "../lib/format";
-import type { BankProses, Kpr, RetCair, Retensi } from "../lib/types";
+import type { BankProses, BankRiwayat, Kpr, RetCair, Retensi } from "../lib/types";
 import { Datalist, Drawer, Field, Fld, Select } from "./ui";
 import { KprPicker } from "./KprPicker";
 
@@ -40,10 +40,10 @@ const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 // ---------------- KPR ----------------
 export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
   const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x), plafond: plafondOtomatis(x) });
-  const awalBank = rapikanBank(initial.bankProses);
-  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: awalBank }, x => onSave({ ...hitung(x), bankProses: catatRiwayat(awalBank, rapikanBank(x.bankProses)) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
+  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: rapikanBank(initial.bankProses) }, x => onSave({ ...hitung(x), bankProses: rapikanBank((x.bankProses ?? []).filter(b => b.bank.trim())) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
   const bp = r.bankProses ?? [];
   const setBp = (i: number, p: Partial<BankProses>) => patch({ bankProses: bp.map((b, j) => (j === i ? { ...b, ...p } : b)) });
+  const setPg = (i: number, k: number, p: Partial<BankRiwayat>) => setBp(i, { progres: (bp[i].progres ?? []).map((x, m) => (m === k ? { ...x, ...p } : x)) });
   const need = berkasNeed(r);
   const nf = (k: keyof Kpr) => (v: string) => patch({ [k]: numOrUndef(v) } as Partial<Kpr>);
   const sf = (k: keyof Kpr) => (v: string) => patch({ [k]: v } as Partial<Kpr>);
@@ -78,22 +78,26 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           <Fld label="Plafond KPR (harga transaksi − UTJ − uang muka)"><div className="calc num">Rp {rp(plafondOtomatis(r))}</div></Fld>
         </div></fieldset>
         <fieldset><legend>Kelengkapan berkas</legend><div className="checks">
-          {DOC_GROUPS.map(([g, keys]) => ({ g, keys: keys.filter(k => need.includes(k)) })).filter(x => x.keys.length).map(({ g, keys }) => <span key={g} style={{ display: "contents" }}><span className="grp">{g}</span>
+          {DOC_GROUPS.map(([g, keys]) => <span key={g} style={{ display: "contents" }}><span className="grp">{g}</span>
             {keys.map(k => <label className="ck" key={k}><input type="checkbox" checked={!!r.berkas?.[k]} onChange={e => patch({ berkas: { ...r.berkas, [k]: e.target.checked } })} />{DOCS[k]}</label>)}</span>)}
         </div></fieldset>
         <fieldset><legend>Proses bank</legend><div className="rows">
           {bp.map((b, i) => (
-            <div key={i} style={{ display: "contents" }}>
-            <div className="rowf bp">
-              <div><label>Bank</label><input list="dl-bank" value={b.bank} onChange={e => setBp(i, { bank: e.target.value })} /></div>
-              <div><label>Tanggal</label><input type="date" value={b.tgl} onChange={e => setBp(i, { tgl: e.target.value })} /></div>
-              <div><label>Hasil</label><select value={b.hasil} onChange={e => setBp(i, { hasil: e.target.value })}><option value="">–</option>{HASIL.map(h => <option key={h}>{h}</option>)}</select></div>
-              <div><label>Keterangan</label><input value={b.ket} onChange={e => setBp(i, { ket: e.target.value })} /></div>
-              <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ bankProses: bp.filter((_, j) => j !== i) })}>×</button>
-            </div>
-            {(b.riwayat ?? []).length > 0 && <p className="sub" style={{ margin: "-4px 0 8px 4px" }}>Riwayat {b.bank}: {(b.riwayat ?? []).map(h => [h.tgl ? tgl(h.tgl) : "tanpa tanggal", h.hasil || "–", h.ket].filter(Boolean).join(" · ")).join("  |  ")}</p>}
+            <div className="bankgrp" key={i}>
+              <div className="rowf bk">
+                <div><label>Bank</label><input list="dl-bank" value={b.bank} onChange={e => setBp(i, { bank: e.target.value })} /></div>
+                <button type="button" className="rm" aria-label="Hapus bank beserta riwayatnya" onClick={() => patch({ bankProses: bp.filter((_, j) => j !== i) })}>×</button>
+              </div>
+              {(b.progres ?? []).map((p, k) => (
+                <div className="rowf pg" key={k}>
+                  <div><label>Tanggal</label><input type="date" value={p.tgl} onChange={e => setPg(i, k, { tgl: e.target.value })} /></div>
+                  <div><label>Hasil</label><select value={p.hasil} onChange={e => setPg(i, k, { hasil: e.target.value })}><option value="">–</option>{HASIL.map(h => <option key={h}>{h}</option>)}</select></div>
+                  <div><label>Keterangan</label><input value={p.ket} onChange={e => setPg(i, k, { ket: e.target.value })} /></div>
+                  <button type="button" className="rm" aria-label="Hapus progres" onClick={() => setBp(i, { progres: (b.progres ?? []).filter((_, m) => m !== k) })}>×</button>
+                </div>))}
+              <button type="button" className="btn sm add" onClick={() => setBp(i, { progres: [...(b.progres ?? []), { tgl: isoToday(), hasil: (b.progres ?? []).length ? "Proses" : "Diajukan", ket: "" }] })}>+ Tambah progres</button>
             </div>))}
-        </div><button type="button" className="btn sm add" onClick={() => patch({ bankProses: [...bp, { bank: "", tgl: "", ket: "", hasil: "Diajukan" }] })}>+ Tambah bank</button></fieldset>
+        </div><button type="button" className="btn sm add" onClick={() => patch({ bankProses: [...bp, { bank: "", tgl: "", ket: "", hasil: "", progres: [{ tgl: isoToday(), hasil: "Diajukan", ket: "" }] }] })}>+ Tambah bank</button></fieldset>
         <fieldset><legend>ACC &amp; akad</legend><div className="grid">
           <Field label="Nominal ACC bank (Rp)" type="number" value={r.accBank} onChange={nf("accBank")} />
           <Field label="TUM (Rp)" type="number" value={r.tum} onChange={nf("tum")} />

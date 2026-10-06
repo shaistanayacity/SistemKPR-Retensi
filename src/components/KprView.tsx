@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { berkasScore, emptyKprFilter, lastMonths, perMonth, windowEnd, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
+import { berkasScore, progresBank, emptyKprFilter, lastMonths, perMonth, windowEnd, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
 import { brand, juta, KPR_PILL, KPR_STAT, num, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Kpr } from "../lib/types";
 import { kprPDF, kprXLS, kprReportPDF } from "../lib/exportFiles";
@@ -161,7 +161,7 @@ function KprRow({ r, onOpen }: { r: Kpr; onOpen: (r: Kpr) => void }) {
       <td><Who name={r.nama} sub={<>{[[r.sales ? "Sales: " + r.sales : "", r.kantor].filter(Boolean).join(" · "), kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")}<span className="sub num" style={{ display: "block" }}>SPR &amp; PPJB {r.tglSPR ? tgl(r.tglSPR) : "belum"}</span></>} /></td>
       <td className="r"><div className="money-c"><b className="num">{rp(num(r.hargaTransaksi))}</b>
         {kpr ? <span className="sub num">UM {num(r.totalUM) > 0 ? juta(r.totalUM) : "–"} · KPR {num(r.plafond) ? juta(r.plafond) : "–"}</span> : <span className="sub">{titleCase(r.caraBayar)}</span>}</div></td>
-      <td>{(r.bankProses ?? []).length ? <div className="bpl">{(r.bankProses ?? []).map((b, i) => { const h = b.hasil || "Diajukan", cls = h === "ACC" ? "acc" : h === "Ditolak" || h === "Batal" ? "no" : "", riw = (b.riwayat ?? []).map(h => [h.tgl ? tgl(h.tgl) : "", h.hasil].filter(Boolean).join(" ")).join(" → "); return (
+      <td>{(r.bankProses ?? []).length ? <div className="bpl">{(r.bankProses ?? []).map((b, i) => { const h = b.hasil || "Diajukan", cls = h === "ACC" ? "acc" : h === "Ditolak" || h === "Batal" ? "no" : "", riw = progresBank(b).map(h => [h.tgl ? tgl(h.tgl) : "", h.hasil || "Diajukan", h.ket].filter(Boolean).join(" ")).join(" → "); return (
         <div key={i}><div className="bph"><span className={"chip " + cls} title={riw ? `${b.bank}. Riwayat: ${riw}` : b.bank}>{brand(b.bank) || b.bank}</span><span className="bpm">{[b.tgl ? tgl(b.tgl) : "", h].filter(Boolean).join(" · ")}</span></div>{b.ket && <div className="bpk" title={b.ket}>{b.ket}</div>}</div>); })}</div> : kpr ? <span className="sub">Belum diajukan</span> : <Dash />}</td>
       <td>{r.tglAkad ? <div className="akad"><b className="num">Akad {tgl(r.tglAkad)}</b><span className="sub trunc" title={r.tempatAkad}>{r.tempatAkad}</span><span className="sub trunc">{titleCase(r.notaris)}</span></div>
         : st === "ACC Bank" ? <div className="akad"><b className="num">ACC{num(r.accBank) ? " " + rpShort(r.accBank) : ""}</b><span className="sub">{r.tglACC ? tgl(r.tglACC) : "tanggal ACC belum diisi"}</span><span className="sub">belum akad</span></div> : <Dash />}</td>

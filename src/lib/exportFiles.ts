@@ -1,5 +1,5 @@
 // Unduhan PDF dan Excel sesuai filter aktif. Pustaka dimuat saat dibutuhkan agar halaman awal tetap ringan.
-import { berkasScore, cairSorted, compSisa, isKPR, jenis, KprFilter, RetFilter, retAwal, retCair, retNilai, retPersen, retSisa, retStatus, retTerima, status, totalDiskon } from "./logic";
+import { berkasScore, cairSorted, progresBank, compSisa, isKPR, jenis, KprFilter, RetFilter, retAwal, retCair, retNilai, retPersen, retSisa, retStatus, retTerima, status, totalDiskon } from "./logic";
 import { DOCS, kompShort, LEGAL, num, RET_LABEL, rp, tgl } from "./format";
 import type { Kpr, Retensi } from "./types";
 
@@ -115,7 +115,7 @@ export async function kprXLS(rows: Kpr[], f: KprFilter) {
       "Harga Jual": num(r.hargaJual), "Diskon PPN": num(r.diskonPPN), "Diskon Tusuk Sate": num(r.diskonTusukSate), "Diskon Khusus": num(r.diskonKhusus), "Total Diskon": totalDiskon(r), "Harga Transaksi": num(r.hargaTransaksi), UTJ: num(r.utj), "Uang Muka": num(r.totalUM), "Plafond KPR": num(r.plafond) };
     (Object.keys(DOCS) as (keyof typeof DOCS)[]).forEach(k => (o[DOCS[k]] = r.berkas?.[k] ? "Ya" : ""));
     const s = berkasScore(r); o["Berkas Lengkap"] = `${s.have}/${s.need}`;
-    for (let j = 0; j < maxB; j++) { const b = (r.bankProses ?? [])[j]; o[`Bank ${j + 1}`] = b?.bank ?? ""; o[`Tgl Bank ${j + 1}`] = b?.tgl ?? ""; o[`Hasil Bank ${j + 1}`] = b?.bank ? b.hasil || "Diajukan" : ""; o[`Ket Bank ${j + 1}`] = b?.ket ?? ""; }
+    for (let j = 0; j < maxB; j++) { const b = (r.bankProses ?? [])[j]; o[`Bank ${j + 1}`] = b?.bank ?? ""; o[`Tgl Bank ${j + 1}`] = b?.tgl ?? ""; o[`Hasil Bank ${j + 1}`] = b?.bank ? b.hasil || "Diajukan" : ""; o[`Ket Bank ${j + 1}`] = b?.ket ?? ""; o[`Riwayat Bank ${j + 1}`] = b ? progresBank(b).map(h => [h.tgl ? tgl(h.tgl) : "tanpa tgl", h.hasil || "Diajukan", h.ket].filter(Boolean).join(" · ")).join(" → ") : ""; }
     Object.assign(o, { "Nominal ACC": num(r.accBank), TUM: num(r.tum), "Tgl ACC": r.tglACC ?? "", "Tgl Akad": r.tglAkad ?? "", "Tempat Akad": r.tempatAkad ?? "", Notaris: r.notaris ?? "" });
     (Object.keys(LEGAL) as (keyof typeof LEGAL)[]).forEach(k => (o[LEGAL[k]] = r.legal?.[k] ? "Ya" : ""));
     Object.assign(o, { "Progres Bangun %": Math.round(num(r.progressBangun) * 100), AJB: r.ajb ? "Ya" : "", "Tgl AJB": r.tglAJB ?? "", STU: r.stu ? "Ya" : "", "Tgl STU": r.tglSTU ?? "" });
@@ -150,7 +150,7 @@ async function reportPDF<T>(title: string, sub: string, rows: T[], cols: { head:
 }
 
 export async function kprReportPDF(rows: Kpr[], f: KprFilter, columns: Record<string, boolean>) {
-  const bp = (r: Kpr) => (r.bankProses ?? []).map(b => [b.bank, b.tgl && tgl(b.tgl), b.hasil || "Diajukan", b.ket].filter(Boolean).join(" · ")).join("\n") || "–";
+  const bp = (r: Kpr) => (r.bankProses ?? []).map(b => b.bank + ":\n" + progresBank(b).map(h => "  " + [h.tgl ? tgl(h.tgl) : "tanpa tgl", h.hasil || "Diajukan", h.ket].filter(Boolean).join(" · ")).join("\n")).join("\n") || "–";
   const all: [string, { head: string; val: (r: Kpr, i: number) => string | number; right?: boolean; sum?: (r: Kpr) => number; w?: number }][] = [
     ["unit", { head: "Unit", val: r => r.unit, w: 14 }], ["nama", { head: "Nama", val: r => r.nama }], ["sales", { head: "Sales", val: r => r.sales ?? "–" }],
     ["kantor", { head: "Kantor Agent", val: r => r.kantor ?? "–" }], ["caraBayar", { head: "Cara Bayar", val: r => r.caraBayar ?? "–" }],
@@ -165,7 +165,7 @@ export async function kprReportPDF(rows: Kpr[], f: KprFilter, columns: Record<st
     ["tglUTJ", { head: "Tgl UTJ", val: r => tgl(r.tglUTJ) || "–" }], ["tglSPR", { head: "Tgl SPR & PPJB", val: r => tgl(r.tglSPR) || "–" }],
     ["tglACC", { head: "Tgl ACC", val: r => tgl(r.tglACC) || "–" }], ["tglAkad", { head: "Tgl Akad", val: r => tgl(r.tglAkad) || "–" }],
     ["tempatAkad", { head: "Tempat Akad", val: r => r.tempatAkad ?? "–" }], ["notaris", { head: "Notaris", val: r => r.notaris ?? "–" }],
-    ["status", { head: "Status", val: r => status(r) }], ["bankProses", { head: "Proses Bank", val: bp, w: 44 }],
+    ["status", { head: "Status", val: r => status(r) }], ["bankProses", { head: "Proses Bank (riwayat per bank)", val: bp, w: 52 }],
     ["berkas", { head: "Berkas", val: r => { const s = berkasScore(r); return s.missing.length ? `${s.have}/${s.need} (kurang: ${s.missing.join(", ")})` : `${s.have}/${s.need} lengkap`; }, w: 24 }],
     ["jenisPekerjaan", { head: "Pekerjaan", val: r => jenis(r) }],
   ];
