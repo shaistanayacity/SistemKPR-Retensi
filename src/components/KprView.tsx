@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { berkasScore, emptyKprFilter, lastMonths, perMonth, windowEnd, followUp, isBelumAkad, isKPR, jenis, KprFilter, kprBanks, kprBrand, kprRows, status } from "../lib/logic";
 import { brand, juta, KPR_PILL, KPR_STAT, num, rp, rpShort, tgl, titleCase } from "../lib/format";
 import type { Kpr } from "../lib/types";
-import { kprPDF, kprXLS } from "../lib/exportFiles";
+import { kprPDF, kprXLS, kprReportXLS } from "../lib/exportFiles";
 import { Avatar, Chev, DateTools, Dash, Who } from "./ui";
 import { Icon } from "./Icon";
 import { TrendChart } from "./TrendChart";
+import { ReportBuilder } from "./ReportBuilder";
 
 const STEP_C: Record<string, string> = { Pemberkasan: "var(--s1)", "Proses Bank": "var(--s2)", "ACC Bank": "var(--s3)", "Sudah Akad": "var(--s4)", "Non KPR": "var(--s5)" };
 const STEP_ICON = ["file", "clip", "check", "key", "slash"];
@@ -13,6 +14,7 @@ const DESC: Record<string, string> = { Pemberkasan: "belum diajukan ke bank", "P
 
 export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; canAdd: boolean; onOpen: (r: Kpr) => void; onAdd: () => void; onImport: () => void }) {
   const [dl, setDl] = useState("");
+  const [reportBuilding, setReportBuilding] = useState(false);
   const [f, setF] = useState<KprFilter>(emptyKprFilter);
   const set = (p: Partial<KprFilter>) => setF(x => ({ ...x, ...p }));
   const kprAll = all.filter(isKPR);
@@ -47,6 +49,14 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
   const banks = [...new Set(all.flatMap(kprBanks))].sort();
   const bayar = [...new Set(all.map(r => (r.caraBayar ?? "").toUpperCase()).filter(Boolean))].sort();
   const segs: [string, string, number][] = [["", "Semua", all.length], ["belum", "Belum akad", belum], ...KPR_STAT.map(s => [s, s, by[s].n] as [string, string, number])];
+
+  const genReport = async (cols: Record<string, boolean>) => {
+    if (!rows.length) { alert("Tidak ada data pada filter ini."); return; }
+    setDl("report");
+    try { await kprReportXLS(rows, f, cols); } catch { alert("Gagal menyiapkan file. Periksa koneksi lalu coba lagi."); }
+    setDl("");
+    setReportBuilding(false);
+  };
 
   return (
     <section className="view">
@@ -119,6 +129,7 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
           </select>
           <span className="sp" />
           {canAdd && <button className="btn pri" onClick={onImport}>Unggah Excel</button>}
+          <button className="btn" onClick={() => setReportBuilding(true)}>Buat Report Custom</button>
           <button className="btn" disabled={!!dl} onClick={() => void run("pdf")}>{dl === "pdf" ? "Menyiapkan…" : "Unduh PDF"}</button>
           <button className="btn" disabled={!!dl} onClick={() => void run("xls")}>{dl === "xls" ? "Menyiapkan…" : "Unduh Excel"}</button>
         </div>
@@ -137,6 +148,7 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
           </tbody>
         </table></div>
       </div>
+      {reportBuilding && <ReportBuilder type="kpr" onClose={() => setReportBuilding(false)} onGenerate={genReport} />}
     </section>
   );
 }
