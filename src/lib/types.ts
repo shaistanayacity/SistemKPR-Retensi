@@ -9,6 +9,8 @@ export interface Kpr {
   ord: number;
   unit: string;
   nama: string;
+  cluster?: string;
+  tipe?: string;
   sales?: string;
   kantor?: string;
   tglUTJ?: string;
@@ -50,6 +52,8 @@ export interface Retensi {
   ord: number;
   blok: string;
   nama: string;
+  cluster?: string;
+  tipe?: string;
   pembayaran?: string;
   tglAkad?: string;
   kprId?: string;

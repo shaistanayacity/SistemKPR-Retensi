@@ -20,7 +20,7 @@ Tab Berkas KPR:
 - Kartu alur: Pemberkasan, Proses Bank, ACC Bank, Sudah Akad, Non KPR. Daftar "Perlu ditindaklanjuti". Bagan unit per bank.
 - Tab status, pencarian nama/unit, filter tahun UTJ, bank, cara bayar, urutan (default berkas terbaru dulu menurut tanggal UTJ).
 - Filter tanggal (UTJ, SPR & PPJB, proses bank, ACC, akad, pencairan KPR) dengan rentang dari/sampai dan tombol Bulan ini, Bulan lalu, 30 hari.
-- Tabel 8 kolom: Unit, Pembeli (nama, sales, kantor agent), Nilai, Proses Bank (bank, tanggal, keterangan), ACC & Akad, Berkas, Status. Klik baris membuka panel detail untuk melihat dan mengubah.
+- Tabel 10 kolom: Cluster, Tipe, Blok (sebelumnya "Unit"), Pembeli (nama, sales, kantor agent), Nilai, Proses Bank (bank, tanggal, keterangan), ACC & Akad, Berkas, Status. Klik baris membuka panel detail untuk melihat dan mengubah.
 - Panel detail (revisi Oktober 2026): data pembeli (+ sales, kantor agent), harga (harga jual, diskon PPN / Tusuk Sate / Khusus, total diskon, harga transaksi = harga jual - total diskon, UTJ, uang muka, plafond), kelengkapan berkas (semua kelompok tampil, tanpa label opsional; KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji 3 bulan, RK 6 bln, NIB/SKDU, lapkeu), proses bank: satu kotak per bank berisi riwayat progres berurutan (tanggal, hasil, keterangan; tombol + Tambah progres), progres terakhir menjadi kondisi terkini, ACC & akad (nominal ACC, TUM, tanggal, tempat, notaris), legal & pajak, serah terima. Tidak ada lagi: cashback, angsuran UM, total UM, pencairan KPR, berkas akad, catatan, promo.
 - Unduh PDF dan Excel sesuai filter aktif. Report custom (pilih kolom) hanya PDF. Unggah Excel (lihat aturan impor di bawah).
 Tab Retensi/Escrow:
@@ -41,8 +41,8 @@ Harga: total diskon = diskon PPN + Tusuk Sate + Khusus; harga transaksi = harga 
 Kelengkapan berkas: jumlah dokumen terpenuhi dari yang dibutuhkan (karyawan: KTP, NPWP, KK, akta nikah, RK 3 bln, suket kerja, slip gaji; wiraswasta: KTP, NPWP, KK, akta nikah, RK 6 bln, NIB, lapkeu).
 
 ## Model data
-KPR: ord, unit, nama, sales, kantor, tglUTJ, tglSPR, caraBayar, jenisPekerjaan, hargaJual, diskonPPN, diskonTusukSate, diskonKhusus, totalDiskon, hargaTransaksi, utj, totalUM (uang muka), plafond, accBank, tglACC, tum, berkas{ktp,npwp,kk,akta,rk3,suket,slip3,rk6,nibSkdu,lapkeu}, bankProses[{bank,tgl,ket,hasil,progres[{tgl,hasil,ket}]}] (satu entri per bank; progres = seluruh riwayat berurutan, tgl/hasil/ket mengikuti progres terakhir), legal{potongPokok,roya,ambilSertifikat,verifikasi,validasi}, tglAkad, tempatAkad, notaris, progressBangun, ajb, tglAJB, stu, tglSTU, updatedAt.
-Retensi: ord, blok, nama, pembayaran, tglAkad, kprId, nilaiKPRAccBank, totalDiterimAwal, ret{bangunan,ajb,sertifikat,pbg,pdam,listrik,pajak}, cair[{tgl,nominal,komponen,ket}], bank, notaris, keterangan, updatedAt.
+KPR: ord, unit (ditampilkan sebagai "Blok"), nama, cluster, tipe, sales, kantor, tglUTJ, tglSPR, caraBayar, jenisPekerjaan, hargaJual, diskonPPN, diskonTusukSate, diskonKhusus, totalDiskon, hargaTransaksi, utj, totalUM (uang muka), plafond, accBank, tglACC, tum, berkas{ktp,npwp,kk,akta,rk3,suket,slip3,rk6,nibSkdu,lapkeu}, bankProses[{bank,tgl,ket,hasil,progres[{tgl,hasil,ket}]}] (satu entri per bank; progres = seluruh riwayat berurutan, tgl/hasil/ket mengikuti progres terakhir), legal{potongPokok,roya,ambilSertifikat,verifikasi,validasi}, tglAkad, tempatAkad, notaris, progressBangun, ajb, tglAJB, stu, tglSTU, updatedAt.
+Retensi: ord, blok, nama, cluster, tipe, pembayaran, tglAkad, kprId, nilaiKPRAccBank, totalDiterimAwal, ret{bangunan,ajb,sertifikat,pbg,pdam,listrik,pajak}, cair[{tgl,nominal,komponen,ket}], bank, notaris, keterangan, updatedAt.
 Tanggal disimpan ISO (YYYY-MM-DD). Nominal dalam rupiah (angka bulat).
 
 ## Aturan impor Excel

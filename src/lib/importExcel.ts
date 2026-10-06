@@ -73,7 +73,7 @@ export function parseRetRows(rows: Row[]): RetImport[] | null {
 
 // ---- Penggabungan & rencana ----
 type Rec = Record<string, unknown>;
-const FL_KPR: Record<string, string> = { unit: "Unit", nama: "Nama", tglUTJ: "Tgl UTJ", tglSPR: "Tgl SPR", caraBayar: "Cara bayar", hargaJual: "Harga jual", diskonPPN: "Diskon PPN", diskonTusukSate: "Diskon Tusuk Sate", diskonKhusus: "Diskon Khusus", hargaTransaksi: "Harga transaksi", utj: "UTJ", totalUM: "Uang muka", plafond: "Plafond", accBank: "Nominal ACC", tum: "TUM", tglAkad: "Tgl akad", tempatAkad: "Tempat akad", notaris: "Notaris", progressBangun: "Progres bangun", ajb: "AJB", tglAJB: "Tgl AJB", stu: "STU", tglSTU: "Tgl STU", berkas: "Berkas", legal: "Legal & pajak", bankProses: "Bank" };
+const FL_KPR: Record<string, string> = { unit: "Blok", nama: "Nama", tglUTJ: "Tgl UTJ", tglSPR: "Tgl SPR", caraBayar: "Cara bayar", hargaJual: "Harga jual", diskonPPN: "Diskon PPN", diskonTusukSate: "Diskon Tusuk Sate", diskonKhusus: "Diskon Khusus", hargaTransaksi: "Harga transaksi", utj: "UTJ", totalUM: "Uang muka", plafond: "Plafond", accBank: "Nominal ACC", tum: "TUM", tglAkad: "Tgl akad", tempatAkad: "Tempat akad", notaris: "Notaris", progressBangun: "Progres bangun", ajb: "AJB", tglAJB: "Tgl AJB", stu: "STU", tglSTU: "Tgl STU", berkas: "Berkas", legal: "Legal & pajak", bankProses: "Bank" };
 const FL_RET: Record<string, string> = { nama: "Nama", pembayaran: "Pembayaran", nilaiKPRAccBank: "Nilai KPR ACC bank", totalDiterimAwal: "Total diterima awal", ret: "Retensi", bank: "Bank", notaris: "Notaris", keterangan: "Keterangan" };
 const isEmptyV = (v: unknown) => v === "" || v == null || v === 0 || v === false;
 const clone = <T,>(o: T): T => JSON.parse(JSON.stringify(o));

@@ -195,6 +195,8 @@ export function kprKeRetensi(r: Kpr): Partial<Retensi> & { kosong: string[] } {
   const out: Partial<Retensi> = { kprId: r.id, blok: r.unit, nama: String(r.nama ?? "").toUpperCase() };
   const kosong: string[] = [];
   const set = <K extends keyof Retensi>(k: K, v: Retensi[K] | undefined, label: string) => { if (v === undefined || v === "" || v === 0) kosong.push(label); else out[k] = v; };
+  set("cluster", r.cluster, "cluster");
+  set("tipe", r.tipe, "tipe");
   set("pembayaran", r.caraBayar, "cara bayar");
   set("bank", bankDariKpr(r), "bank");
   set("notaris", r.notaris, "notaris");

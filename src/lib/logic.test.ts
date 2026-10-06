@@ -85,17 +85,17 @@ describe("jendela grafik", () => {
 
 import { bankDariKpr, kprKeRetensi, normUnit } from "./logic";
 describe("hubungan KPR ke Retensi", () => {
-  const k: Kpr = { id: "k1", ord: 1, unit: "F1-01", nama: "Dwiki Anggara", caraBayar: "KPR", accBank: 760000000, notaris: "HAIRUR", tglAkad: "2026-03-02", tempatAkad: "BTN SIDOARJO" };
+  const k: Kpr = { id: "k1", ord: 1, unit: "F1-01", nama: "Dwiki Anggara", cluster: "Emerald", tipe: "36/72", caraBayar: "KPR", accBank: 760000000, notaris: "HAIRUR", tglAkad: "2026-03-02", tempatAkad: "BTN SIDOARJO" };
   it("mengisi nama (huruf besar), bank, notaris, nilai KPR, cara bayar, tanggal akad", () => {
     const x = kprKeRetensi(k);
-    expect(x).toMatchObject({ kprId: "k1", blok: "F1-01", nama: "DWIKI ANGGARA", pembayaran: "KPR", bank: "BTN SIDOARJO", notaris: "HAIRUR", nilaiKPRAccBank: 760000000, tglAkad: "2026-03-02" });
+    expect(x).toMatchObject({ kprId: "k1", blok: "F1-01", cluster: "Emerald", tipe: "36/72", nama: "DWIKI ANGGARA", pembayaran: "KPR", bank: "BTN SIDOARJO", notaris: "HAIRUR", nilaiKPRAccBank: 760000000, tglAkad: "2026-03-02" });
     expect(x.kosong).toEqual([]);
   });
   it("tempat akad yang bukan bank tidak dianggap bank", () => expect(bankDariKpr({ ...k, tempatAkad: "Kantor Notaris" })).toBe(""));
   it("bank yang ACC didahulukan", () => expect(bankDariKpr({ ...k, bankProses: [{ bank: "BRI SDA", tgl: "", ket: "", hasil: "ACC" }] })).toBe("BRI SDA"));
   it("kolom yang kosong di KPR dilaporkan dan tidak ditimpa", () => {
     const x = kprKeRetensi({ id: "k2", ord: 2, unit: "A-01", nama: "Budi", caraBayar: "KPR" });
-    expect(x.kosong).toEqual(["bank", "notaris", "nilai KPR ACC bank", "tanggal akad"]);
+    expect(x.kosong).toEqual(["cluster", "tipe", "bank", "notaris", "nilai KPR ACC bank", "tanggal akad"]);
     expect("bank" in x).toBe(false);
   });
   it("kunci unit mengabaikan spasi dan huruf kecil", () => expect(normUnit(" f1 - 01 ")).toBe("F1-01"));

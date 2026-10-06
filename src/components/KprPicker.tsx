@@ -3,7 +3,7 @@ import { kprBrand, kprKeRetensi, normUnit, status } from "../lib/logic";
 import { KPR_PILL, natural, titleCase } from "../lib/format";
 import type { Kpr, Retensi } from "../lib/types";
 
-/** Pilih unit dari daftar KPR untuk mengisi form Retensi. Opsional: semua kolom tetap bisa diisi manual. */
+/** Pilih blok dari daftar KPR untuk mengisi form Retensi. Opsional: semua kolom tetap bisa diisi manual. */
 export function KprPicker({ kpr, sudahAda, linkedId, onPick, onClear }: { kpr: Kpr[]; sudahAda: Set<string>; linkedId?: string; onPick: (p: Partial<Retensi>, kosong: string[]) => void; onClear: () => void }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -36,8 +36,8 @@ export function KprPicker({ kpr, sudahAda, linkedId, onPick, onClear }: { kpr: K
         </div>
       ) : (
         <div className="pk-box">
-          <input className="pk-in" type="search" placeholder={kpr.length ? "Cari unit atau nama pembeli di data KPR" : "Data KPR belum ada, isi manual di bawah"} disabled={!kpr.length}
-            value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} aria-label="Cari unit di data KPR" />
+          <input className="pk-in" type="search" placeholder={kpr.length ? "Cari blok atau nama pembeli di data KPR" : "Data KPR belum ada, isi manual di bawah"} disabled={!kpr.length}
+            value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} aria-label="Cari blok di data KPR" />
           {open && kpr.length > 0 && (
             <div className="pk-list" role="listbox">
               {hasil.length ? hasil.map(k => {
@@ -49,14 +49,14 @@ export function KprPicker({ kpr, sudahAda, linkedId, onPick, onClear }: { kpr: K
                     {dipakai ? <span className="pill p-neu">Sudah ada di Retensi</span> : <span className={"pill " + KPR_PILL[st]}>{st}</span>}
                   </button>
                 );
-              }) : <p className="none" style={{ padding: "10px 12px" }}>Tidak ada unit yang cocok. Isi manual di bawah.</p>}
+              }) : <p className="none" style={{ padding: "10px 12px" }}>Tidak ada blok yang cocok. Isi manual di bawah.</p>}
             </div>
           )}
         </div>
       )}
       <p className="sub" style={{ marginTop: 8 }}>
         {linked || info
-          ? <>Terisi dari KPR: <b>{["nama", "cara bayar", "bank", "notaris", "nilai KPR ACC bank", "tanggal akad"].filter(l => !(info ?? []).includes(l)).join(", ")}</b>. Semuanya masih bisa diubah.{info && info.length ? <> Kosong di KPR, isi manual: <b>{info.join(", ")}</b>.</> : null}</>
+          ? <>Terisi dari KPR: <b>{["nama", "cluster", "tipe", "cara bayar", "bank", "notaris", "nilai KPR ACC bank", "tanggal akad"].filter(l => !(info ?? []).includes(l)).join(", ")}</b>. Semuanya masih bisa diubah.{info && info.length ? <> Kosong di KPR, isi manual: <b>{info.join(", ")}</b>.</> : null}</>
           : <>Tidak ada di daftar? Langsung isi kolom di bawah secara manual.</>}
       </p>
     </fieldset>

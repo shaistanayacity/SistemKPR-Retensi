@@ -52,7 +52,7 @@ export function ImportDrawer({ kind, kpr, ret, onClose, onDone }: { kind: "kpr" 
       <fieldset><legend>Pilih file</legend>
         <label className="drop"><b>Klik untuk memilih file</b><span>{isK ? "File .xlsx rekap penjualan KPR." : "File .xlsx data retensi."}</span>
           <input className="sr" type="file" accept=".xlsx,.xlsm,.xls" onChange={e => void read(e.target.files?.[0])} /></label>
-        <p className="sub" style={{ marginTop: 10 }}>{isK ? "Unit" : "Blok"} yang sudah ada diperbarui, yang baru ditambahkan. Tidak ada data yang dihapus. Anda bisa melihat dan membatalkan sebelum disimpan.</p>
+        <p className="sub" style={{ marginTop: 10 }}>Blok yang sudah ada diperbarui, yang baru ditambahkan. Tidak ada data yang dihapus. Anda bisa melihat dan membatalkan sebelum disimpan.</p>
       </fieldset>
       {state === "reading" && <div className="card" style={{ padding: 16 }}><b>Membaca file…</b></div>}
       {state === "unknown" && <div className="card" style={{ padding: 16 }}><b>File ini tidak dikenali</b><p className="sub">{isK ? "Pastikan ada sheet dengan kolom UNIT dan NAMA (rekap KPR)." : "Pastikan ada sheet dengan kolom Blok dan Nama (retensi)."}</p></div>}
@@ -60,7 +60,7 @@ export function ImportDrawer({ kind, kpr, ret, onClose, onDone }: { kind: "kpr" 
       {found && plan && <>
         <fieldset><legend>{isK ? "Rekap KPR" : "Data retensi"} · {found.fileName}</legend>
           <p className="sub" style={{ margin: "0 0 12px" }}>Sheet "{found.sheet}", {found.items.length} baris terbaca.</p>
-          <div className="impstat"><div><b className="num">{plan.news.length}</b><span>{isK ? "unit" : "blok"} baru</span></div><div><b className="num">{plan.upd.length}</b><span>diperbarui</span></div><div><b className="num">{plan.same}</b><span>tidak berubah</span></div></div>
+          <div className="impstat"><div><b className="num">{plan.news.length}</b><span>blok baru</span></div><div><b className="num">{plan.upd.length}</b><span>diperbarui</span></div><div><b className="num">{plan.same}</b><span>tidak berubah</span></div></div>
           <label className="ck" style={{ marginTop: 12 }}><input type="checkbox" checked={ow} onChange={e => setOw(e.target.checked)} />Timpa juga isian yang kosong di Excel</label>
           <p className="sub" style={{ margin: "6px 0 0" }}>Biarkan tidak dicentang agar kolom kosong di Excel tidak menghapus data yang sudah Anda isi di dashboard.</p>
           {plan.skipped > 0 && <p className="sub" style={{ margin: "8px 0 0" }}>{plan.skipped} unit sudah punya riwayat pencairan retensi, jadi nilai retensinya tidak diubah.</p>}

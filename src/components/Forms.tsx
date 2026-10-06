@@ -40,7 +40,7 @@ const numOrUndef = (v: string) => (v === "" ? undefined : num(v));
 // ---------------- KPR ----------------
 export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, onDelete, all }: Common<Kpr> & { all: Kpr[] }) {
   const hitung = (x: Kpr): Kpr => ({ ...x, totalDiskon: totalDiskon(x), hargaTransaksi: hargaTransaksiOtomatis(x), plafond: plafondOtomatis(x) });
-  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: rapikanBank(initial.bankProses) }, x => onSave({ ...hitung(x), bankProses: rapikanBank((x.bankProses ?? []).filter(b => b.bank.trim())) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Unit dan nama pembeli wajib diisi." : ""));
+  const { rec: r, patch, busy, msg, save, del } = useForm({ ...initial, bankProses: rapikanBank(initial.bankProses) }, x => onSave({ ...hitung(x), bankProses: rapikanBank((x.bankProses ?? []).filter(b => b.bank.trim())) }), onDelete, x => (!x.unit?.trim() || !x.nama?.trim() ? "Blok dan nama pembeli wajib diisi." : ""));
   const bp = r.bankProses ?? [];
   const setBp = (i: number, p: Partial<BankProses>) => patch({ bankProses: bp.map((b, j) => (j === i ? { ...b, ...p } : b)) });
   const setPg = (i: number, k: number, p: Partial<BankRiwayat>) => setBp(i, { progres: (bp[i].progres ?? []).map((x, m) => (m === k ? { ...x, ...p } : x)) });
@@ -52,12 +52,16 @@ export function KprForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
   return (
     <Drawer title={isNew ? "Tambah unit" : `${r.unit} · ${titleCase(r.nama)}`} subtitle={isNew ? "Isi data pembeli dan berkas KPR" : `${status(r)} · diperbarui ${r.updatedAt ? tgl(r.updatedAt.slice(0, 10)) : "dari rekap Excel"}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
+      <Datalist id="dl-cluster" values={all.map(x => x.cluster)} />
+      <Datalist id="dl-tipe" values={all.map(x => x.tipe)} />
       <Datalist id="dl-bank" values={all.flatMap(x => (x.bankProses ?? []).map(b => b.bank))} />
       <Datalist id="dl-tempat" values={all.map(x => x.tempatAkad)} />
       <Datalist id="dl-notaris" values={all.map(x => x.notaris)} />
       <fieldset disabled={!canEdit} style={{ display: "contents" }}>
-        <fieldset><legend>Unit &amp; pembeli</legend><div className="grid">
-          <Field label="Unit *" value={r.unit} onChange={sf("unit")} />
+        <fieldset><legend>Blok &amp; pembeli</legend><div className="grid">
+          <Field label="Cluster" value={r.cluster} onChange={sf("cluster")} list="dl-cluster" />
+          <Field label="Tipe" value={r.tipe} onChange={sf("tipe")} list="dl-tipe" />
+          <Field label="Blok *" value={r.unit} onChange={sf("unit")} />
           <Field label="Nama pembeli *" value={r.nama} onChange={sf("nama")} w2 />
           <Field label="Sales" value={r.sales} onChange={sf("sales")} />
           <Field label="Kantor agent" value={r.kantor} onChange={sf("kantor")} />
@@ -136,12 +140,16 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
   return (
     <Drawer title={isNew ? "Tambah retensi" : `${r.blok} · ${titleCase(r.nama)}`} subtitle={isNew ? "Data escrow / retensi bank per unit" : `${retStatus(r) || "Belum ada retensi"} · sisa retensi Rp ${rp(sisa)}`} onClose={onClose}
       footer={<Footer isNew={isNew} canEdit={canEdit} canDelete={canDelete} busy={busy} msg={msg} onSave={save} onDelete={del} onClose={onClose} />}>
+      <Datalist id="dl-rcluster" values={all.map(x => x.cluster)} />
+      <Datalist id="dl-rtipe" values={all.map(x => x.tipe)} />
       <Datalist id="dl-rbank" values={all.map(x => x.bank)} />
       <Datalist id="dl-rnot" values={all.map(x => x.notaris)} />
       <fieldset disabled={!canEdit} style={{ display: "contents" }}>
         {isNew && canEdit && <KprPicker kpr={kpr} linkedId={r.kprId} sudahAda={new Set(all.map(x => normUnit(x.blok)))}
           onPick={isi => patch(isi)} onClear={() => patch({ kprId: undefined })} />}
-        <fieldset><legend>Unit &amp; pemilik</legend><div className="grid">
+        <fieldset><legend>Blok &amp; pemilik</legend><div className="grid">
+          <Field label="Cluster" value={r.cluster} onChange={sf("cluster")} list="dl-rcluster" />
+          <Field label="Tipe" value={r.tipe} onChange={sf("tipe")} list="dl-rtipe" />
           <Field label="Blok *" value={r.blok} onChange={sf("blok")} />
           <Field label="Nama *" value={r.nama} onChange={v => patch({ nama: v.toUpperCase() })} w2 />
           <Select label="Pembayaran" value={r.pembayaran || "KPR"} options={[...new Set(["KPR", "Tunai", r.pembayaran].filter(Boolean) as string[])]} onChange={sf("pembayaran")} />

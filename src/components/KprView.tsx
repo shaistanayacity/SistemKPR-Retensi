@@ -120,12 +120,12 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
         </div>
         <div className="tools">
           <label className="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-            <input type="search" placeholder="Cari nama atau unit" aria-label="Cari nama atau unit" value={f.q} onChange={e => set({ q: e.target.value })} /></label>
+            <input type="search" placeholder="Cari nama atau blok" aria-label="Cari nama atau blok" value={f.q} onChange={e => set({ q: e.target.value })} /></label>
           <select className="sel" aria-label="Tahun UTJ" value={f.year} onChange={e => set({ year: e.target.value })}><option value="">Semua tahun UTJ</option>{years.map(y => <option key={y}>{y}</option>)}</select>
           <select className="sel" aria-label="Bank" value={f.bank} onChange={e => set({ bank: e.target.value })}><option value="">Semua bank</option>{banks.map(y => <option key={y}>{y}</option>)}</select>
           <select className="sel" aria-label="Cara bayar" value={f.bayar} onChange={e => set({ bayar: e.target.value })}><option value="">Semua cara bayar</option>{bayar.map(y => <option key={y}>{y}</option>)}</select>
           <select className="sel" aria-label="Urutan" value={f.sort} onChange={e => set({ sort: e.target.value })}>
-            <option value="baru">Berkas terbaru dulu</option><option value="lama">Berkas terlama dulu</option><option value="diubah">Terakhir diubah</option><option value="unit">Unit A–Z</option>
+            <option value="baru">Berkas terbaru dulu</option><option value="lama">Berkas terlama dulu</option><option value="diubah">Terakhir diubah</option><option value="unit">Blok A–Z</option>
           </select>
           <span className="sp" />
           {canAdd && <button className="btn pri" onClick={onImport}>Unggah Excel</button>}
@@ -142,9 +142,9 @@ export function KprView({ all, canAdd, onOpen, onAdd, onImport }: { all: Kpr[]; 
         </div>
         <p className="meta">Menampilkan <b className="num">{rows.length}</b> dari {all.length} unit{sumPl ? <> · plafond <b className="num">{rpShort(sumPl)}</b></> : null}</p>
         <div className="tbl"><table>
-          <thead><tr><th>Unit</th><th>Pembeli</th><th className="r">Nilai</th><th>Proses Bank</th><th>ACC &amp; Akad</th><th>Berkas</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Cluster</th><th>Tipe</th><th>Blok</th><th>Pembeli</th><th className="r">Nilai</th><th>Proses Bank</th><th>ACC &amp; Akad</th><th>Berkas</th><th>Status</th><th></th></tr></thead>
           <tbody>
-            {rows.length ? rows.map(r => <KprRow key={r.id} r={r} onOpen={onOpen} />) : <tr><td colSpan={8}><div className="empty"><b>Tidak ada data yang cocok</b>Ubah filter, atau klik Tambah untuk mengisi data baru.</div></td></tr>}
+            {rows.length ? rows.map(r => <KprRow key={r.id} r={r} onOpen={onOpen} />) : <tr><td colSpan={10}><div className="empty"><b>Tidak ada data yang cocok</b>Ubah filter, atau klik Tambah untuk mengisi data baru.</div></td></tr>}
           </tbody>
         </table></div>
       </div>
@@ -157,6 +157,8 @@ function KprRow({ r, onOpen }: { r: Kpr; onOpen: (r: Kpr) => void }) {
   const st = status(r), sc = berkasScore(r), kpr = isKPR(r), pct = sc.need ? sc.have / sc.need : 0;
   return (
     <tr className="click" onClick={() => onOpen(r)}>
+      <td>{r.cluster || <Dash />}</td>
+      <td>{r.tipe || <Dash />}</td>
       <td className="unit">{r.unit}</td>
       <td><Who name={r.nama} sub={<>{[[r.sales ? "Sales: " + r.sales : "", r.kantor].filter(Boolean).join(" · "), kpr ? jenis(r) : "", r.tglUTJ ? "UTJ " + tgl(r.tglUTJ) : ""].filter(Boolean).join(" · ")}<span className="sub num" style={{ display: "block" }}>SPR &amp; PPJB {r.tglSPR ? tgl(r.tglSPR) : "belum"}</span></>} /></td>
       <td className="r"><div className="money-c"><b className="num">{rp(num(r.hargaTransaksi))}</b>

@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Drawer } from "./ui";
 
 export const KPR_COLUMNS = [
-  { id: "unit", label: "Unit", default: true },
+  { id: "cluster", label: "Cluster", default: true },
+  { id: "tipe", label: "Tipe", default: true },
+  { id: "unit", label: "Blok", default: true },
   { id: "nama", label: "Nama Pembeli", default: true },
   { id: "sales", label: "Sales", default: true },
   { id: "kantor", label: "Kantor Agent", default: false },
@@ -28,6 +30,8 @@ export const KPR_COLUMNS = [
 ] as const;
 
 export const RET_COLUMNS = [
+  { id: "cluster", label: "Cluster", default: true },
+  { id: "tipe", label: "Tipe", default: true },
   { id: "blok", label: "Blok", default: true },
   { id: "nama", label: "Nama", default: true },
   { id: "pembayaran", label: "Pembayaran", default: true },
