@@ -91,7 +91,9 @@ export async function retPDF(rows: Retensi[], f: RetFilter) {
   const blob = await pdfDoc("Rekap Retensi / Escrow", `${retFilterLabel(f)} · ${rows.length} unit · dicetak ${today()}`,
     ["No", "Cluster", "Tipe", "Blok", "Nama", "Bank KPR", "Notaris", "Nilai KPR ACC Bank", "Total Diterima Awal", "Rincian Retensi", "Retensi", "Riwayat Pencairan Retensi", "Sudah Cair", "Total Retensi (Sisa)", "Status", "Keterangan"],
     body, ["", "", "", "", "Total", "", "", sum(retNilai), sum(retTerima), "", sum(retAwal), "", sum(retCair), sum(retSisa), "", ""],
-    { 0: { cellWidth: 6, halign: "right" }, 3: { fontStyle: "bold", cellWidth: 12 }, 4: { cellWidth: 28 }, 7: { halign: "right" }, 8: { halign: "right" }, 9: { cellWidth: 32 }, 10: { halign: "right" }, 11: { cellWidth: 44 }, 12: { halign: "right" }, 13: { halign: "right", fontStyle: "bold" }, 14: { cellWidth: 22 } });
+    // Lebar diatur agar angka (termasuk baris total) tidak terpotong dan kolom teks tidak melebar percuma.
+    { 0: { cellWidth: 6, halign: "right" }, 1: { cellWidth: 11 }, 2: { cellWidth: 11 }, 3: { fontStyle: "bold", cellWidth: 12 }, 4: { cellWidth: 20 }, 5: { cellWidth: 10 }, 6: { cellWidth: 16 },
+      7: { halign: "right", cellWidth: 20 }, 8: { halign: "right", cellWidth: 20 }, 9: { cellWidth: 25 }, 10: { halign: "right", cellWidth: 19 }, 11: { cellWidth: 34 }, 12: { halign: "right", cellWidth: 19 }, 13: { halign: "right", fontStyle: "bold", cellWidth: 21 }, 14: { cellWidth: 14 } }, 6.2);
   save(`Retensi_${stamp()}.pdf`, blob);
 }
 
