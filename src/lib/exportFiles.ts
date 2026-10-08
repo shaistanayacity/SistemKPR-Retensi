@@ -45,7 +45,7 @@ function loadLogo(): Promise<string | null> {
     .catch(() => null));
 }
 
-async function pdfDoc(title: string, sub: string, head: string[], body: (string | number)[][], foot: (string | number)[], colStyles: Record<number, object>) {
+async function pdfDoc(title: string, sub: string, head: string[], body: (string | number)[][], foot: (string | number)[], colStyles: Record<number, object>, fs = 6.6) {
   const { default: JsPDF } = await import("jspdf");
   const { default: autoTable } = await import("jspdf-autotable");
   const doc = new JsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -57,8 +57,8 @@ async function pdfDoc(title: string, sub: string, head: string[], body: (string 
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(100); doc.text(sub, tx, 18);
   autoTable(doc, {
     head: [head], body, foot: [foot], startY: 24, margin: { left: 10, right: 10, bottom: 12 }, theme: "grid",
-    styles: { fontSize: 6.6, cellPadding: 1.3, lineColor: [225, 225, 225], lineWidth: 0.15, textColor: [17, 17, 17], valign: "middle", overflow: "linebreak" },
-    headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: "bold", fontSize: 6.8 },
+    styles: { fontSize: fs, cellPadding: +(fs * 0.2).toFixed(2), lineColor: [225, 225, 225], lineWidth: 0.15, textColor: [17, 17, 17], valign: "middle", overflow: "linebreak" },
+    headStyles: { fillColor: [17, 17, 17], textColor: 255, fontStyle: "bold", fontSize: fs + 0.2 },
     footStyles: { fillColor: [238, 238, 238], textColor: [20, 24, 28], fontStyle: "bold" },
     alternateRowStyles: { fillColor: [247, 247, 247] }, columnStyles: colStyles, showFoot: "lastPage",
     didDrawPage: d => { doc.setFontSize(7); doc.setTextColor(140); doc.text(`Halaman ${d.pageNumber}`, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 6, { align: "right" }); doc.setTextColor(17); },
@@ -144,9 +144,11 @@ export async function retXLS(rows: Retensi[]) {
 async function reportPDF<T>(title: string, sub: string, rows: T[], cols: { head: string; val: (r: T, i: number) => string | number; right?: boolean; sum?: (r: T) => number; w?: number }[], file: string) {
   const body = rows.map((r, i) => cols.map(c => c.val(r, i)));
   const foot = cols.map((c, i) => (i === 0 ? `Total ${rows.length} data` : c.sum ? rp(rows.reduce((a, r) => a + c.sum!(r), 0)) : ""));
+  // Makin sedikit kolom, makin besar huruf, supaya lebar halaman terpakai.
+  const fs = cols.length <= 5 ? 10.5 : cols.length <= 7 ? 9.5 : cols.length <= 9 ? 8.5 : cols.length <= 12 ? 7.5 : 6.6;
   const styles: Record<number, object> = {};
-  cols.forEach((c, i) => { styles[i] = { ...(c.right ? { halign: "right" } : {}), ...(c.w ? { cellWidth: c.w } : {}) }; });
-  save(file, await pdfDoc(title, sub, cols.map(c => c.head), body, foot, styles));
+  cols.forEach((c, i) => { styles[i] = { ...(c.right ? { halign: "right" } : {}), ...(c.w ? { cellWidth: Math.round(c.w * fs / 6.6) } : {}) }; });
+  save(file, await pdfDoc(title, sub, cols.map(c => c.head), body, foot, styles, fs));
 }
 
 export async function kprReportPDF(rows: Kpr[], f: KprFilter, columns: Record<string, boolean>) {
