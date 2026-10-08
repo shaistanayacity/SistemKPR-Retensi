@@ -14,8 +14,7 @@ export function KprPicker({ kpr, sudahAda, linkedId, onPick, onClear }: { kpr: K
     const s = q.trim().toLowerCase();
     return [...kpr]
       .filter(k => !s || `${k.unit} ${k.nama}`.toLowerCase().includes(s))
-      .sort((a, b) => natural(a.unit, b.unit))
-      .slice(0, 8);
+      .sort((a, b) => natural(a.unit, b.unit));
   }, [kpr, q]);
 
   const pilih = (k: Kpr) => {
