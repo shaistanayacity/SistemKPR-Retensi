@@ -2,7 +2,7 @@ import { useState } from "react";
 import { berkasNeed, normUnit, rapikanBank, compSisa, retKomponen, hargaTransaksiOtomatis, jenis, plafondOtomatis, retAwal, retPersen, retSisa, retStatus, status, totalDiskon } from "../lib/logic";
 import { DOC_GROUPS, DOCS, HASIL, isoToday, kompShort, LEGAL, LEGAL_GROUPS, num, RET_LABEL, rp, tgl, titleCase } from "../lib/format";
 import type { BankProses, BankRiwayat, Kpr, RetCair, Retensi } from "../lib/types";
-import { Datalist, Drawer, Field, Fld, Select } from "./ui";
+import { Datalist, Drawer, Field, Fld, NumInput, Select } from "./ui";
 import { KprPicker } from "./KprPicker";
 
 type Common<T> = { initial: T; isNew: boolean; canEdit: boolean; canDelete: boolean; onClose: () => void; onSave: (r: T) => Promise<void>; onDelete: () => Promise<void> };
@@ -171,7 +171,7 @@ export function RetForm({ initial, isNew, canEdit, canDelete, onClose, onSave, o
           {cair.map((c, i) => (
             <div className="rowf cr" key={i}>
               <div><label>Tanggal cair</label><input type="date" value={c.tgl} onChange={e => setCair(i, { tgl: e.target.value })} /></div>
-              <div><label>Nominal (Rp)</label><input type="number" step="any" value={c.nominal || ""} onChange={e => setCair(i, { nominal: num(e.target.value) })} /></div>
+              <div><label>Nominal (Rp)</label><NumInput value={c.nominal || ""} onChange={v => setCair(i, { nominal: num(v) })} /></div>
               <div><label>Komponen</label><select value={c.komponen} onChange={e => setCair(i, { komponen: e.target.value })}>{[...new Set([...keys as string[], c.komponen].filter(Boolean) as string[])].map(k => <option key={k} value={k}>{kompShort(k)}</option>)}</select></div>
               <button type="button" className="rm" aria-label="Hapus baris" onClick={() => patch({ cair: cair.filter((_, j) => j !== i) })}>×</button>
             </div>))}

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 import { hue, initials, titleCase } from "../lib/format";
 
 export const Chev = () => (
@@ -39,8 +39,33 @@ export function Fld({ label, w2, children }: { label: string; w2?: boolean; chil
   return <div className={"fld" + (w2 ? " w2" : "")}><label>{label}{children}</label></div>;
 }
 
+const titik = (d: string) => d.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+/** Isian angka dengan pemisah ribuan titik (10000000 tampil 10.000.000). onChange menerima digit murni. */
+export function NumInput({ value, onChange }: { value: string | number | undefined; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const caret = useRef<number | null>(null);
+  const n0 = value === undefined || value === "" ? NaN : Math.round(Number(value));
+  const shown = Number.isFinite(n0) && n0 >= 0 ? titik(String(n0)) : "";
+  useLayoutEffect(() => {
+    if (caret.current !== null && ref.current && document.activeElement === ref.current) ref.current.setSelectionRange(caret.current, caret.current);
+    caret.current = null;
+  });
+  return <input ref={ref} inputMode="numeric" value={shown} onChange={e => {
+    const el = e.target, pos = el.selectionStart ?? el.value.length;
+    const before = el.value.slice(0, pos).replace(/\D/g, "").length;
+    const digits = el.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    const f = titik(digits);
+    let n = 0, p = 0;
+    while (p < f.length && n < before) { if (/\d/.test(f[p])) n++; p++; }
+    caret.current = p;
+    onChange(digits);
+  }} />;
+}
+
 export function Field({ label, value, onChange, type = "text", w2, list }: { label: string; value: string | number | undefined; onChange: (v: string) => void; type?: string; w2?: boolean; list?: string }) {
-  return <Fld label={label} w2={w2}><input type={type} step={type === "number" ? "any" : undefined} value={value ?? ""} list={list} onChange={e => onChange(e.target.value)} /></Fld>;
+  if (type === "number") return <Fld label={label} w2={w2}><NumInput value={value} onChange={onChange} /></Fld>;
+  return <Fld label={label} w2={w2}><input type={type} value={value ?? ""} list={list} onChange={e => onChange(e.target.value)} /></Fld>;
 }
 
 export function Select({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
