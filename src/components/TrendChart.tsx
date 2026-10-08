@@ -14,7 +14,8 @@ function path(pts: [number, number][]) {
   }
   return d;
 }
-const niceMax = (v: number) => { if (v <= 0) return 4; const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; };
+/** Batas atas sumbu = 4 x langkah bulat, agar keempat garis bantu selalu berupa bilangan bulat tanpa angka ganda. */
+const niceMax = (v: number) => { if (v <= 4) return 4; const q = v / 4, p = Math.pow(10, Math.floor(Math.log10(q))); return 4 * Math.max(1, Math.ceil(q / p) * p); };
 
 export function TrendChart({ labels, series, format = (n: number) => String(n), empty = "Belum ada data untuk ditampilkan." }: { labels: string[]; series: Series[]; format?: (n: number) => string; empty?: string }) {
   const [hover, setHover] = useState<number | null>(null);
